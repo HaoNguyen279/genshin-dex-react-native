@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
 import { DataTable } from "react-native-paper";
-import DataTableHeader from "react-native-paper/lib/typescript/components/DataTable/DataTableHeader";
+
 
 
 const globalFont = StyleSheet.create({
@@ -68,8 +68,6 @@ const RenderTable = () =>{
                 <DataTable.Cell textStyle={styles.cell}>{damage_data["Low/High Plunge DMG"][2]}</DataTable.Cell>
             </DataTable.Row>
         </DataTable>
-
-
     )
 }
 
@@ -313,7 +311,7 @@ export function ImagesList(){
 
     return(
         <SafeAreaView style={{flex:1}}>
-            <ScrollView style={{flex:1}}  >
+            <ScrollView style={{flex:1}} >
                 <Video
                         source={getBackground(route.params?.element)}
                         isLooping

@@ -1,25 +1,13 @@
 import { createNativeStackNavigator, NativeStackNavigatorProps } from '@react-navigation/native-stack';
 import {NavigationContainer, NavigationProp, useNavigation} from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
+
 import { StyleSheet, Text, View, Button, TextInput, Dimensions , Image, Pressable} from 'react-native';
 import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
-import { ResizeMode } from 'expo-av';
-import { useState } from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WishSimulator } from './components/WishSimulator';
 
-const { width, height } = Dimensions.get('screen')
-function HomeScreen(){
-  const navigation : NavigationProp<RootStackParamList> = useNavigation();
-  return(
-    <View style={styles.home}>
-      
-      <Text>Test homescreen navigator</Text>
-      <Button title='See my profile' onPress={() => navigation.navigate("Profile")} >
-
-      </Button>
-    </View>
-  )
-}
 function ProfileScreen(){
 
   const navigation : NavigationProp<RootStackParamList> = useNavigation();
@@ -38,27 +26,34 @@ function ProfileScreen(){
 
 export default function App() {
   const Stack = createNativeStackNavigator<RootStackParamList>();
-
-  return (
-    
-    <NavigationContainer>
-      <Stack.Navigator
-	  >
+  const Tab = createBottomTabNavigator();
+  const HomeStackScreen = ()=>{
+    return(
+      <Stack.Navigator>
         <Stack.Screen
           	name="Home"
           	component={Home}
           	options={{
-            title:"React Native Prj By Hao Nguyen",
-			headerShown:false
+			    headerShown:false
           	}}
         />
         <Stack.Screen 
-          name="Images"
-          component={ImagesList}
-          options={{title:'Back'}}
+           name="Images"
+           component={ImagesList}
+           options={{title:'Back'} }
           />
       </Stack.Navigator>
-    </NavigationContainer>
+    )
+  }
+  return (
+
+        <NavigationContainer>
+            <Tab.Navigator>
+                <Tab.Screen name='Main' component={HomeStackScreen} options={{headerShown:false}}/>
+                <Tab.Screen name='Wish' component={WishSimulator} options={{headerShown:false}}/>
+            </Tab.Navigator>
+        </NavigationContainer>
+
   );
 }
 

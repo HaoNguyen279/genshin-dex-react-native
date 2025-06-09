@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, Image, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
 import data from '../assets/data.json'
 import { SafeAreaView } from "react-native-safe-area-context";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 
+const Tab = createBottomTabNavigator();
 
 type RenderListProps ={
     navigation : NavigationProp<RootStackParamList>;
@@ -86,6 +88,10 @@ export function Home(){
                     search_text={searchText}
                 >
                 </RenderList>
+                {/* <Tab.Navigator>
+                    <Tab.Screen name="Home" component={Home} />
+                    
+                </Tab.Navigator> */}
             </View>
         </SafeAreaView>
     )
