@@ -5,11 +5,12 @@ import { StyleSheet, Text, View, Button, TextInput, Dimensions , Image, Pressabl
 import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { WishSimulator } from './components/WishSimulator';
+import { useState } from 'react';
 
 function ProfileScreen(){
-
+    const [value, setValue] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
   const navigation : NavigationProp<RootStackParamList> = useNavigation();
   return(
     <View>
@@ -19,9 +20,11 @@ function ProfileScreen(){
         <Text>Ganyu</Text>
       </View>
       <Button title='Back to home' onPress={() => navigation.goBack()}/>
+
+    
     </View>
   )
-} 
+}
 
 
 export default function App() {
@@ -51,6 +54,8 @@ export default function App() {
             <Tab.Navigator>
                 <Tab.Screen name='Main' component={HomeStackScreen} options={{headerShown:false}}/>
                 <Tab.Screen name='Wish' component={WishSimulator} options={{headerShown:false}}/>
+                <Tab.Screen name='Profile' component={ProfileScreen} options={{headerShown:false}}/>
+                
             </Tab.Navigator>
         </NavigationContainer>
 
@@ -70,6 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems:"center",
     alignContent:"center"
-  },
+  }
+
 
 });

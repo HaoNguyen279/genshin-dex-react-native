@@ -1,6 +1,7 @@
 
 
 type RootStackParamList = {
+    
     "Home" : undefined,
     "Profile" : undefined,
     "Images" :  
@@ -15,7 +16,8 @@ type RootStackParamList = {
         birthday: string,
         about: string,
         url_image: string,
-        url_icon: string
+        url_icon: string,
+        gacha_card_url : string
     }  
     | undefined ,
 }

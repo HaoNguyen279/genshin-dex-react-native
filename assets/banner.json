@@ -1,0 +1,122 @@
+[
+    {
+        "id_banner": 1,
+        "five_stars_character": "Xiao",
+        "four_stars_character": ["Yao Yao", "Xinyan", "Thoma"],
+        "banner_start": "February 20, 2024",
+        "banner_end": "March 12, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Invitation%20to%20Mundane%20Life%205.png"
+    },
+    {
+        "id_banner": 2,
+        "five_stars_character": "Yae Miko",
+        "four_stars_character": ["Yao Yao", "Xinyan", "Thoma"],
+        "banner_start": "February 20, 2024",
+        "banner_end": "March 12, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Everbloom%20Violet%204.png"
+    },
+    {
+        "id_banner": 3,
+        "five_stars_character": "Mualani",
+        "four_stars_character": ["Xinyan", "Bennett", "Kachina"],
+        "banner_start": "August 28, 2024",
+        "banner_end": "September 17, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Sharktacular%20Surfari%201.png"
+    },
+    {
+        "id_banner": 4,
+        "five_stars_character": "Kaedehara Kazuha",
+        "four_stars_character": ["Xingqiu", "Yanfei", "Barbara"],
+        "banner_start": "August 28, 2024",
+        "banner_end": "September 17, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Leaves%20in%20the%20Wind%204.png"
+    },
+    {
+        "id_banner": 5,
+        "five_stars_character": "Kinich",
+        "four_stars_character": ["Thoma", "Kujou Sara", "Chevreuse"],
+        "banner_start": "September 17, 2024",
+        "banner_end": "October 8, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Seeker%20of%20Flame-Wrought%20Secrets%202.png"
+    },
+    {
+        "id_banner": 6,
+        "five_stars_character": "Raiden Shogun",
+        "four_stars_character": ["Thoma", "Kujou Sara", "Chevreuse"],
+        "banner_start": "September 17, 2024",
+        "banner_end": "October 8, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Reign%20of%20Serenity%205.png"
+    },
+    {
+        "id_banner": 7,
+        "five_stars_character": "Xilonen",
+        "four_stars_character": ["Beidou", "Yanfei", "Faruzan"],
+        "banner_start": "October 9, 2024",
+        "banner_end": "October 29, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Forgefire's%20Blessing%202.png"
+    },
+    {
+        "id_banner": 8,
+        "five_stars_character": "Nahida",
+        "four_stars_character": ["Xingqiu", "Kuki Shinobu", "Sethos"],
+        "banner_start": "October 9, 2024",
+        "banner_end": "October 29, 2024",
+        "banner_url": "https://paimon.moe/images/banners/The%20Moongrass'%20Enlightenment%204.png"
+    },
+    {
+        "id_banner": 9,
+        "five_stars_character": "Hu Tao",
+        "four_stars_character": ["Xingqiu", "Diona", "Fischl"],
+        "banner_start": "October 29, 2024",
+        "banner_end": "November 19, 2024",
+        "banner_url": "https://paimon.moe/images/banners/Moment%20of%20Bloom%204.png"
+    },
+    {
+        "id_banner": 10,
+        "five_stars_character": "Escoffier",
+        "four_stars_character": ["Layla", "Ororon", "Ifa"],
+        "banner_start": "May 27, 2025",
+        "banner_end": "June 17, 2025",
+        "banner_url": "https://paimon.moe/images/banners/La%20Chanson%20Cerise%201.png"
+    },
+    {
+        "id_banner": 11,
+        "five_stars_character": "Navia",
+        "four_stars_character": ["Kirara", "Kaveh", "Ningguang"],
+        "banner_start": "May 27, 2025",
+        "banner_end": "June 17, 2025",
+        "banner_url": "https://paimon.moe/images/banners/In%20the%20Name%20of%20the%20Rosula%202.png"
+    },
+    {
+        "id_banner": 12,
+        "five_stars_character": "Skirk",
+        "four_stars_character": ["Sayu", "Iansan", "Lisa"],
+        "banner_start": "June 18, 2025",
+        "banner_end": "July 8, 2025",
+        "banner_url": "https://upload-os-bbs.hoyolab.com/upload/2025/06/08/443335400/6ef8731c9160a4ba14192bf453b72270_1139522947147962674.webp?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70"
+    },
+    {
+        "id_banner": 13,
+        "five_stars_character": "Shenhe",
+        "four_stars_character": ["Mika", "Sucrose", "Diona"],
+        "banner_start": "June 18, 2025",
+        "banner_end": "July 8, 2025",
+        "banner_url": "https://paimon.moe/images/banners/The%20Transcendent%20One%20Returns%202.png"
+    },
+    {
+        "id_banner": 14,
+        "five_stars_character": "Mavuika",
+        "four_stars_character": ["Kachina", "Diona", "Bennett"],
+        "banner_start": "July 8, 2025",
+        "banner_end": "July 29, 2025",
+        "banner_url": "https://paimon.moe/images/banners/Ancient%20Flame%20Ablaze%201.png"
+    },
+    {
+        "id_banner": 15,
+        "five_stars_character": "Emilie",
+        "four_stars_character": ["Xiangling", "Yanfei", "Razor"],
+        "banner_start": "July 8, 2025",
+        "banner_end": "July 29, 2025",
+        "banner_url": "https://paimon.moe/images/banners/Ambrosial%20Essence%201.png"
+    }
+]
