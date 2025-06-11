@@ -6,6 +6,7 @@ import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { WishSimulator } from './components/WishSimulator';
+import { Test } from './components/Test';
 import { useState } from 'react';
 
 function ProfileScreen(){
@@ -54,7 +55,7 @@ export default function App() {
             <Tab.Navigator>
                 <Tab.Screen name='Main' component={HomeStackScreen} options={{headerShown:false}}/>
                 <Tab.Screen name='Wish' component={WishSimulator} options={{headerShown:false}}/>
-                <Tab.Screen name='Profile' component={ProfileScreen} options={{headerShown:false}}/>
+                {/* <Tab.Screen name='Profile' component={Test} options={{headerShown:false}}/>*/}
                 
             </Tab.Navigator>
         </NavigationContainer>
