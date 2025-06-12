@@ -17,8 +17,9 @@ const globalFont = StyleSheet.create({
 const that_hoang = [87,44,4,56,14,94,71,74];
 var history = {
     "pity" : 0,
-    "pulled" : [3,3,3,3,3,3,3,3,3],
-    "isGuaranteed": false
+    "pulled" : [3],
+    "isGuaranteed_fiveStars": false,
+    "isGuaranteed_fourStars": false,
 };
 
 interface HistoryPity {
@@ -78,6 +79,43 @@ function getRandomNumber(min : number , max : number){
     return Math.floor(Math.random() *(max - min + 1)) + min;
 }
 
+const getListId4StarsRateUp = (idBanner : number) =>{
+    var list : string[]  = banner.find( (item) => item.id_banner === idBanner)?.four_stars_character!; 
+    var listID : number[]  = []
+    for(let i = 0; i< 3 ;i++){
+        listID.push( data.find((item)=> item.name === list[i])?.id!)
+    }
+    return listID;
+}
+
+const getWinResult4starsCharacterId = (isGuaranteed_fourStars : boolean,listIdChar4StarsBannerRateUp : number[])=>{
+    if(isGuaranteed_fourStars){
+        history.isGuaranteed_fourStars = false;
+        return listIdChar4StarsBannerRateUp[getRandomNumber(0,2)];
+    }
+    else{
+        if(1 === getRandomNumber(1,2)){
+            history.isGuaranteed_fourStars = false;
+            return listIdChar4StarsBannerRateUp[getRandomNumber(0,2)];;
+        }
+        else{
+            history.isGuaranteed_fourStars = true;
+            var charId4StarsRandom : number;
+            while(true){
+                var randId = character_4stars[getRandomNumber(0,character_4stars.length-1)].id
+                if(!listIdChar4StarsBannerRateUp.includes(randId)){
+                    charId4StarsRandom = randId;
+                    break;
+                }
+            }
+            return charId4StarsRandom;
+        }
+    }
+}
+
+
+
+
 function getRandom3starWeaponAsset(){
     return map_3star_weapons.get(getRandomNumber(1,5));
 }
@@ -102,29 +140,25 @@ const randomFive = (array : number[], addChance : number)=>{
     return [...resultSet];
 }
 
-const getWinResultCharacterId = (isGuaranteed : boolean,idCharBannerRateUp : number) =>{
-    if(isGuaranteed){
-        history.isGuaranteed = false;
-        return idCharBannerRateUp;
+const getWinResult5starsCharacterId = (isGuaranteed_fiveStars : boolean,idChar5StarsBannerRateUp : number) =>{
+    if(isGuaranteed_fiveStars){
+        history.isGuaranteed_fiveStars = false;
+        return idChar5StarsBannerRateUp;
     }
     else{
         if(1 === getRandomNumber(1,2)){
-            history.isGuaranteed = false;
-            return idCharBannerRateUp;
+            history.isGuaranteed_fiveStars = false;
+            return idChar5StarsBannerRateUp;
         }
         else{
-            history.isGuaranteed = true;
+            history.isGuaranteed_fiveStars = true;
             return that_hoang[getRandomNumber(0,7)];
         }
     }
 }
 
 
-
-
-
-function gacha(idCharBannerRateUp : number, pull : number){
-
+function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : number ){
 
     var character_id : number[] = [];
     for(let i = 0;i <pull; i++){
@@ -141,24 +175,20 @@ function gacha(idCharBannerRateUp : number, pull : number){
             five_chance = randomFive(four_chance,0); 
         }
         
-
         var randNumb = getRandomNumber(1,1000);
         console.log(randNumb);
         if(pity_5 < 90){
             if(pity_4 < 10){
                 if(five_chance.includes(randNumb)){
-                    var idCharGot = getWinResultCharacterId(history.isGuaranteed,idCharBannerRateUp);
+                    var idCharGot = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
                     character_id.push(idCharGot);
                     five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
                     history.pulled.push(5);
                 }
                 else if(four_chance.includes(randNumb)){
-                    if (character_4stars && character_4stars.length > 0) {
-                        const randomChar = character_4stars[Math.floor(Math.random() * character_4stars.length)];
-                        character_id.push(randomChar && randomChar.id ? randomChar.id : 99);
-                    } else {
-                        character_id.push(99);
-                    }
+                    const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
+                    console.log("Pulled 4 sao : " + randomChar)
+                    character_id.push(randomChar && randomChar ? randomChar : 99);
                     history.pulled.push(4);
                 }
                 else{
@@ -167,17 +197,14 @@ function gacha(idCharBannerRateUp : number, pull : number){
                 }
             }
             else{
-                if (character_4stars && character_4stars.length > 0) {
-                    const randomChar = character_4stars[Math.floor(Math.random() * character_4stars.length)];
-                    character_id.push(randomChar && randomChar.id ? randomChar.id : 99);
-                } else {
-                    character_id.push(99);
-                }
+                const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
+                console.log("Pulled 4 sao : " + randomChar)
+                character_id.push(randomChar && randomChar ? randomChar : 99);
                 history.pulled.push(4);
             }
         }
         else{
-            var idCharGot : number = getWinResultCharacterId(history.isGuaranteed,idCharBannerRateUp);
+            var idCharGot : number = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
             character_id.push(idCharGot);
             five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
             history.pulled.push(5);
@@ -260,24 +287,23 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
 
 
 const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
-const color10 = "#bdf070";
-const color30 = "#60d74c"; 
-const color50 = "#eeda89";
-const color60 = "#fab66e";
-const color70 = "#e2c152";
-const color80 = "#e85c5a";
-const color90 = "#de3c41"; 
-var resultColor = "";
+    const color10 = "#bdf070";
+    const color30 = "#60d74c"; 
+    const color50 = "#eeda89";
+    const color60 = "#fab66e";
+    const color70 = "#e2c152";
+    const color80 = "#e85c5a";
+    const color90 = "#de3c41"; 
+    var resultColor = "";
 
-// Cách 1: Đảo ngược thứ tự điều kiện (từ nhỏ đến lớn)
-resultColor = data_history.pity <= 10 ? color10 :
-              data_history.pity <= 30 ? color30 :
-              data_history.pity <= 50 ? color50 :
-              data_history.pity <= 60 ? color60 :
-              data_history.pity <= 70 ? color70 :
-              data_history.pity <= 80 ? color80 :
-              data_history.pity <= 90 ? color90 :
-              "#default"; // hoặc một màu mặc định
+    resultColor =   data_history.pity <= 10 ? color10 :
+                    data_history.pity <= 30 ? color30 :
+                    data_history.pity <= 50 ? color50 :
+                    data_history.pity <= 60 ? color60 :
+                    data_history.pity <= 70 ? color70 :
+                    data_history.pity <= 80 ? color80 :
+                    data_history.pity <= 90 ? color90 :
+                    "#default"; 
     return (
          <View style={{borderRadius:30,backgroundColor:"rgba(187, 171, 141,0.8)", marginHorizontal:3, marginTop:3,
                         display:"flex", flexDirection:"row",padding:5,borderColor:"#726d73",borderWidth:1}}>
@@ -502,7 +528,7 @@ export function WishSimulator(){
                         <TouchableOpacity
                         style={styles.store_button}
                         onPress={()=>{
-                            setInterwinedFate(intertwinedFate+10);
+                            setInterwinedFate(intertwinedFate+1000);
                         }}>
                             <ImageBackground
                                 source={pull_button_bg}
@@ -533,7 +559,7 @@ export function WishSimulator(){
                             onPress={()=>{ 
                                 if(intertwinedFate -1 >= 0){
                                     setShowVideo(true)
-                                    setListGacha(gacha(rateUpCharId,1));
+                                    setListGacha(gacha(rateUpCharId,1,selectedBanner));
                                     setInterwinedFate(intertwinedFate-1);
                                 }
                             }}>
@@ -558,7 +584,7 @@ export function WishSimulator(){
                             onPress={()=>{
                                 if(intertwinedFate -10 >= 0){
                                     setShowVideo(true)
-                                    setListGacha(gacha(rateUpCharId,10));
+                                    setListGacha(gacha(rateUpCharId,10,selectedBanner));
                                     setInterwinedFate(intertwinedFate-10);
                                 }
                             }}>

@@ -1343,18 +1343,46 @@
         "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/04/30/ce693d1e36aef5936b2d2db006605fc4_9036718103340803450.png?x-oss-process=image%2Fformat%2Cwebp",
         "gacha_card_url": "https://genshin.ch/templates/assets/img/avatar_icons/a113_gacha_card.webp"
     },
+        {
+        "id": 97,
+        "name": "Dahlia",
+        "element": "Hydro",
+        "rarity": 4,
+        "weapon": "Sword",
+        "region": "Mondstadt",
+        "role": "Support",
+        "birthday": "February 14",
+        "about": "Dahlia is a Hydro character in Genshin Impact, a tribal dancer from Mondstadt. Graceful and free-spirited, she moves like flowing water. As a Sub-DPS, Ifa deals Hydro damage and supports Vaporize reactions.",
+        "url_image": "https://act-upload.hoyoverse.com/event-ugc-hoyowiki/2025/05/13/151578876/4d0005f59813b5593d32571c05f54fcf_7191654248602392598.png?x-oss-process=image%2Fformat%2Cwebp",
+        "url_icon": "https://act-upload.hoyoverse.com/event-ugc-hoyowiki/2025/05/13/151578876/b84bccea7e57c6a9a0383a083e21d8e7_6103203638791526024.png?x-oss-process=image%2Fformat%2Cwebp",
+        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/dahlia_115_gacha_card_w145.webp"
+    },
+    {
+        "id": 98,
+        "name": "Skirk",
+        "element": "Cryo",
+        "rarity": 5,
+        "weapon": "Sword",
+        "region": "Fontaine",
+        "role": "Support",
+        "birthday": "February 14",
+        "about": "Sin infests the firmament, calamity unfurls across the universe. You are free, and none now may proscribe you — yet your destiny remains bound to that of this world. Indeed, you shall send your disciple here in the near future. Yet, his 'Foul Legacy' was not originally his. Rather, it was taught to him by that solitary girl who dwelt in the darkest corners of the universe.",
+        "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/3/35/Skirk_Card.png/revision/latest?cb=20250513040246",
+        "url_icon": "https://upload-static.hoyoverse.com/hoyolab-wiki/2023/11/09/151578876/1e2cb29d039dddf84b706c655ed6367a_4235020342409263843.png?x-oss-process=image%2Fformat%2Cwebp",
+        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/skirknew_114_gacha_card_w145.webp"
+    },
     {
         "id": 99,
-        "name": "jack",
+        "name": "TestingCard",
         "element": "Geo",
         "rarity": 3,
         "weapon": "jack",
-        "region": "jack",
+        "region": "Liyue",
         "role": "jack",
         "birthday": "jack",
-        "about": "jack",
-        "url_image": "https://wiki.hoyolab.com/_ipx/f_webp/https://bbs.hoyolab.com/hoyowiki/picture/character/%25E9%2592%259F%25E7%25A6%25BB/avatar_header.png",
-        "url_icon": "https://cdn.wanderer.moe/genshin-impact/character-icons/ui-avataricon-zhongli.png",
+        "about": "test item represent 3 star weapon, test only",
+        "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/0/0d/Traveler_Male_Card.png/revision/latest?cb=20220725205310",
+        "url_icon": "https://cdn.wanderer.moe/genshin-impact/character-icons/ui-avataricon-playerboy.png",
         "gacha_card_url": "https://genshin.ch/templates/assets/img/gacha_weapons/w11302g.webp"
     } 
 ]

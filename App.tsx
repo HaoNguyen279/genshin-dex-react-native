@@ -6,7 +6,6 @@ import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { WishSimulator } from './components/WishSimulator';
-import { Test } from './components/Test';
 import { useState } from 'react';
 
 function ProfileScreen(){

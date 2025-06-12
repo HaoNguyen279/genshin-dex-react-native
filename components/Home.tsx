@@ -20,6 +20,7 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                     <FlatList 
                         data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
                         numColumns={3}
+                        contentContainerStyle={{paddingBottom:120}}
                         renderItem={({item}) =>{
                             return(
                                 <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>

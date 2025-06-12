@@ -90,10 +90,10 @@
     {
         "id_banner": 12,
         "five_stars_character": "Skirk",
-        "four_stars_character": ["Sayu", "Iansan", "Lisa"],
+        "four_stars_character": ["Dahlia", "Xingqiu", "Chongyun"],
         "banner_start": "June 18, 2025",
         "banner_end": "July 8, 2025",
-        "banner_url": "https://upload-os-bbs.hoyolab.com/upload/2025/06/08/443335400/6ef8731c9160a4ba14192bf453b72270_1139522947147962674.webp?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70"
+        "banner_url": "https://i.ibb.co/3Y550G2X/skirk-banner.png"
     },
     {
         "id_banner": 13,
