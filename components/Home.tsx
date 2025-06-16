@@ -1,12 +1,15 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
-import { View, FlatList, StyleSheet, Text, TouchableOpacity, Image, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
 import data from '../assets/data.json'
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-
-
+import {Image} from "expo-image"
+import CustomSplashScreen from "./CustomSplashScreen";
+ 
 const Tab = createBottomTabNavigator();
+
+const preload_icon_list = data.map( item => item.url_icon)
 
 type RenderListProps ={
     navigation : NavigationProp<RootStackParamList>;
@@ -14,7 +17,7 @@ type RenderListProps ={
     search_text : string
 }
 const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
-    console.log("re-render-list")
+    console.log("Re-render-list")
     return(
             <View style={styles.list}>
                     <FlatList 
@@ -25,10 +28,13 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                             return(
                                 <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
                                         <View style={[getBackgroundFrame(item.rarity).background,styles.box]}>
+                                            
                                             <Image
                                                 source={{uri:item.url_icon}}
                                                 style={styles.icon}
+                                                priority={"high"}
                                             />
+
                                             <Text style={[styles.text]}>{item.name}</Text>
                                         </View>
                                 </TouchableOpacity>
@@ -50,49 +56,55 @@ const getBackgroundFrame = (rarity :number) =>{
 }
 
 export function Home(){
-    console.log('re-render');
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [tempSearchText, setTempSearchText] = useState("");
 
     const [searchText,setSearchText]  = useState("");
-    
+    const [loading,setLoading] = useState(true);
+
+    useEffect(() =>{
+        const preload_url = async () =>{
+            await Promise.all(preload_icon_list.map( url_icon => Image.prefetch(url_icon)))
+            .then(() => console.log("Successfully preloaded url icon!"))
+            .catch(err => console.warn("Failed to preload url icon :" + err))
+            setLoading(false);
+            console.log("set false");
+        }
+        preload_url();
+        
+    })
+    if(loading) return <CustomSplashScreen/>
+
     return(
         <SafeAreaView>
             <View>
-                    <View style={styles.search_bar}>
-                        <TextInput
-                            style= {styles.search_input}
-                            placeholder='Search'
-                            onChangeText={setTempSearchText}
-                            keyboardType='default'
-                        /> 
-                        <Pressable
-                            style={({pressed}) =>({
-                                    width:40,
-                                    height:40,
-                                    marginLeft:10,
-                                    backgroundColor : pressed ? "#e3e3e3" : "transparent",
-                                    borderRadius:20
-                            })
-                        }
-                            onPress={()=> setSearchText(tempSearchText)} 
-                        >
-                            <Image
-                                style={{width:30,height:30,margin:"auto"}}
-                                source={require("../assets/png/search_icon.png")}
-                                resizeMode="contain"
-                            />
-                        </Pressable>
-                    </View>
+                <View style={styles.search_bar}>
+                    <TextInput
+                        style= {styles.search_input}
+                        placeholder='Search'
+                        onChangeText={setTempSearchText}
+                        keyboardType='default'
+                    /> 
+                    <Pressable
+                        style={({pressed}) =>({
+                                width:40,
+                                height:40,
+                                marginLeft:10,
+                                backgroundColor : pressed ? "#e3e3e3" : "transparent",
+                                borderRadius:20})}
+                        onPress={()=> setSearchText(tempSearchText)} 
+                    >
+                        <Image
+                            style={{width:30,height:30,margin:"auto"}}
+                            source={require("../assets/png/search_icon.png")}
+                            resizeMode="contain"
+                        />
+                    </Pressable>
+                </View>
                 <RenderList
                     navigation={navigation}
-                    search_text={searchText}
-                >
+                    search_text={searchText}>
                 </RenderList>
-                {/* <Tab.Navigator>
-                    <Tab.Screen name="Home" component={Home} />
-                    
-                </Tab.Navigator> */}
             </View>
         </SafeAreaView>
     )

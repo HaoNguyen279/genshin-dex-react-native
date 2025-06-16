@@ -1,4 +1,4 @@
-import { StyleSheet, View, ImageBackground, Image, TouchableOpacity ,Text, FlatList, Modal, Button} from "react-native"
+import { StyleSheet, View, ImageBackground, TouchableOpacity ,Text, FlatList, Modal, Animated} from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { useEffect, useRef, useState } from "react";
@@ -7,6 +7,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
 import { Shadow } from "react-native-shadow-2";
 import banner from "../assets/banner.json"
+import CustomSplashScreen from "./CustomSplashScreen";
+import { Image } from "expo-image";
+import Svg, { Path  } from 'react-native-svg';
+
 
 
 const globalFont = StyleSheet.create({
@@ -14,6 +18,11 @@ const globalFont = StyleSheet.create({
         fontFamily:"genshin_font"
     }
 })
+
+const preload_gacha_cards = data.map( char => char.gacha_card_url);
+const preload_gacha_banners = banner.map( banner => banner.banner_url)
+
+console.log(preload_gacha_cards)
 const that_hoang = [87,44,4,56,14,94,71,74];
 var history = {
     "pity" : 0,
@@ -27,14 +36,9 @@ interface HistoryPity {
     pity:number
 }
 var five_stars_history_pity : HistoryPity[] = [
-    {idChar:1 , pity:90},
-    {idChar:1 , pity:90},
-    {idChar:1 , pity:90},
-    {idChar:1 , pity:90},
-    {idChar:1 , pity:90},
+    {idChar:1 , pity:0},
+
 ]
-
-
 
 interface Character {
     id: number;
@@ -51,7 +55,6 @@ interface Character {
     gacha_card_url: string;
 }
 
-const videoSource = require("../assets/wish_animation/wish_ani_5stars.mp4");
 const backgroundSource = require("../assets/wish_animation/wish_background.jpg");
 const gachaBackground = require("../assets/wish_animation/gacha_background.webp");
 const resultGachaCard = require("../assets/wish_animation/resultcard-bg.png");
@@ -59,6 +62,8 @@ const closeButton = require("../assets/wish_animation/close_button.png");
 const pull_button_bg = require("../assets/wish_animation/pull_button_bg.webp");
 const intertwined_fate = require("../assets/wish_animation/intertwined_fate.webp");
 const history_bg = require("../assets/wish_animation/history_bg.png");
+const star_rarity = require("../assets/wish_animation/star.png");
+const weapon_indicator = require("../assets/wish_animation/weapon_indicator.png");
 
 const catalyst1_3stars_weapon = require("../assets/gacha_items/catalyst1_3stars_weapon.webp");
 const claymore1_3stars_weapon = require("../assets/gacha_items/claymore1_3stars_weapon.webp");
@@ -73,7 +78,36 @@ map_3star_weapons.set(3,sword1_3stars_weapon);
 map_3star_weapons.set(4,bow1_3stars_weapon);
 map_3star_weapons.set(5,polearm1_3stars_weapon);
 
+const getElementIcon = (element : string | undefined) =>{
+    const data_background = {
+        "cryo" :  require("../assets/element_icons/Element_Cryo.webp"),
+        "pyro" :  require("../assets/element_icons/Element_Pyro.webp"),
+        "hydro" :  require("../assets/element_icons/Element_Hydro.webp"),
+        "dendro" :  require("../assets/element_icons/Element_Dendro.webp"),
+        "electro" :  require("../assets/element_icons/Element_Electro.webp"),
+        "anemo" :  require("../assets/element_icons/Element_Anemo.webp"),
+        "geo" : require("../assets/element_icons/Element_Geo.webp"),
+    }
+    switch (element){
+                case "Cryo":
+            return data_background["cryo"]
+                case "Pyro":
+            return data_background["pyro"]
+                case "Hydro":
+            return data_background["hydro"]
+                case "Dendro":
+            return data_background["dendro"]
+                case "Electro":
+            return data_background["electro"]
+                case "Anemo":
+            return data_background["anemo"]
+                case "Geo":
+            return data_background["geo"]
+    }
+}
+
 const character_4stars = data.filter(item => item.rarity == 4);
+
 
 function getRandomNumber(min : number , max : number){
     return Math.floor(Math.random() *(max - min + 1)) + min;
@@ -130,7 +164,7 @@ const randomFour = () : number[]=>{
 }
 const randomFive = (array : number[], addChance : number)=>{
     var resultSet = new Set();
-    while(resultSet.size< 12 + addChance){
+    while(resultSet.size< 7 + addChance){
         var rand = getRandomNumber(1,1000);
         if(!array.includes(rand))
             resultSet.add(rand);
@@ -214,7 +248,7 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
     for(let i = 0; i <10;i++){
         if(character_id.at(i) === undefined){
             character_id.at(i) == 99
-            console.log("nigggggggggggggggggggggggggggggggggggggggggggggggg46345362452462546========???????????????????????????")
+            console.log("????????????????????????????????????????????????????????")
         }
             
     }
@@ -249,38 +283,69 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
   
   if (!shadowColor) {
     return (
+       
       <View style={styles.resultGachaCard}>
-        <ImageBackground source={resultGachaCard} style={styles.gachaCard}>
-          <Image 
-            source={getRandom3starWeaponAsset()}
-            style={styles.gachaCharacter}
-            resizeMode="cover"
-          />
-        </ImageBackground>
+        
+        <View style={{ alignItems:"center"}}>
+            <View style={{position:"absolute", zIndex:2, flexDirection:"row",top:"80%"}}>
+                <Image source={star_rarity} style={{width:10,height:10}}/>
+                <Image source={star_rarity} style={{width:10,height:10}}/>
+                <Image source={star_rarity} style={{width:10,height:10}}/>
+            </View>
+            <View style={{position:"absolute", zIndex:2, flexDirection:"row",top:"60%"}}>
+                <Image
+                    source={weapon_indicator}
+                    style={{width:40,height:40}}
+                />
+            </View>
+            <ImageBackground source={resultGachaCard} style={styles.gachaCard}>
+              <Image 
+                source={getRandom3starWeaponAsset()}
+                style={styles.gachaCharacter}
+                resizeMode="cover"
+                priority={"high"}
+              />
+            </ImageBackground>
+        </View  >
       </View>
     );
   }
   
   return (
-    <Shadow
-      style={{borderRadius:30}}
-      distance={20}
-      startColor={shadowColor}
-      endColor={'#00000000'}
-      paintInside={true}
-      sides={{start: true, top: true, end: true, bottom: true}}
-      corners={{ topStart: true, topEnd: true, bottomStart: true, bottomEnd: true}}
-    >
+
       <View style={styles.resultGachaCard}>
-        <ImageBackground source={resultGachaCard} style={styles.gachaCard}>
-          <Image 
-            source={{ uri: item.gacha_card_url }}
-            style={styles.gachaCharacter}
-            resizeMode="cover"
-          />
-        </ImageBackground>
+        <ShadowEffect isFiveStars={item.rarity === 5}/>
+            <View style={{ alignItems:"center"}}>
+                <View style={{position:"absolute", zIndex:2, flexDirection:"row",top:"80%"}}>
+                    <Image source={star_rarity} style={{width:10,height:10}}/>
+                    <Image source={star_rarity} style={{width:10,height:10}}/>
+                    <Image source={star_rarity} style={{width:10,height:10}}/>
+                { item.rarity == 4 && (
+                    <Image source={star_rarity} style={{width:10,height:10}}/>
+                )}
+                {item.rarity == 5 && (
+                    <View style={{flexDirection:"row"}}>
+                        <Image source={star_rarity} style={{width:10,height:10}}/><Image source={star_rarity} style={{width:10,height:10}}/>
+                    </View>
+                )}
+            </View>
+            <View style={{position:"absolute", zIndex:2, flexDirection:"row",top:"60%"}}>
+                <Image
+                    source={getElementIcon(item.element)}
+                    style={{width:35,height:35}}
+                />
+            </View>
+            <ImageBackground source={resultGachaCard} style={styles.gachaCard}>
+              <Image 
+                source={{ uri: item.gacha_card_url }}
+                style={styles.gachaCharacter}
+                contentFit="cover"
+                priority={"high"}
+              />
+            </ImageBackground>
+            </View>
       </View>
-    </Shadow>
+
   );
 };
 
@@ -332,6 +397,7 @@ export function WishSimulator(){
     const [bannerUrl,setBannerUrl] = useState("");
     const [rateUpCharId,setRateUpCharId] = useState<number>(1);
 
+    const [loading, setLoading] = useState(true);
 
     const handleStatus = (status : AVPlaybackStatus)=>{
         if(!status.isLoaded) return;
@@ -340,7 +406,7 @@ export function WishSimulator(){
             setShowGachaList(true);
         }
     }
-        useEffect(() => {
+    useEffect(() => {
         const foundBanner = banner.find((item) => item.id_banner === selectedBanner);
         const charId : number = data.find((item) => item.name === foundBanner?.five_stars_character)?.id!
         if (foundBanner) {
@@ -350,16 +416,33 @@ export function WishSimulator(){
             setBannerUrl("");
         }
     }, [selectedBanner]);
+
+
     useEffect(() => {
         const hide = async() =>{
             if (loaded || error) {
-            SplashScreen.hideAsync();
+                SplashScreen.hideAsync();
             }
         };
         hide();
         console.log("__Off__")
     }, [loaded, error]);
 
+    useEffect(() => {
+	    const preloadImages = async () => {
+             await Promise.all(preload_gacha_cards.map( url => Image.prefetch(url)))
+             .then(() => console.log("preload done gacha"))
+             .catch(err => console.warn("Preload failed gacha" + err) );
+             await Promise.all(preload_gacha_banners.map(item => Image.prefetch(item)))
+              .then(() => console.log("preload done banner"))
+             .catch(err => console.warn("Preload failed banner" + err) );
+             setLoading(false);
+        };
+        preloadImages();
+        setTimeout(()=> {setLoading(false)}, 9000);
+    }, []);
+
+  if (loading) return <CustomSplashScreen />;
     if (!loaded && !error) {
         return null;
     }
@@ -416,7 +499,6 @@ export function WishSimulator(){
                             
                             />
                         </View>
-                        
                     </View>
                 </Modal>
                 
@@ -444,18 +526,13 @@ export function WishSimulator(){
                             <FlatList
                                     style={{width:450,height:200}}
                                     numColumns={4}
-                                    contentContainerStyle={{alignItems:"center"}}
+                                    contentContainerStyle={{alignItems:"center"}} 
                                     data={five_stars_history_pity}
                                     renderItem={({item}) =>{
-                                        return(
-                                            <PityCard
-                                                data_history={item}
-                                            />
-                                        )
+                                        return(   <PityCard data_history={item}/>   )
                                     }}
                                 />
                         </View>
-                        
                     </View>
                 </Modal>               
                 
@@ -473,7 +550,9 @@ export function WishSimulator(){
                     <TouchableOpacity
                         style={styles.skip_button}
                         onPress={()=>{
-                            setShowVideo(false) 
+                            SplashScreen.preventAutoHideAsync();
+                            setTimeout( () => {SplashScreen.hideAsync()}, 3000);
+                            setShowVideo(false);
                             setShowGachaList(true);
                         }}
                         >
@@ -493,7 +572,7 @@ export function WishSimulator(){
                             horizontal={true}
                             style={ styles.flatList }
                             keyExtractor={(item, index) => index.toString()}
-                            renderItem={({item}) => <GachaCard item={item}/> }
+                            renderItem={({item,index}) => <AnimatedItem index={index}><GachaCard item={item}/></AnimatedItem> }
                             contentContainerStyle={{
                                 flexGrow: 1,          
                                 justifyContent: 'center',  
@@ -528,7 +607,7 @@ export function WishSimulator(){
                         <TouchableOpacity
                         style={styles.store_button}
                         onPress={()=>{
-                            setInterwinedFate(intertwinedFate+1000);
+                            setInterwinedFate(intertwinedFate+97);
                         }}>
                             <ImageBackground
                                 source={pull_button_bg}
@@ -536,7 +615,7 @@ export function WishSimulator(){
                                 style={{position:'absolute',width:140,height:35,}}
                             >
                             <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Cửa hàng</Text>
+                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Shop</Text>
                             </View>
                             </ImageBackground>
                         </TouchableOpacity>
@@ -551,7 +630,7 @@ export function WishSimulator(){
                                 style={{position:'absolute',width:140,height:35,}}
                             >
                             <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Lịch sử</Text></View>
+                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>History</Text></View>
                             </ImageBackground>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -648,8 +727,151 @@ export function WishSimulator(){
     </SafeAreaProvider>
     )
 }
+interface ShadowEffectProps{
+    isFiveStars : boolean;
+}
+
+// Component Effect này gen bằng GPT + Claude, khó vcl :)
+const ShadowEffect : React.FC<ShadowEffectProps> = React.memo(({isFiveStars}) => {
+    var color : any;
+    if(isFiveStars) color = "rgb(249, 171, 6) ";
+    else color = "rgb(198, 85, 219)";
+    const width = 68;
+    const height = 230;
+    const centerX = width / 2;
+
+    const pathData = `
+    M ${centerX} 0
+    C ${centerX + width/2} ${height * 0.2} ${centerX + width/2} ${height * 0.8} ${centerX} ${height}
+    C ${centerX - width/2} ${height * 0.8} ${centerX - width/2} ${height * 0.2} ${centerX} 0
+    Z
+    `;
+
+  return (
+    <View style={styles.shadow_effect}>
+      <Svg
+        width={width + 120}
+        height={height + 300}
+        viewBox={`-60 -150 ${width + 120} ${height + 300}`}
+      >
+        {/* Blur dọc trên */}
+        {Array.from({ length: 10 }, (_, i) => {
+        const dy = -2 * (i + 1);
+        const alpha = 0.12 * Math.exp(-i / 18);
+        var fillColor; 
+        if(isFiveStars) fillColor = "rgba(249, 171, 6, "  + alpha.toFixed(3) + ")";
+        else fillColor = "rgba(198, 85, 219, " + alpha.toFixed(3) + ")";
+        return (
+            <Path
+                key={`blur-top-${i}`}
+                d={pathData}
+                fill={fillColor}
+                transform={`translate(0, ${dy})`}
+            />
+          );
+        })}
+
+        {/* Blur dọc dưới */}
+        {Array.from({ length: 10 }, (_, i) => {
+        const dy = 2 * (i + 1);
+        const alpha = 0.12 * Math.exp(-i / 18);
+        var fillColor;
+        if(isFiveStars) fillColor = "rgba(249, 171, 6, "  + alpha.toFixed(3) + ")";
+        else fillColor = "rgba(198, 85, 219, " + alpha.toFixed(3) + ")";
+        return (
+            <Path
+                key={`blur-bottom-${i}`}
+                d={pathData}
+                fill={fillColor}
+                transform={`translate(0, ${dy})`}
+            />
+          );
+        })}
+
+        {/* Blur xung quanh */}
+        {Array.from({ length: 12 }, (_, i) => {
+        const radius = 1.5 * (i + 1); // nhỏ hơn => mịn hơn
+        const alpha = 0.09 * Math.exp(-i / 6);
+        const positions = Array.from({ length: 20 }, (_, j) => {
+            const angle = (j / 20) * 2 * Math.PI;
+            const dx = parseFloat((Math.cos(angle) * radius).toFixed(1));
+            const dy = parseFloat((Math.sin(angle) * radius).toFixed(1));
+            return [dx, dy];
+          });
+        var fillColor : any;
+        if(isFiveStars) fillColor = "rgba(249, 171, 6, "  + alpha.toFixed(3) + ")";
+        else fillColor = "rgba(198, 85, 219, " + alpha.toFixed(3) + ")";
+        return positions.map(([dx, dy], idx) => (
+            <Path
+              key={`blur-around-${i}-${idx}`}
+              d={pathData}
+              fill={fillColor}
+              transform={`translate(${dx}, ${dy})`}
+            />
+          ));
+        })}
+
+        {/* Path chính */}
+        <Path
+          d={pathData}
+          fill={color}
+          stroke={color}
+          strokeWidth={1}
+        />
+      </Svg>
+    </View>
+  );
+});
+type Props = {
+  index: number;
+  children: React.ReactNode;
+};
+// Quả animated này GPT làm nốt, chạy ok vê lờ ;)
+const AnimatedItem: React.FC<Props> = ({ index, children }) => {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(50)).current; // 👈 bắt đầu lệch phải
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateX, {
+        toValue: 0, // 👈 dịch về vị trí gốc
+        duration: 300,
+        delay: index * 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        opacity,
+        transform: [{ translateX }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+};
 
 const styles = StyleSheet.create({
+    shadow_effect: {
+        ...StyleSheet.absoluteFillObject,
+        flex: 1,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 55,  
+        height: 230, 
+        overflow: 'visible',
+        marginTop:35
+    },
     container:{
         position: 'relative',
         marginTop:60,
@@ -718,7 +940,8 @@ const styles = StyleSheet.create({
     },
       resultGachaCard: {
         width: 54, 
-        height: 230,
+        // height: 230,
+        height:300,
         padding: 2,
         alignItems: 'center',
         justifyContent: 'center',
@@ -751,9 +974,9 @@ const styles = StyleSheet.create({
     flatList:{
         transform: [{ rotate: "90deg" }],
         alignSelf:"center",
-        width:600,
+        width:610,
         position:"absolute",
-        marginTop:230,
+        marginTop:200,
         padding:10
     },
     skip_button:{
@@ -785,7 +1008,4 @@ const styles = StyleSheet.create({
         left:"73%",
         zIndex:2
     }
-
-
-
 })
