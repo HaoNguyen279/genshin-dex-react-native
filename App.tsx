@@ -36,13 +36,13 @@ export default function App() {
           	name="Home"
           	component={Home}
           	options={{
-			    headerShown:false
+			        headerShown:false
           	}}
         />
         <Stack.Screen 
            name="Images"
            component={ImagesList}
-           options={{title:'Back'} }
+           options={{title:'Back' , headerShown:false}}
           />
       </Stack.Navigator>
     )
@@ -73,13 +73,13 @@ export default function App() {
 					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
 			<Tab.Screen name='Home' component={HomeStackScreen} 
 				options={{
-					headerShown:false,
+					title:"Character Archive",
 					tabBarLabelStyle:{fontSize:12},
 					tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
 					}}/>
 			<Tab.Screen name='Wish' component={WishSimulator}
 				options={{
-					headerShown:false,
+          title:"Wish Simulator",
 					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
 			{/* <Tab.Screen name='prfile' component={ProfileScreen}
 				options={{

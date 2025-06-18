@@ -829,7 +829,7 @@ type Props = {
 // Quả animated này GPT làm nốt, chạy ok vê lờ ;)
 const AnimatedItem: React.FC<Props> = ({ index, children }) => {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(50)).current; // 👈 bắt đầu lệch phải
+  const translateX = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -840,7 +840,7 @@ const AnimatedItem: React.FC<Props> = ({ index, children }) => {
         useNativeDriver: true,
       }),
       Animated.timing(translateX, {
-        toValue: 0, // 👈 dịch về vị trí gốc
+        toValue: 0,
         duration: 300,
         delay: index * 100,
         useNativeDriver: true,
@@ -874,7 +874,6 @@ const styles = StyleSheet.create({
     },
     container:{
         position: 'relative',
-        marginTop:60,
         alignSelf:"center",
     },
     box: {

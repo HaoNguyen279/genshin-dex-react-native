@@ -38,8 +38,14 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                                             <Text style={[styles.text]}>{item.name}</Text>
                                         </View>
                                 </TouchableOpacity>
-                                )
+                            )
                         }}
+                        ListEmptyComponent={() =>(
+                            <View style={{marginTop:200, alignItems:"center"}}>
+                                <Text>The world is wide, try to search something else</Text>
+                                <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
+                            </View>
+                        )}
                         keyExtractor={ (item) => item.id.toString()}
                     >
                     </FlatList>
@@ -76,36 +82,34 @@ export function Home(){
     if(loading) return <CustomSplashScreen/>
 
     return(
-        <SafeAreaView>
-            <View>
-                <View style={styles.search_bar}>
-                    <TextInput
-                        style= {styles.search_input}
-                        placeholder='Search'
-                        onChangeText={setTempSearchText}
-                        keyboardType='default'
-                    /> 
-                    <Pressable
-                        style={({pressed}) =>({
-                                width:40,
-                                height:40,
-                                marginLeft:10,
-                                backgroundColor : pressed ? "#e3e3e3" : "transparent",
-                                borderRadius:20})}
-                        onPress={()=> setSearchText(tempSearchText)} 
-                    >
-                        <Image
-                            style={{width:30,height:30,margin:"auto"}}
-                            source={require("../assets/png/search_icon.png")}
-                            resizeMode="contain"
-                        />
-                    </Pressable>
-                </View>
-                <RenderList
-                    navigation={navigation}
-                    search_text={searchText}>
-                </RenderList>
+        <SafeAreaView  edges={[ 'bottom']}>
+            <View style={styles.search_bar}>
+                <TextInput
+                    style= {styles.search_input}
+                    placeholder='Search'
+                    onChangeText={setTempSearchText}
+                    keyboardType='default'
+                /> 
+                <Pressable
+                    style={({pressed}) =>({
+                            width:40,
+                            height:40,
+                            marginLeft:10,
+                            backgroundColor : pressed ? "#e3e3e3" : "transparent",
+                            borderRadius:20})}
+                    onPress={()=> setSearchText(tempSearchText)} 
+                >
+                    <Image
+                        style={{width:30,height:30,margin:"auto"}}
+                        source={require("../assets/png/search_icon.png")}
+                        resizeMode="contain"
+                    />
+                </Pressable>
             </View>
+            <RenderList
+                navigation={navigation}
+                search_text={searchText}>
+            </RenderList>
         </SafeAreaView>
     )
 
@@ -137,33 +141,32 @@ const styles = StyleSheet.create({
 
     } ,
     search_button:{
-    width:40,
-    height:40,
-    marginLeft:10,
-    backgroundColor :"transparent",
-  },
-  search_bar:{
-    display:"flex",
-    flexDirection:"row",
-    margin:"auto"
-  },
-  search_input:{
-    width: 300,
-    height:40,
-    borderColor:"black",
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-  text:{
-    backgroundColor:"rgb(40, 46, 57)",
-    width:100,
-    textAlign:"center",
-    color:"white",
-    borderBottomLeftRadius:20,
-    borderBottomRightRadius:20
+        width:40,
+        height:40,
+        marginLeft:10,
+        backgroundColor :"transparent",
+    },
+     search_bar:{
+        display:"flex",
+        flexDirection:"row",
+        margin:"auto",
+        marginTop:10
+            
 
+    },
+    search_input:{
+        width: 300,
+        height:40,
+        borderColor:"black",
+        borderWidth: 1,
+        borderRadius: 10,
+    },
+    text:{
+        backgroundColor:"rgb(40, 46, 57)",
+        width:100,
+        textAlign:"center",
+        color:"white",
+        borderBottomLeftRadius:20,
+        borderBottomRightRadius:20
   }
-
-
-
 })

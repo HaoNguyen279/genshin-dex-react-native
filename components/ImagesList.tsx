@@ -1,5 +1,5 @@
-import { View, FlatList, Image, StyleSheet, Text, ViewStyle, ImageBackground, Dimensions, ScrollView, SafeAreaView } from "react-native";
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { View, FlatList, Image, StyleSheet, Text, ViewStyle, ImageBackground, Dimensions, ScrollView, SafeAreaView, Touchable, TouchableOpacity } from "react-native";
+import { RouteProp, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Shadow } from "react-native-shadow-2";
 import { Video, ResizeMode } from "expo-av";
 import { useEffect, useState } from "react";
@@ -292,7 +292,7 @@ export function ImagesList(){
     const [loaded, error] = useFonts({
         'genshin_font': require('../assets/fonts/genshin_font.ttf'),
     });
-
+    const navigation = useNavigation();
     const route : RouteProp<RootStackParamList, "Images"> = useRoute();
     const [loading,setLoading] = useState(true);
     useEffect(() => {
@@ -313,38 +313,40 @@ export function ImagesList(){
         <SafeAreaView style={{flex:1}}>
             <ScrollView style={{flex:1}} >
                 <Video
-                        source={getBackground(route.params?.element)}
-                        isLooping
-                        shouldPlay
-                        resizeMode={ResizeMode.COVER}
-                        style={styles.backgroundVideo}
-                    />
+                    source={getBackground(route.params?.element)}
+                    isLooping
+                    shouldPlay
+                    resizeMode={ResizeMode.COVER}
+                    style={styles.backgroundVideo}
+                />
                 <View>
-
-                        <View style={{display:"flex", alignItems:"center", marginTop:40}}>
-                            <Shadow
-                                distance={10}
-                                startColor="#00000020"
-                                offset={[0, 4]}
-                                corners={{ topStart: true, topEnd: true, bottomStart: true, bottomEnd: true }}
-                                style={{borderRadius:30}}
-                            >
-                                <View style={styles.box}>
-                                    <Image
-                                        source={{uri:route.params?.url_image}}
-                                        style={styles.image}
-                                        resizeMode="contain"
-                                        onLoad={() =>{
-                                            // Load xong
-                                            setLoading(false);
-                                        }}
-                                        onError={() =>{
-                                            setLoading(false);
-                                        }}
-                                    />
-                                </View>
-                            </Shadow>
-                        </View>
+                    <TouchableOpacity onPress={() => navigation.goBack()}> 
+                        <Text style={[globalFont.fonts, {color:"white",fontSize:16,padding:10}]}> ﹤Back</Text>
+                    </TouchableOpacity>
+                    <View style={{display:"flex", alignItems:"center", marginTop:40}}>
+                        <Shadow
+                            distance={10}
+                            startColor="#00000020"
+                            offset={[0, 4]}
+                            corners={{ topStart: true, topEnd: true, bottomStart: true, bottomEnd: true }}
+                            style={{borderRadius:30}}
+                        >
+                            <View style={styles.box}>
+                                <Image
+                                    source={{uri:route.params?.url_image}}
+                                    style={styles.image}
+                                    resizeMode="contain"
+                                    onLoad={() =>{
+                                        // Load xong
+                                        setLoading(false);
+                                    }}
+                                    onError={() =>{
+                                        setLoading(false);
+                                    }}
+                                />
+                            </View>
+                        </Shadow>
+                    </View>
 
                         <View >
                             <View style={styles.text_box}>

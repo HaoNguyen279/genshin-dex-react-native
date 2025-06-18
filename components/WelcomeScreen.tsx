@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet  } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-// import { Image } from 'expo-image';
+import { Image } from 'expo-image';
 
 // Source nay generate boi Claude, lam bieng lam welcome vl =))
 
@@ -44,18 +44,17 @@ const WelcomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Welcome to</Text>
-      
       <Image 
         source={require("../assets/gi_dex_icon.png")}
         style={styles.image}
       />
-      
-      <Text style={styles.authorText}>by Hao Nguyen dev</Text>
-      
+      <Text style={styles.authorText}>by Hao Nguyen</Text>
       <Text style={styles.techText}>using React Native - Expo</Text>
-
-      <Text style={{marginTop:100}}>To use app, please choose tab below</Text>
-      <Text style={{fontSize:30}}>↓↓↓</Text>
+      <Image source={require("../assets/png/furina_sticker.webp")} style={{width:100,height:100,marginTop:20}}/>
+      <View style={{alignItems:"center", position:"absolute", bottom:"5%"}}>
+        <Text style={{marginTop:200}}>To use app, please choose tab below</Text>
+        <Text style={{fontSize:30}}>↓↓↓</Text>
+      </View>
     </View>
   );
 };
@@ -65,7 +64,7 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F7F0',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
