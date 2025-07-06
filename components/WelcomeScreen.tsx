@@ -4,7 +4,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import { Image } from 'expo-image';
 
-// Source nay generate boi Claude, lam bieng lam welcome vl =))
 
 const globalFont = StyleSheet.create({
   fonts: {
@@ -12,8 +11,15 @@ const globalFont = StyleSheet.create({
   }
 });
 
-const WelcomeScreen = () => {
+const test = async () =>{
+  const chim  = await fetch('https://1e7e-2402-800-6319-dfbb-f0ed-3a92-2fd1-ed30.ngrok-free.app/api/product'); 
+  const data = await chim.json();
+  console.log(data);
+      return data;
+}
 
+const WelcomeScreen = () => {
+  const testdata = test();
   const [loaded, error] = useFonts({
 			'genshin_font': require('../assets/fonts/genshin_font.ttf'),
 		});

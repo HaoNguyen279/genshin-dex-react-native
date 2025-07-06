@@ -1,5 +1,5 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
 import data from '../assets/data.json'
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -63,11 +63,13 @@ const getBackgroundFrame = (rarity :number) =>{
 
 export function Home(){
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
-    const [tempSearchText, setTempSearchText] = useState("");
-
     const [searchText,setSearchText]  = useState("");
     const [loading,setLoading] = useState(true);
-
+    const searchInputRef = useRef<TextInput>(null);
+    const clearSearchText = () =>{
+        if(searchInputRef != null)
+            searchInputRef.current?.clear();
+    }
     useEffect(() =>{
         const preload_url = async () =>{
             await Promise.all(preload_icon_list.map( url_icon => Image.prefetch(url_icon)))
@@ -85,9 +87,10 @@ export function Home(){
         <SafeAreaView  edges={[ 'bottom']}>
             <View style={styles.search_bar}>
                 <TextInput
+                    ref={searchInputRef}
                     style= {styles.search_input}
                     placeholder='Search'
-                    onChangeText={setTempSearchText}
+                    onChangeText={setSearchText}
                     keyboardType='default'
                 /> 
                 <Pressable
@@ -97,7 +100,10 @@ export function Home(){
                             marginLeft:10,
                             backgroundColor : pressed ? "#e3e3e3" : "transparent",
                             borderRadius:20})}
-                    onPress={()=> setSearchText(tempSearchText)} 
+                    onPress={()=> {
+                        setSearchText(""); 
+                        clearSearchText();
+                    }} 
                 >
                     <Image
                         style={{width:30,height:30,margin:"auto"}}

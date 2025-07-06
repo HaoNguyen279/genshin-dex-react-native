@@ -1,17 +1,16 @@
-import { StyleSheet, View, ImageBackground, TouchableOpacity ,Text, FlatList, Modal, Animated} from "react-native"
+import { StyleSheet, View, ImageBackground, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions} from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { useEffect, useRef, useState } from "react";
 import data from "../assets/data.json"
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
-import { Shadow } from "react-native-shadow-2";
 import banner from "../assets/banner.json"
 import CustomSplashScreen from "./CustomSplashScreen";
 import { Image } from "expo-image";
 import Svg, { Path  } from 'react-native-svg';
 
-
+const { width, height} = Dimensions.get('window');
 
 const globalFont = StyleSheet.create({
     fonts:{
@@ -245,13 +244,7 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         }
     }
     console.log(character_id);
-    for(let i = 0; i <10;i++){
-        if(character_id.at(i) === undefined){
-            character_id.at(i) == 99
-            console.log("????????????????????????????????????????????????????????")
-        }
-            
-    }
+
     var resultSet : Character[]  = [];
     for( let i = 0 ;i < character_id.length; i++){
         var char = data.filter(item => item.id == character_id[i])[0];
@@ -302,7 +295,7 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
               <Image 
                 source={getRandom3starWeaponAsset()}
                 style={styles.gachaCharacter}
-                resizeMode="cover"
+                contentFit="cover"
                 priority={"high"}
               />
             </ImageBackground>
@@ -879,7 +872,7 @@ const styles = StyleSheet.create({
     box: {
         position:"relative",
         width: 393.75,
-        height: 700,
+        height: height*0.85,
     },
     button:{
         width:50,
