@@ -311,7 +311,6 @@ export function ImagesList(){
 
     return(
         <SafeAreaView style={{flex:1}}>
-            <ScrollView style={{flex:1}} >
                 <Video
                     source={getBackground(route.params?.element)}
                     isLooping
@@ -319,6 +318,7 @@ export function ImagesList(){
                     resizeMode={ResizeMode.COVER}
                     style={styles.backgroundVideo}
                 />
+                <ScrollView style={{flex:1}} >
                 <View>
                     <TouchableOpacity onPress={() => navigation.goBack()}> 
                         <Text style={[globalFont.fonts, {color:"white",fontSize:16,padding:10}]}> ﹤Back</Text>

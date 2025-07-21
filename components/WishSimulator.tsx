@@ -2,15 +2,17 @@ import { StyleSheet, View, ImageBackground, TouchableOpacity ,Text, FlatList, Mo
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { useEffect, useRef, useState } from "react";
-import data from "../assets/data.json"
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
-import banner from "../assets/banner.json"
 import CustomSplashScreen from "./CustomSplashScreen";
 import { Image } from "expo-image";
 import Svg, { Path  } from 'react-native-svg';
+import * as FileSystem from 'expo-file-system';
 
+import data from "../assets/data.json";
+import banner from "../assets/banner.json";
 const { width, height} = Dimensions.get('window');
+
 
 const globalFont = StyleSheet.create({
     fonts:{
@@ -21,11 +23,13 @@ const globalFont = StyleSheet.create({
 const preload_gacha_cards = data.map( char => char.gacha_card_url);
 const preload_gacha_banners = banner.map( banner => banner.banner_url)
 
-console.log(preload_gacha_cards)
+// console.log(preload_gacha_cards);
+
 const that_hoang = [87,44,4,56,14,94,71,74];
+
 var history = {
     "pity" : 0,
-    "pulled" : [3],
+    "pulled" : [] as number[],
     "isGuaranteed_fiveStars": false,
     "isGuaranteed_fourStars": false,
 };
@@ -34,10 +38,35 @@ interface HistoryPity {
     idChar: number;
     pity:number
 }
-var five_stars_history_pity : HistoryPity[] = [
-    {idChar:1 , pity:0},
 
-]
+
+var five_stars_history_pity : HistoryPity[];
+async function initHistoryData() {
+    try{
+        const path = FileSystem.documentDirectory  + 'wish_history.json';
+        const fileInfo = await FileSystem.getInfoAsync(path);
+        if(!fileInfo.exists){
+            console.log("File does not exist, creating one...");
+            const defaultData : HistoryPity[] = [];
+            await FileSystem.writeAsStringAsync(path, JSON.stringify(defaultData, null,2), {encoding: FileSystem.EncodingType.UTF8});
+        }
+        else{
+            console.log("File already exists, reading history from file...");
+            five_stars_history_pity = await readHistoryFromFile();// Code phía dưới CÓ đợi promise đc sovle
+            const lastHistory = five_stars_history_pity[five_stars_history_pity.length - 1];
+            if(that_hoang.includes(lastHistory.idChar)){
+                history.isGuaranteed_fiveStars = true;
+                console.log("Co bao hiem");
+            }
+        }
+    }
+    catch(error){
+        console.log("Caught error when trying to check if file is exists!");
+    }
+
+};
+initHistoryData().then(test => console.log("Initialized history data!"));
+
 
 interface Character {
     id: number;
@@ -107,6 +136,38 @@ const getElementIcon = (element : string | undefined) =>{
 
 const character_4stars = data.filter(item => item.rarity == 4);
 
+async function writeHistoryToFile(data : HistoryPity[]){
+    const path = FileSystem.documentDirectory + 'wish_history.json';
+    try{
+        await FileSystem.writeAsStringAsync(path, JSON.stringify(data, null, 2),{
+        encoding: FileSystem.EncodingType.UTF8,
+    });
+        console.log('Saved at:', path);
+    }
+    catch(error) {
+        console.error('Failed to save file:', error);
+    }
+}
+
+async function readHistoryFromFile(){
+    const path = FileSystem.documentDirectory + 'wish_history.json';
+    try{
+        const fileContent = await FileSystem.readAsStringAsync(path, {encoding: FileSystem.EncodingType.UTF8});
+        const dataRead : HistoryPity[]  = JSON.parse(fileContent);
+        return dataRead;
+    }catch(error){
+        console.error('Failed to read file:', error);
+        const errorData : HistoryPity[] = [ {idChar : 1, pity: 1}];
+        return errorData;
+    }
+}
+
+async function resetHistoryFromFile(){
+    const emptyData : HistoryPity[] = [];
+    await writeHistoryToFile(emptyData);
+    console.log("Successfully reset pull history!");
+    
+}
 
 function getRandomNumber(min : number , max : number){
     return Math.floor(Math.random() *(max - min + 1)) + min;
@@ -114,7 +175,7 @@ function getRandomNumber(min : number , max : number){
 
 const getListId4StarsRateUp = (idBanner : number) =>{
     var list : string[]  = banner.find( (item) => item.id_banner === idBanner)?.four_stars_character!; 
-    var listID : number[]  = []
+    var listID : number[]  = [];
     for(let i = 0; i< 3 ;i++){
         listID.push( data.find((item)=> item.name === list[i])?.id!)
     }
@@ -146,6 +207,9 @@ const getWinResult4starsCharacterId = (isGuaranteed_fourStars : boolean,listIdCh
     }
 }
 
+// Chance
+const FOUR_STAR_CHANCE = 51; // 5.1% = 51/1000
+const FIVE_STAR_CHANCE = 7; // 0.7% = 7/1000
 
 
 
@@ -153,23 +217,21 @@ function getRandom3starWeaponAsset(){
     return map_3star_weapons.get(getRandomNumber(1,5));
 }
 const randomFour = () : number[]=>{
+    // Dùng Set để tránh bị trùng number. nếu add số đã có thì Set tự bỏ qua
     var resultSet = new Set<number>();
-    while(resultSet.size < 51){
+    while(resultSet.size < FOUR_STAR_CHANCE){
         resultSet.add(getRandomNumber(1,1000));
-    }              
-    console.log("------------------------------------------------------------------------------------")
-    console.log("4 sao :" + [...resultSet])
+    }
+    // Cú pháp ... chuyển Set về Array bình thường
     return [...resultSet];
 }
 const randomFive = (array : number[], addChance : number)=>{
     var resultSet = new Set();
-    while(resultSet.size< 7 + addChance){
+    while(resultSet.size< FIVE_STAR_CHANCE + addChance){
         var rand = getRandomNumber(1,1000);
         if(!array.includes(rand))
             resultSet.add(rand);
     }
-    console.log("5 sao:");
-    console.log([...resultSet])
     return [...resultSet];
 }
 
@@ -209,7 +271,6 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         }
         
         var randNumb = getRandomNumber(1,1000);
-        console.log(randNumb);
         if(pity_5 < 90){
             if(pity_4 < 10){
                 if(five_chance.includes(randNumb)){
@@ -217,6 +278,7 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
                     character_id.push(idCharGot);
                     five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
                     history.pulled.push(5);
+                    writeHistoryToFile(five_stars_history_pity);
                 }
                 else if(four_chance.includes(randNumb)){
                     const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
@@ -239,11 +301,15 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         else{
             var idCharGot : number = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
             character_id.push(idCharGot);
-            five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
+            five_stars_history_pity.push({idChar :idCharGot, pity:pity_5});
             history.pulled.push(5);
+            writeHistoryToFile(five_stars_history_pity);
         }
+        
+
+
     }
-    console.log(character_id);
+
 
     var resultSet : Character[]  = [];
     for( let i = 0 ;i < character_id.length; i++){
@@ -385,7 +451,9 @@ export function WishSimulator(){
     const [showGachaList,setShowGachaList] = useState(false);
     const [intertwinedFate,setInterwinedFate] = useState(12);
     const [isVisible,setIsVisible] = useState(false);
+
     const [isVisibleHistory,setIsVisibleHistory] = useState(false);
+
     const [selectedBanner,setSelectedBanner] = useState(1);
     const [bannerUrl,setBannerUrl] = useState("");
     const [rateUpCharId,setRateUpCharId] = useState<number>(1);
@@ -418,17 +486,17 @@ export function WishSimulator(){
             }
         };
         hide();
-        console.log("__Off__")
+        console.log("Off")
     }, [loaded, error]);
 
     useEffect(() => {
 	    const preloadImages = async () => {
              await Promise.all(preload_gacha_cards.map( url => Image.prefetch(url)))
-             .then(() => console.log("preload done gacha"))
-             .catch(err => console.warn("Preload failed gacha" + err) );
+             .then(() => console.log("Preloaded gacha card successfully!"))
+             .catch(err => console.warn("Failed to preload gacha card? -----" + err) );
              await Promise.all(preload_gacha_banners.map(item => Image.prefetch(item)))
-              .then(() => console.log("preload done banner"))
-             .catch(err => console.warn("Preload failed banner" + err) );
+              .then(() => console.log("Preloaded banner image successfully!"))
+             .catch(err => console.warn("Failed to preload banner image? -----" + err) );
              setLoading(false);
         };
         preloadImages();
@@ -439,7 +507,6 @@ export function WishSimulator(){
     if (!loaded && !error) {
         return null;
     }
-    
     return(
     
     <SafeAreaProvider>
@@ -504,27 +571,35 @@ export function WishSimulator(){
                     
                     >
                     <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
-                    <TouchableOpacity onPress={()=> {setIsVisibleHistory(false)}}  style={styles.close_button_modal}>
+                        <TouchableOpacity onPress={()=> {setIsVisibleHistory(false)}}  style={styles.close_button_modal}>
                         <ImageBackground
                             source={closeButton}
                             style={{width:50,height:50}}
                         />
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                         <View style={styles.modalContainer}>
                             <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
                             <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
                                 <Text style={[globalFont.fonts,{fontSize:22,marginRight:20}]}>History:</Text>
-
                             </View>
                             <FlatList
-                                    style={{width:450,height:200}}
+                                    style={{width:450,height:170}}
                                     numColumns={4}
                                     contentContainerStyle={{alignItems:"center"}} 
                                     data={five_stars_history_pity}
                                     renderItem={({item}) =>{
-                                        return(   <PityCard data_history={item}/>   )
+                                        return(   <PityCard data_history={item}/>)
                                     }}
-                                />
+                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    resetHistoryFromFile();
+                                    initHistoryData();
+                                    setIsVisibleHistory(false);
+                                }}
+                            >
+                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Reset History</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>               
