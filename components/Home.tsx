@@ -1,12 +1,12 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
-import data from '../assets/data.json'
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import {Image} from "expo-image"
+import {Image} from "expo-image";
+
 import CustomSplashScreen from "./CustomSplashScreen";
- 
+import data from '../assets/data/character.json';
 const Tab = createBottomTabNavigator();
 
 const preload_icon_list = data.map( item => item.url_icon)

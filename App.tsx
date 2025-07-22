@@ -8,22 +8,9 @@ import { WishSimulator } from './components/WishSimulator';
 import React, { useEffect, useState } from 'react';
 import CustomSplashScreen from './components/CustomSplashScreen';
 import WelcomeScreen from './components/WelcomeScreen';
+import Profile from './components/Profile';
 
 
-function ProfileScreen(){
-    const [value, setValue] = useState(null);
-    const [isFocus, setIsFocus] = useState(false);
-  const navigation : NavigationProp<RootStackParamList> = useNavigation();
-  return(
-    <View>
-      <Text>Test profile screen</Text>
-      <Text>Name : Hao Nguyen</Text>
-      <View>
-      </View>
-      <Button title='Back to home' onPress={() => navigation.goBack()}/>
-    </View>
-  )
-}
 
 export default function App() {
   const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -50,7 +37,6 @@ export default function App() {
     useEffect(() => {
 		const preloadImages = async () => {
     	const urls = [
-      "https://i.ibb.co/3Y550G2X/skirk-banner.png",
       "https://gensh.honeyhunterworld.com/img/skirknew_114_gacha_card_w145.webp",
     ];
     await Promise.all(urls.map(Image.prefetch));
@@ -71,7 +57,7 @@ export default function App() {
 				options={{
 					headerShown:false, 
 					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
-			<Tab.Screen name='Home' component={HomeStackScreen} 
+			<Tab.Screen name='Home' component={HomeStackScreen}
 				options={{
 					title:"Character Archive",
 					tabBarLabelStyle:{fontSize:12},
@@ -81,17 +67,18 @@ export default function App() {
 				options={{
           title:"Wish Simulator",
 					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
-			{/* <Tab.Screen name='prfile' component={ProfileScreen}
-				options={{
-					headerShown:false,
-					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/> */}
+      <Tab.Screen name='Profile' component={Profile}
+        options={{
+          title:"Profile",
+          tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
+        }}
+      />
 		</Tab.Navigator>
 	</NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-
   home:{
     display: "flex",
     flex: 1,
@@ -99,6 +86,4 @@ const styles = StyleSheet.create({
     alignItems:"center",
     alignContent:"center"
   }
-
-
 });

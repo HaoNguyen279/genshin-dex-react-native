@@ -9,9 +9,9 @@ import { Image } from "expo-image";
 import Svg, { Path  } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 
-import data from "../assets/data.json";
-import banner from "../assets/banner.json";
-const { width, height} = Dimensions.get('window');
+import data from "../assets/data/character.json";
+import banner from "../assets/data/banner.json";
+const {width, height} = Dimensions.get('window');
 
 
 const globalFont = StyleSheet.create({
@@ -22,8 +22,6 @@ const globalFont = StyleSheet.create({
 
 const preload_gacha_cards = data.map( char => char.gacha_card_url);
 const preload_gacha_banners = banner.map( banner => banner.banner_url)
-
-// console.log(preload_gacha_cards);
 
 const that_hoang = [87,44,4,56,14,94,71,74];
 
@@ -41,6 +39,7 @@ interface HistoryPity {
 
 
 var five_stars_history_pity : HistoryPity[];
+
 async function initHistoryData() {
     try{
         const path = FileSystem.documentDirectory  + 'wish_history.json';
@@ -65,8 +64,8 @@ async function initHistoryData() {
     }
 
 };
-initHistoryData().then(test => console.log("Initialized history data!"));
 
+initHistoryData().then(test => console.log("Initialized history data!"));
 
 interface Character {
     id: number;
@@ -477,7 +476,6 @@ export function WishSimulator(){
             setBannerUrl("");
         }
     }, [selectedBanner]);
-
 
     useEffect(() => {
         const hide = async() =>{
