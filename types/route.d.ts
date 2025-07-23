@@ -2,7 +2,7 @@
 
 type RootStackParamList = {
     
-    "Home" : undefined,
+    "HomePage" : undefined,
     "Profile" : undefined,
     "Images" :  
      {  

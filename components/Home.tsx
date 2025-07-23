@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {Image} from "expo-image";
 
-import CustomSplashScreen from "./CustomSplashScreen";
+import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
 const Tab = createBottomTabNavigator();
 
@@ -28,7 +28,6 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                             return(
                                 <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
                                         <View style={[getBackgroundFrame(item.rarity).background,styles.box]}>
-                                            
                                             <Image
                                                 source={{uri:item.url_icon}}
                                                 style={styles.icon}
@@ -79,7 +78,6 @@ export function Home(){
             console.log("set false");
         }
         preload_url();
-        
     })
     if(loading) return <CustomSplashScreen/>
 
@@ -118,7 +116,6 @@ export function Home(){
             </RenderList>
         </SafeAreaView>
     )
-
 }
 const styles = StyleSheet.create({
     font:{

@@ -321,7 +321,7 @@ export function ImagesList(){
                 <ScrollView style={{flex:1}} >
                 <View>
                     <TouchableOpacity onPress={() => navigation.goBack()}> 
-                        <Text style={[globalFont.fonts, {color:"white",fontSize:16,padding:10}]}> ﹤Back</Text>
+                        <Text style={[globalFont.fonts, {color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
                     </TouchableOpacity>
                     <View style={{display:"flex", alignItems:"center", marginTop:40}}>
                         <Shadow

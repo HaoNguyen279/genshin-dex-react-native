@@ -4,7 +4,7 @@ import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { useEffect, useRef, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
-import CustomSplashScreen from "./CustomSplashScreen";
+import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image } from "expo-image";
 import Svg, { Path  } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
@@ -14,11 +14,7 @@ import banner from "../assets/data/banner.json";
 const {width, height} = Dimensions.get('window');
 
 
-const globalFont = StyleSheet.create({
-    fonts:{
-        fontFamily:"genshin_font"
-    }
-})
+
 
 const preload_gacha_cards = data.map( char => char.gacha_card_url);
 const preload_gacha_banners = banner.map( banner => banner.banner_url)
@@ -60,7 +56,7 @@ async function initHistoryData() {
         }
     }
     catch(error){
-        console.log("Caught error when trying to check if file is exists!");
+        console.warn("Caught error when trying to check if file is exists!");
     }
 
 };
@@ -105,6 +101,9 @@ map_3star_weapons.set(3,sword1_3stars_weapon);
 map_3star_weapons.set(4,bow1_3stars_weapon);
 map_3star_weapons.set(5,polearm1_3stars_weapon);
 
+
+// Lấy url của element icon, truyền vào tên element
+// Ví dụ: getElementIcon("pyro") sẽ trả về url của icon Pyro
 const getElementIcon = (element : string | undefined) =>{
     const data_background = {
         "cryo" :  require("../assets/element_icons/Element_Cryo.webp"),
@@ -133,8 +132,10 @@ const getElementIcon = (element : string | undefined) =>{
     }
 }
 
+// Lấy mảng data các character 4 sao
 const character_4stars = data.filter(item => item.rarity == 4);
 
+// Write history data to wish_history file
 async function writeHistoryToFile(data : HistoryPity[]){
     const path = FileSystem.documentDirectory + 'wish_history.json';
     try{
@@ -147,7 +148,7 @@ async function writeHistoryToFile(data : HistoryPity[]){
         console.error('Failed to save file:', error);
     }
 }
-
+// Read history data from wish_history file
 async function readHistoryFromFile(){
     const path = FileSystem.documentDirectory + 'wish_history.json';
     try{
@@ -161,6 +162,7 @@ async function readHistoryFromFile(){
     }
 }
 
+// Reset history data in wish_history file
 async function resetHistoryFromFile(){
     const emptyData : HistoryPity[] = [];
     await writeHistoryToFile(emptyData);
@@ -168,10 +170,12 @@ async function resetHistoryFromFile(){
     
 }
 
+// Lấy ngẫu nhiên 1 số trong khoảng từ min đến max, dùng để roll char
 function getRandomNumber(min : number , max : number){
     return Math.floor(Math.random() *(max - min + 1)) + min;
 }
 
+// Lấy id của 4 sao rate up trong banner hiện tại
 const getListId4StarsRateUp = (idBanner : number) =>{
     var list : string[]  = banner.find( (item) => item.id_banner === idBanner)?.four_stars_character!; 
     var listID : number[]  = [];
@@ -181,6 +185,7 @@ const getListId4StarsRateUp = (idBanner : number) =>{
     return listID;
 }
 
+// Lấy id của 4 sao rate up trong banner, bao gồm guaranteed 4stars system
 const getWinResult4starsCharacterId = (isGuaranteed_fourStars : boolean,listIdChar4StarsBannerRateUp : number[])=>{
     if(isGuaranteed_fourStars){
         history.isGuaranteed_fourStars = false;
@@ -211,7 +216,7 @@ const FOUR_STAR_CHANCE = 51; // 5.1% = 51/1000
 const FIVE_STAR_CHANCE = 7; // 0.7% = 7/1000
 
 
-
+// Lấy random ra (url) của 1 trong 5 vũ khí 3 sao
 function getRandom3starWeaponAsset(){
     return map_3star_weapons.get(getRandomNumber(1,5));
 }
@@ -256,6 +261,11 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
 
     var character_id : number[] = [];
     for(let i = 0;i <pull; i++){
+        // Khá quan trọng, liên quan đến pity system
+        // Ví dụ mảng history.pulled = [3,3,3,3,3,4,3,3,3,3,5,3]
+        // Hiện tại sau khi roll đc 5star sẽ đang chỉ có 1 pity, ta lấy lastIndexof(5) để lấy ra vị trí của 5 sao cuối cùng
+        // Sau đó lấy length - lastIndexof(5) để tính ra pity 5 sao hiện tại ( = 1 )
+        // Tương tự với 4 sao
         var lastIndexof4 = history.pulled.lastIndexOf(4);
         var lastIndexof5 = history.pulled.lastIndexOf(5);
         var pity_4 = history.pulled.length - lastIndexof4;
@@ -268,53 +278,56 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         }else{
             five_chance = randomFive(four_chance,0); 
         }
-        
         var randNumb = getRandomNumber(1,1000);
-        if(pity_5 < 90){
-            if(pity_4 < 10){
-                if(five_chance.includes(randNumb)){
-                    var idCharGot = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
-                    character_id.push(idCharGot);
-                    five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
-                    history.pulled.push(5);
-                    writeHistoryToFile(five_stars_history_pity);
+        try{
+            if(pity_5 < 90){
+                if(pity_4 < 10){
+                    if(five_chance.includes(randNumb)){
+                        var idCharGot = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
+                        character_id.push(idCharGot);
+                        five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
+                        history.pulled.push(5);
+                        writeHistoryToFile(five_stars_history_pity);
+                    }
+                    else if(four_chance.includes(randNumb)){
+                        const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
+                        console.log("Pulled 4 stars : " + data.find(item => item.id === randomChar)?.name);
+                        character_id.push(randomChar && randomChar ? randomChar : 99);
+                        history.pulled.push(4);
+                    }
+                    else{
+                        character_id.push(99);
+                        history.pulled.push(3);
+                    }
                 }
-                else if(four_chance.includes(randNumb)){
+                else{
                     const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
-                    console.log("Pulled 4 sao : " + randomChar)
+                    console.log("Pulled 4 stars : " + data.find(item => item.id === randomChar)?.name);
                     character_id.push(randomChar && randomChar ? randomChar : 99);
                     history.pulled.push(4);
                 }
-                else{
-                    character_id.push(99);
-                    history.pulled.push(3);
-                }
             }
             else{
-                const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
-                console.log("Pulled 4 sao : " + randomChar)
-                character_id.push(randomChar && randomChar ? randomChar : 99);
-                history.pulled.push(4);
+                var idCharGot : number = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
+                character_id.push(idCharGot);
+                five_stars_history_pity.push({idChar :idCharGot, pity:pity_5});
+                history.pulled.push(5);
+                writeHistoryToFile(five_stars_history_pity);
             }
         }
-        else{
-            var idCharGot : number = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
-            character_id.push(idCharGot);
-            five_stars_history_pity.push({idChar :idCharGot, pity:pity_5});
-            history.pulled.push(5);
-            writeHistoryToFile(five_stars_history_pity);
+        catch(error){
+            console.error("Error when trying to gacha: " + error);
         }
-        
-
-
     }
 
 
     var resultSet : Character[]  = [];
     for( let i = 0 ;i < character_id.length; i++){
-        var char = data.filter(item => item.id == character_id[i])[0];
-        resultSet.push(char)
+        var char = data.find(item => item.id == character_id[i]);
+        if(char) resultSet.push(char);
     }
+    // Sắp xếp result set theo rarity từ cao xuống thấp
+    // Trong game thực tế sẽ sắp xếp theo rarity
     resultSet.sort((a, b) => b.rarity - a.rarity);
     return resultSet;
 }
@@ -448,7 +461,7 @@ export function WishSimulator(){
     const [showVideo,setShowVideo] = useState(false);
     const [listGacha,setListGacha] = useState<Character[]>([]);
     const [showGachaList,setShowGachaList] = useState(false);
-    const [intertwinedFate,setInterwinedFate] = useState(12);
+    const [intertwinedFate,setInterwinedFate] = useState(100);
     const [isVisible,setIsVisible] = useState(false);
 
     const [isVisibleHistory,setIsVisibleHistory] = useState(false);
@@ -673,7 +686,7 @@ export function WishSimulator(){
                         <TouchableOpacity
                         style={styles.store_button}
                         onPress={()=>{
-                            setInterwinedFate(intertwinedFate+97);
+                            setInterwinedFate(intertwinedFate+100);
                         }}>
                             <ImageBackground
                                 source={pull_button_bg}
@@ -925,7 +938,11 @@ const AnimatedItem: React.FC<Props> = ({ index, children }) => {
     </Animated.View>
   );
 };
-
+const globalFont = StyleSheet.create({
+    fonts:{
+        fontFamily:"genshin_font"
+    }
+})
 const styles = StyleSheet.create({
     shadow_effect: {
         ...StyleSheet.absoluteFillObject,
@@ -941,11 +958,11 @@ const styles = StyleSheet.create({
     container:{
         position: 'relative',
         alignSelf:"center",
+        flex:1
     },
     box: {
-        position:"relative",
-        width: 393.75,
-        height: height*0.85,
+        width: width,
+        height: height*0.86,
     },
     button:{
         width:50,
@@ -954,8 +971,6 @@ const styles = StyleSheet.create({
     },
     banner_style:{
         margin:"auto",
-        // alignSelf:"center",
-        // top:"35%",
         width:440,
         height:220,
         transform:[{rotate:"90deg"}],

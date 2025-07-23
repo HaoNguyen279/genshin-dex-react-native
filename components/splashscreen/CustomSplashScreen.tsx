@@ -4,7 +4,7 @@ import { View, Image, Text, ActivityIndicator, StyleSheet } from 'react-native';
 const CustomSplashScreen = () => (
   <View style={styles.container}>
     <Image
-      source={require('../assets/gi_dex_icon.png')}
+      source={require('../../assets/gi_dex_icon.png')}
       style={styles.logo}
       resizeMode='contain'
     />

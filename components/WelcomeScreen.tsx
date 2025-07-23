@@ -5,21 +5,7 @@ import { useFonts } from 'expo-font';
 import { Image } from 'expo-image';
 
 
-const globalFont = StyleSheet.create({
-  fonts: {
-    fontFamily: "genshin_font"
-  }
-});
-
-const test = async () =>{
-  const chim  = await fetch('https://1e7e-2402-800-6319-dfbb-f0ed-3a92-2fd1-ed30.ngrok-free.app/api/product'); 
-  const data = await chim.json();
-  console.log(data);
-      return data;
-}
-
 const WelcomeScreen = () => {
-  const testdata = test();
   const [loaded, error] = useFonts({
 			'genshin_font': require('../assets/fonts/genshin_font.ttf'),
 		});
@@ -33,7 +19,6 @@ const WelcomeScreen = () => {
 			if (loaded === true) {
         await console.log("Loaded successfully");
 				await SplashScreen.hideAsync();
-        
 			}
       else{
         console.log("Loaded failed");
@@ -65,7 +50,11 @@ const WelcomeScreen = () => {
   );
 };
 
-
+const globalFont = StyleSheet.create({
+  fonts: {
+    fontFamily: "genshin_font"
+  }
+});
 
 const styles = StyleSheet.create({
   container: {

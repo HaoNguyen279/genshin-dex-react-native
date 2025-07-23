@@ -6,7 +6,7 @@ import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { WishSimulator } from './components/WishSimulator';
 import React, { useEffect, useState } from 'react';
-import CustomSplashScreen from './components/CustomSplashScreen';
+import CustomSplashScreen from './components/splashscreen/CustomSplashScreen';
 import WelcomeScreen from './components/WelcomeScreen';
 import Profile from './components/Profile';
 
@@ -20,7 +20,7 @@ export default function App() {
     return(
       <Stack.Navigator>
         <Stack.Screen
-          	name="Home"
+          	name="HomePage"
           	component={Home}
           	options={{
 			        headerShown:false
@@ -29,8 +29,10 @@ export default function App() {
         <Stack.Screen 
            name="Images"
            component={ImagesList}
-           options={{title:'Back' , headerShown:false}}
-          />
+           options={{
+            headerShown:false
+          }}
+        />
       </Stack.Navigator>
     )
   }
@@ -52,15 +54,15 @@ export default function App() {
   return (
 	<NavigationContainer>
 		<Tab.Navigator
-			screenOptions={{tabBarStyle:{height:70,paddingTop:10}}}>
+			screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}> 
+      {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
 			<Tab.Screen name='Welcome' component={WelcomeScreen}
 				options={{
 					headerShown:false, 
 					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
-			<Tab.Screen name='Home' component={HomeStackScreen}
+			<Tab.Screen name='HomePage' component={HomeStackScreen}
 				options={{
 					title:"Character Archive",
-					tabBarLabelStyle:{fontSize:12},
 					tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
 					}}/>
 			<Tab.Screen name='Wish' component={WishSimulator}
