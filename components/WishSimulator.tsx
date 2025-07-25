@@ -8,16 +8,36 @@ import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image } from "expo-image";
 import Svg, { Path  } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
+import { GoogleGenAI } from "@google/genai";
 
 import data from "../assets/data/character.json";
 import banner from "../assets/data/banner.json";
+import { GEMINI_API_KEY } from "@env";
+import LoadingModal from "./splashscreen/Loading";
 const {width, height} = Dimensions.get('window');
 
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+async function getResponse(prompt : string) {
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-lite",
+        contents: prompt,
+    });
+    console.log(response.text);
+    return response.text;
+}
+async function getLuckyAnalysis(data : HistoryPity[]) {
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "Đọc file json sau đây và phân tích độ may mắn của tôi (Mỗi document là 1 character gồm name là tên, won là có trúng rate hay không, (trong gacha, trúng rate là win 1 tỷ lệ 50%, nếu lose thì lần tiếp theo chắc chắn sẽ trúng)), phân tích ghi ra, character nào mà user sở hữu nhiều nhất, với 'c0' là 1 nhân vật, 'c1' là 2 nhân vật,... Trả về khoảng vài dòng text( ko dùng markdown, với mỗi dòng thêm ký tự '> '), bao gồm: Độ may mắn, Nhân vật sở hữu nhiều nhất, Số lần pull : (bằng tổng pity của từng document), Win/Total: (won là số document có won: true, Total là tổng số document ), Tỉ lệ win: ,  List char : (Ví dụ Dehya c2,..) của các nhân vật, Pity trung bình: (Số lần pull/ tổng số document)  " + JSON.stringify(data),
+    });
 
+    console.log(response.text);
+    return response.text ? response.text : "Không có dữ liệu để phân tích";
+}
 
 const preload_gacha_cards = data.map( char => char.gacha_card_url);
-const preload_gacha_banners = banner.map( banner => banner.banner_url)
+const preload_gacha_banners = banner.map( banner => banner.banner_url);
 
 const that_hoang = [87,44,4,56,14,94,71,74];
 
@@ -30,7 +50,9 @@ var history = {
 
 interface HistoryPity {
     idChar: number;
-    pity:number
+    name : string;
+    pity:number;
+    won : boolean
 }
 
 
@@ -148,16 +170,17 @@ async function writeHistoryToFile(data : HistoryPity[]){
         console.error('Failed to save file:', error);
     }
 }
-// Read history data from wish_history file
+// Read history data from wish_history file, returns an array of HistoryPity
 async function readHistoryFromFile(){
     const path = FileSystem.documentDirectory + 'wish_history.json';
     try{
         const fileContent = await FileSystem.readAsStringAsync(path, {encoding: FileSystem.EncodingType.UTF8});
         const dataRead : HistoryPity[]  = JSON.parse(fileContent);
+        console.log('Read file successfully:', dataRead);
         return dataRead;
     }catch(error){
         console.error('Failed to read file:', error);
-        const errorData : HistoryPity[] = [ {idChar : 1, pity: 1}];
+        const errorData : HistoryPity[] = [ {idChar : 1, pity: 1,won : false,name: "Error",}];
         return errorData;
     }
 }
@@ -167,7 +190,10 @@ async function resetHistoryFromFile(){
     const emptyData : HistoryPity[] = [];
     await writeHistoryToFile(emptyData);
     console.log("Successfully reset pull history!");
-    
+}
+
+function getCharacterNameById(id : number) : string{
+    return data.find(item => item.id === id)?.name || "Unknown";
 }
 
 // Lấy ngẫu nhiên 1 số trong khoảng từ min đến max, dùng để roll char
@@ -229,11 +255,11 @@ const randomFour = () : number[]=>{
     // Cú pháp ... chuyển Set về Array bình thường
     return [...resultSet];
 }
-const randomFive = (array : number[], addChance : number)=>{
+const randomFive = (arrayFourStarNumber : number[], addChance : number)=>{
     var resultSet = new Set();
     while(resultSet.size< FIVE_STAR_CHANCE + addChance){
         var rand = getRandomNumber(1,1000);
-        if(!array.includes(rand))
+        if(!arrayFourStarNumber.includes(rand))
             resultSet.add(rand);
     }
     return [...resultSet];
@@ -241,16 +267,16 @@ const randomFive = (array : number[], addChance : number)=>{
 
 const getWinResult5starsCharacterId = (isGuaranteed_fiveStars : boolean,idChar5StarsBannerRateUp : number) =>{
     if(isGuaranteed_fiveStars){
-        history.isGuaranteed_fiveStars = false;
+        // history.isGuaranteed_fiveStars = false;
         return idChar5StarsBannerRateUp;
     }
     else{
         if(1 === getRandomNumber(1,2)){
-            history.isGuaranteed_fiveStars = false;
+            // history.isGuaranteed_fiveStars = false;
             return idChar5StarsBannerRateUp;
         }
         else{
-            history.isGuaranteed_fiveStars = true;
+            // history.isGuaranteed_fiveStars = true;
             return that_hoang[getRandomNumber(0,7)];
         }
     }
@@ -271,25 +297,35 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         var pity_4 = history.pulled.length - lastIndexof4;
         var pity_5 = history.pulled.length - lastIndexof5;
 
-        var four_chance = randomFour();
-        var five_chance;
+        var four_stars_numbers_array = randomFour();
+        var five_stars_numbers_array;
         if(pity_5 > 73 && pity_5 < 85 ){
-            five_chance = randomFive(four_chance, (pity_5-73) * 50);
-        }else{
-            five_chance = randomFive(four_chance,0); 
+            five_stars_numbers_array = randomFive(four_stars_numbers_array, (pity_5-73) * 50);
+        }
+        else if(pity_5 >= 85 && pity_5 < 90){
+            five_stars_numbers_array = randomFive(four_stars_numbers_array, 200 );
+        }
+        else{
+            five_stars_numbers_array = randomFive(four_stars_numbers_array,0); 
         }
         var randNumb = getRandomNumber(1,1000);
         try{
             if(pity_5 < 90){
                 if(pity_4 < 10){
-                    if(five_chance.includes(randNumb)){
+                    if(five_stars_numbers_array.includes(randNumb)){
                         var idCharGot = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
                         character_id.push(idCharGot);
-                        five_stars_history_pity.push({idChar :idCharGot, pity:pity_5})
+
+                        const checkLimitChar = !that_hoang.includes(idCharGot);
+                        const won = checkLimitChar && !history.isGuaranteed_fiveStars;
+                        if(checkLimitChar) history.isGuaranteed_fiveStars = false;
+                        else history.isGuaranteed_fiveStars = true;
+                        
+                        five_stars_history_pity.push({idChar :idCharGot, pity:pity_5, won, name: getCharacterNameById(idCharGot)});
                         history.pulled.push(5);
                         writeHistoryToFile(five_stars_history_pity);
                     }
-                    else if(four_chance.includes(randNumb)){
+                    else if(four_stars_numbers_array.includes(randNumb)){
                         const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
                         console.log("Pulled 4 stars : " + data.find(item => item.id === randomChar)?.name);
                         character_id.push(randomChar && randomChar ? randomChar : 99);
@@ -310,7 +346,13 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
             else{
                 var idCharGot : number = getWinResult5starsCharacterId(history.isGuaranteed_fiveStars,idChar5StarsBannerRateUp);
                 character_id.push(idCharGot);
-                five_stars_history_pity.push({idChar :idCharGot, pity:pity_5});
+
+                const checkLimitChar = !that_hoang.includes(idCharGot);
+                const won = checkLimitChar && !history.isGuaranteed_fiveStars;
+                if(checkLimitChar) history.isGuaranteed_fiveStars = false;
+                else history.isGuaranteed_fiveStars = true;
+
+                five_stars_history_pity.push({idChar :idCharGot, pity:pity_5, won, name: getCharacterNameById(idCharGot)});
                 history.pulled.push(5);
                 writeHistoryToFile(five_stars_history_pity);
             }
@@ -337,7 +379,7 @@ function getVideoPullPath(array : Character[] ){
         return require("../assets/wish_animation/wish_ani_5stars.mp4");
     }
     else if(array.at(0)?.rarity === 4){
-        return require("../assets/wish_animation/wish_ani_4stars.mp4")
+        return require("../assets/wish_animation/wish_ani_4stars.mp4");
     }
     return require("../assets/wish_animation/wish_ani_3stars.mp4");
 }
@@ -449,6 +491,34 @@ const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
     )
 }
 
+const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisiblePityAnalysis: (visible: boolean) => void, responseText : string }> = ({ isVisiblePityAnalysis, setIsVisiblePityAnalysis, responseText }) => {
+
+    return (
+        <Modal
+            visible={isVisiblePityAnalysis}
+            transparent={true}
+            // onRequestClose={() => setIsVisiblePityAnalysis(false)}
+            animationType="fade"
+            style={{justifyContent:"center",alignItems:"center"}}>
+            <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
+            <TouchableOpacity onPress={()=> {setIsVisiblePityAnalysis(false)}} style={styles.close_button_modal}>
+                <ImageBackground
+                    source={closeButton}
+                    style={{width:50,height:50}}
+                />
+            </TouchableOpacity>
+                <View style={styles.modalContainer}>
+                    <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
+                    <View style={{display:"flex",alignItems:"center"}}>
+                        <Text style={[globalFont.fonts,{fontSize:16,marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
+                        <Text style={[globalFont.fonts,{fontSize:12}]}>{responseText}</Text>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    )
+}
+
 export function WishSimulator(){
 
     SplashScreen.preventAutoHideAsync();
@@ -462,9 +532,12 @@ export function WishSimulator(){
     const [listGacha,setListGacha] = useState<Character[]>([]);
     const [showGachaList,setShowGachaList] = useState(false);
     const [intertwinedFate,setInterwinedFate] = useState(100);
-    const [isVisible,setIsVisible] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState("");
 
+    const [isVisibleBanner,setIsVisibleBanner] = useState(false);
+    const [isLoading,setIsLoading] = useState(false);
     const [isVisibleHistory,setIsVisibleHistory] = useState(false);
+    const [isVisiblePityAnalysis,setIsVisiblePityAnalysis] = useState(false);
 
     const [selectedBanner,setSelectedBanner] = useState(1);
     const [bannerUrl,setBannerUrl] = useState("");
@@ -518,22 +591,25 @@ export function WishSimulator(){
     if (!loaded && !error) {
         return null;
     }
+
     return(
     
     <SafeAreaProvider>
+        <LoadingModal visible={isLoading} />
+        <PityAnlysisModal   isVisiblePityAnalysis={isVisiblePityAnalysis} 
+                            setIsVisiblePityAnalysis={setIsVisiblePityAnalysis} 
+                            responseText={analysisResult} />
         <SafeAreaView style={{backgroundColor:"black", flex:1}}>
             <View style={styles.container}>
                 <ImageBackground style={styles.box} source={backgroundSource}>
                 <Modal
-                    visible={isVisible}
+                    visible={isVisibleBanner}
                     transparent={true}
-                    onRequestClose={() => setIsVisible(false)}
+                    onRequestClose={() => setIsVisibleBanner(false)}
                     animationType="fade"
-                    style={{justifyContent:"center",alignItems:"center"}}
-                    
-                    >
+                    style={{justifyContent:"center",alignItems:"center"}}>
                     <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
-                    <TouchableOpacity onPress={()=> {setIsVisible(false)}} style={styles.close_button_modal}>
+                    <TouchableOpacity onPress={()=> {setIsVisibleBanner(false)}} style={styles.close_button_modal}>
                         <ImageBackground
                             source={closeButton}
                             style={{width:50,height:50}}
@@ -555,7 +631,7 @@ export function WishSimulator(){
                                         <TouchableOpacity style={styles.select_item_banner}
                                             onPress={()=>{
                                                 setSelectedBanner(item.id_banner);
-                                                setIsVisible(false)
+                                                setIsVisibleBanner(false)
                                             }}
                                         >
                                             <View style={{display:"flex",flexDirection:"row"}}>
@@ -567,7 +643,6 @@ export function WishSimulator(){
                                         </TouchableOpacity>
                                     )
                                 }}
-                            
                             />
                         </View>
                     </View>
@@ -601,6 +676,7 @@ export function WishSimulator(){
                                     renderItem={({item}) =>{
                                         return(   <PityCard data_history={item}/>)
                                     }}
+                                    
                             />
                             <TouchableOpacity
                                 onPress={() => {
@@ -646,7 +722,6 @@ export function WishSimulator(){
                     >
                     <View style={{position:"relative"}}>
                         <FlatList
-                            // data={data.filter(item => listGacha.includes(item.id))}
                             data={listGacha}
                             horizontal={true}
                             style={ styles.flatList }
@@ -714,7 +789,7 @@ export function WishSimulator(){
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.pull_button,{marginTop:200}]}
-                            onPress={()=>{ 
+                            onPress={()=>{
                                 if(intertwinedFate -1 >= 0){
                                     setShowVideo(true)
                                     setListGacha(gacha(rateUpCharId,1,selectedBanner));
@@ -741,8 +816,8 @@ export function WishSimulator(){
                             style={[styles.pull_button,{marginTop:110}]}
                             onPress={()=>{
                                 if(intertwinedFate -10 >= 0){
-                                    setShowVideo(true)
                                     setListGacha(gacha(rateUpCharId,10,selectedBanner));
+                                    setShowVideo(true);
                                     setInterwinedFate(intertwinedFate-10);
                                 }
                             }}>
@@ -774,7 +849,7 @@ export function WishSimulator(){
                         <TouchableOpacity
                         style={styles.select_banner_button}
                         onPress={()=>{
-                            setIsVisible(true);
+                            setIsVisibleBanner(true);
                         }}>
                             <ImageBackground
                                 source={pull_button_bg}
@@ -783,6 +858,38 @@ export function WishSimulator(){
                             >
                             <View>
                                 <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Select banner</Text>
+                            </View>
+                            </ImageBackground>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                        style={[styles.select_banner_button, {marginTop: 120}]}
+                        onPress={()=>{
+                            setIsLoading(true);
+                            readHistoryFromFile()
+                                .then(dataRead => {
+                                    getLuckyAnalysis(dataRead)
+                                        .then((result) => {
+                                            setAnalysisResult(result);
+                                            setIsLoading(false);
+                                            setIsVisiblePityAnalysis(true);
+                                        })
+                                        .catch(error => {
+                                            setIsLoading(false);
+                                            console.log("Error analyzing history: " + error);
+                                        });
+                                })
+                                .catch(error => {
+                                    setIsLoading(false);
+                                    alert("Error reading history: " + error);
+                                });
+                        }}>
+                            <ImageBackground
+                                source={pull_button_bg}
+                                resizeMode="cover"
+                                style={{position:'absolute',width:140,height:35,}}
+                            >
+                            <View>
+                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Pity analysis AI</Text>
                             </View>
                             </ImageBackground>
                         </TouchableOpacity>
@@ -810,7 +917,7 @@ interface ShadowEffectProps{
     isFiveStars : boolean;
 }
 
-// Component Effect này gen bằng GPT + Claude, khó vcl :)
+// Component Effect này gen bằng GPT + Claude, tạo hiệu ứng shadow cho card khi gacha
 const ShadowEffect : React.FC<ShadowEffectProps> = React.memo(({isFiveStars}) => {
     var color : any;
     if(isFiveStars) color = "rgb(249, 171, 6) ";
@@ -1016,7 +1123,7 @@ const styles = StyleSheet.create({
         borderRadius:25,
         alignItems:"center",
         justifyContent:"center",
-        marginTop:500
+        marginTop:370
     },
       resultGachaCard: {
         width: 54, 
