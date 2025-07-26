@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
 import { DataTable } from "react-native-paper";
+import { scale } from "react-native-size-matters";
 
 
 
@@ -193,19 +194,19 @@ const getBackground = (element : string | undefined) =>{
     }
     switch (element){
                 case "Cryo":
-            return data_background["cryo"]
+            return data_background["cryo"];
                 case "Pyro":
-            return data_background["pyro"]
+            return data_background["pyro"];
                 case "Hydro":
-            return data_background["hydro"]
+            return data_background["hydro"];
                 case "Dendro":
-            return data_background["dendro"]
+            return data_background["dendro"];
                 case "Electro":
-            return data_background["electro"]
+            return data_background["electro"];
                 case "Anemo":
-            return data_background["anemo"]
+            return data_background["anemo"];
                 case "Geo":
-            return data_background["geo"]
+            return data_background["geo"];
     }
 }
 
@@ -308,7 +309,6 @@ export function ImagesList(){
     if (!loaded && !error) {
         return null;
     }
-
     return(
         <SafeAreaView style={{flex:1}}>
                 <Video
@@ -318,7 +318,7 @@ export function ImagesList(){
                     resizeMode={ResizeMode.COVER}
                     style={styles.backgroundVideo}
                 />
-                <ScrollView style={{flex:1}} >
+                <ScrollView style={{flex:1,paddingTop:scale(20),paddingBottom:scale(50)}}>
                 <View>
                     <TouchableOpacity onPress={() => navigation.goBack()}> 
                         <Text style={[globalFont.fonts, {color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
@@ -351,7 +351,6 @@ export function ImagesList(){
                         <View >
                             <View style={styles.text_box}>
                                 <Text style={[{textAlign:"left", fontSize:24},globalFont.fonts, getFontColor(route.params?.element)?.font]}>{ route.params?.name}</Text>
-                                
                                 <Text style={[globalFont.fonts, {color:"white", marginRight:60}]}>   
                                     <Image source={getElementIcon(route.params?.element)} style={styles.element_icon}/>
                                     {route.params?.role}

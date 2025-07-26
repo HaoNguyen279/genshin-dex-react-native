@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image } from "expo-image";
+import * as ScreenOrientation from 'expo-screen-orientation';
 import Svg, { Path  } from 'react-native-svg';
 import * as FileSystem from 'expo-file-system';
 import { GoogleGenAI } from "@google/genai";
@@ -492,7 +493,6 @@ const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
 }
 
 const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisiblePityAnalysis: (visible: boolean) => void, responseText : string }> = ({ isVisiblePityAnalysis, setIsVisiblePityAnalysis, responseText }) => {
-
     return (
         <Modal
             visible={isVisiblePityAnalysis}
@@ -575,33 +575,52 @@ export function WishSimulator(){
 
     useEffect(() => {
 	    const preloadImages = async () => {
-             await Promise.all(preload_gacha_cards.map( url => Image.prefetch(url)))
-             .then(() => console.log("Preloaded gacha card successfully!"))
-             .catch(err => console.warn("Failed to preload gacha card? -----" + err) );
-             await Promise.all(preload_gacha_banners.map(item => Image.prefetch(item)))
-              .then(() => console.log("Preloaded banner image successfully!"))
-             .catch(err => console.warn("Failed to preload banner image? -----" + err) );
-             setLoading(false);
+        await Promise.all(preload_gacha_cards.map( url => Image.prefetch(url)))
+            .then(() => console.log("Preloaded gacha card successfully!"))
+            .catch(err => console.warn("Failed to preload gacha card? -----" + err) );
+        await Promise.all(preload_gacha_banners.map(item => Image.prefetch(item)))
+            .then(() => console.log("Preloaded banner image successfully!"))
+            .catch(err => console.warn("Failed to preload banner image? -----" + err) );
+        setLoading(false);
         };
         preloadImages();
         setTimeout(()=> {setLoading(false)}, 9000);
     }, []);
+    useEffect(() => {
+    const lockToLandscape = async () => {
+      await ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE
+      );
+    };
 
-  if (loading) return <CustomSplashScreen />;
-    if (!loaded && !error) {
-        return null;
+    const unlockOrientation = async () => {
+      await ScreenOrientation.unlockAsync(); // hoặc lock lại Portrait nếu muốn
+    };
+
+    lockToLandscape(); // khi vào tab
+
+    return () => {
+      unlockOrientation(); // khi rời tab
+    };
+  }, []);
+
+    if (loading) return <CustomSplashScreen />;
+        if (!loaded && !error) {
+            return null;
     }
 
     return(
-    
     <SafeAreaProvider>
         <LoadingModal visible={isLoading} />
         <PityAnlysisModal   isVisiblePityAnalysis={isVisiblePityAnalysis} 
                             setIsVisiblePityAnalysis={setIsVisiblePityAnalysis} 
                             responseText={analysisResult} />
-        <SafeAreaView style={{backgroundColor:"black", flex:1}}>
+
+
+        <SafeAreaView style={{backgroundColor:"black", flex:1,}}>
             <View style={styles.container}>
                 <ImageBackground style={styles.box} source={backgroundSource}>
+
                 <Modal
                     visible={isVisibleBanner}
                     transparent={true}
@@ -619,7 +638,6 @@ export function WishSimulator(){
                             <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
                             <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
                                 <Text style={[globalFont.fonts,{fontSize:22,marginRight:20}]}>Select banner:</Text>
-
                             </View>
                             <FlatList
                                 data={banner}
@@ -898,8 +916,7 @@ export function WishSimulator(){
                                 <Image
                                     source={intertwined_fate}
                                     style={{width:20, height:20}}
-                                    resizeMode="cover"
-                                />
+                                    resizeMode="cover"/>
                                 <Text style={[globalFont.fonts, {fontSize:14, alignSelf:"center", color:"white"}]}>{intertwinedFate}</Text>
                             </View>
                         </View>

@@ -1,29 +1,30 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable } from "react-native";
+import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {Image} from "expo-image";
 
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
+import { verticalScale } from "react-native-size-matters";
+import { useFonts } from "expo-font";
 const Tab = createBottomTabNavigator();
 
 const preload_icon_list = data.map( item => item.url_icon)
 
-type RenderListProps ={
+type RenderListProps = {
     navigation : NavigationProp<RootStackParamList>;
     // data_render : NonNullable<RootStackParamList["Images"]>    
     search_text : string
 }
 const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
-    console.log("Re-render-list")
     return(
             <View style={styles.list}>
                     <FlatList 
                         data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
                         numColumns={3}
-                        contentContainerStyle={{paddingBottom:120}}
+                        contentContainerStyle={{paddingBottom:120,flex:1}}
                         renderItem={({item}) =>{
                             return(
                                 <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
@@ -33,14 +34,13 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                                                 style={styles.icon}
                                                 priority={"high"}
                                             />
-
                                             <Text style={[styles.text]}>{item.name}</Text>
                                         </View>
                                 </TouchableOpacity>
                             )
                         }}
                         ListEmptyComponent={() =>(
-                            <View style={{marginTop:200, alignItems:"center"}}>
+                            <View style={{alignItems:"center", marginTop:200}}>
                                 <Text>The world is wide, try to search something else</Text>
                                 <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
                             </View>
@@ -60,6 +60,7 @@ const getBackgroundFrame = (rarity :number) =>{
     })
 }
 
+
 export function Home(){
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [searchText,setSearchText]  = useState("");
@@ -69,6 +70,13 @@ export function Home(){
         if(searchInputRef != null)
             searchInputRef.current?.clear();
     }
+    const [loaded,error] = useFonts({
+        'montserrat': require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
+    });
+    const [fontsLoaded, setFontsLoaded] = useFonts({
+        'montserrat-semi-bold': require('../assets/fonts/Montserrat-SemiBold.ttf'),
+    });
+
     useEffect(() =>{
         const preload_url = async () =>{
             await Promise.all(preload_icon_list.map( url_icon => Image.prefetch(url_icon)))
@@ -82,7 +90,7 @@ export function Home(){
     if(loading) return <CustomSplashScreen/>
 
     return(
-        <SafeAreaView  edges={[ 'bottom']}>
+        <SafeAreaView style={{backgroundColor:"#f4f4f4ff", flex:1}}>
             <View style={styles.search_bar}>
                 <TextInput
                     ref={searchInputRef}
@@ -92,22 +100,12 @@ export function Home(){
                     keyboardType='default'
                 /> 
                 <Pressable
-                    style={({pressed}) =>({
-                            width:40,
-                            height:40,
-                            marginLeft:10,
-                            backgroundColor : pressed ? "#e3e3e3" : "transparent",
-                            borderRadius:20})}
-                    onPress={()=> {
-                        setSearchText(""); 
-                        clearSearchText();
-                    }} 
-                >
+                    style={({pressed}) =>([styles.x_button, {backgroundColor : pressed ? "#e3e3e3" : "transparent"}])}
+                    onPress={()=> { setSearchText("");  clearSearchText(); }}>
                     <Image
                         style={{width:30,height:30,margin:"auto"}}
                         source={require("../assets/png/search_icon.png")}
-                        resizeMode="contain"
-                    />
+                        resizeMode="contain"/>
                 </Pressable>
             </View>
             <RenderList
@@ -117,59 +115,59 @@ export function Home(){
         </SafeAreaView>
     )
 }
+const {width: wid, height: hei} = Dimensions.get("window");
 const styles = StyleSheet.create({
-    font:{
-        fontSize: 18,
-        marginLeft: 20,
-        fontWeight: 700,
-    },
     list :{
         display: "flex",
         paddingTop: 30,
-        alignItems:"center"
+        alignItems:"center",
     },
     icon:{
-        width:100,
+        width:wid/8*2,
         height:100
     },
     box:{
-        width:100,
+        width:wid/8*2,
         height:120,
         display:"flex",
         alignItems:"center",
         flex:1,
         marginBottom:20,
         marginHorizontal:10,
-        borderRadius: 20
-
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "#ffffffff",
     } ,
-    search_button:{
-        width:40,
-        height:40,
-        marginLeft:10,
-        backgroundColor :"transparent",
-    },
      search_bar:{
         display:"flex",
         flexDirection:"row",
         margin:"auto",
         marginTop:10
-            
-
     },
     search_input:{
-        width: 300,
-        height:40,
-        borderColor:"black",
-        borderWidth: 1,
+        width: wid - 100,
+        borderWidth: 2,
         borderRadius: 10,
+        height: verticalScale(32),
+        borderColor: "#dcdcdcff",
     },
     text:{
-        backgroundColor:"rgb(40, 46, 57)",
-        width:100,
+        backgroundColor:"rgba(40, 50, 70, 1)",
+        fontWeight: "600",
+        fontFamily: "montserrat",
+        width:wid/8*2,
         textAlign:"center",
         color:"white",
         borderBottomLeftRadius:20,
-        borderBottomRightRadius:20
-  }
-})
+        borderBottomRightRadius:20,
+        borderWidth:1,
+        borderColor:"#dcdcdc",
+        borderTopWidth:0,
+    },
+    x_button:{
+        width:40,
+        height:40,
+        marginLeft:10,
+        borderRadius:20
+    }
+});

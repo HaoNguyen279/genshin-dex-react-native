@@ -2,7 +2,7 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
-import { ActivityIndicator, Button, Modal, TextInput } from "react-native-paper";
+import {  Button, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { auth } from "../firebaseConfig";
@@ -42,7 +42,7 @@ async function getResponse(prompt : string) {
 }
 
 export default function Profile(){
-    // const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+    const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [inputText, setInputText] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -73,7 +73,6 @@ export default function Profile(){
             return;
         }
         setIsLoadingVisible(true);
-        createUserContent
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed in 
@@ -82,7 +81,6 @@ export default function Profile(){
             updateProfile(userCredential.user, {
                 displayName: name,
             }).then(() => {console.log("User profile updated:", user); });
-            setMessage('Đăng ký thành công!');
             setIsLoadingVisible(false);
             alert('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
             setEmail("");
@@ -104,7 +102,7 @@ export default function Profile(){
                     break;
                 default:
                     alert('Đăng ký không thành công. Vui lòng thử lại sau.');
-             }
+            }
         })
         .finally(() => {
             setIsLoadingVisible(false);
@@ -121,8 +119,6 @@ export default function Profile(){
             .then((userCredential) => {
                 const user = userCredential.user;
                 user.email && user.displayName ? setUserData({ email: user.email, uid: user.uid, displayName: user.displayName }) : setUserData({ email: "null", uid: "null", displayName: "null" });
-                console.log("User signed in:", user);
-                setMessage('Đăng nhập thành công!');
                 setIsLoadingVisible(false);
                 setTimeout(() => {
                     setMessage('');
@@ -154,36 +150,28 @@ export default function Profile(){
     } catch (error : any) {
         setMessage(error.message);
     }
-
     useEffect(() => {
         if (response?.type === 'success') {
             const { id_token } = response.params;
             const credential = GoogleAuthProvider.credential(id_token);
-
             signInWithCredential(auth, credential)
                 .then(() => {
-                    setMessage('Đăng nhập bằng Google thành công!');
+                    setMessage('Successfully signed in with Google!');
                 })
                 .catch((error) => {
                     setMessage(error.message);
                     console.error('Error signing in with Google:', error);
                 });
-            
         }
     }, [response]);
-
   };
-
-
     return(
         <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <ScrollView     contentContainerStyle={{flexGrow: 1}}
-                                keyboardShouldPersistTaps="handled">
+                <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
                         <View> 
-                           
                             <View style={{width:width,height: height*0.1,flexDirection:"row",alignItems:"center", justifyContent:"center", backgroundColor:"#f0f0f0"}}>
                                     <Image
                                         style={{width: 50, height:50, margin:10}}
@@ -196,6 +184,14 @@ export default function Profile(){
                             </View>
                             <View style={{margin:20}}>
                                 <Text style={{fontSize:24,textAlign:'center'}}>Login</Text>
+                                <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:20}}>
+                                    <Button style={{marginHorizontal:5}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignUp")}}>
+                                        <Text>Sign up</Text>
+                                    </Button>
+                                    <Button style={{marginHorizontal:5}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignIn")}}>
+                                        <Text>Sign in</Text>
+                                    </Button>
+                                </View>
                                 <Text style={{marginTop:20}}>Enter your name</Text>
                                 <TextInput
                                     label="Name"

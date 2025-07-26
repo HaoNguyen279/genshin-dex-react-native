@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {NavigationContainer, NavigationProp, useNavigation} from '@react-navigation/native';
-import { StyleSheet, Text, View, Button, Image} from 'react-native';
+import { StyleSheet, Text, View, Button, Image, Dimensions} from 'react-native';
 import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,33 +9,68 @@ import React, { useEffect, useState } from 'react';
 import CustomSplashScreen from './components/splashscreen/CustomSplashScreen';
 import WelcomeScreen from './components/WelcomeScreen';
 import Profile from './components/Profile';
+import SignIn from './components/authenticationscreen/SignIn';
+import SignUp from './components/authenticationscreen/SignUp';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-
+const isLandscape = () => {
+  const dim = Dimensions.get('screen');
+  return dim.width >= dim.height;
+};
 
 export default function App() {
-  const Stack = createNativeStackNavigator<RootStackParamList>();
-  const Tab = createBottomTabNavigator();
+    const Stack = createNativeStackNavigator<RootStackParamList>();
+    const Tab = createBottomTabNavigator();
     const [loading, setLoading] = useState(true);
-  const HomeStackScreen = ()=>{
-    return(
-      <Stack.Navigator>
-        <Stack.Screen
-          	name="HomePage"
-          	component={Home}
-          	options={{
-			        headerShown:false
-          	}}
-        />
-        <Stack.Screen 
-           name="Images"
-           component={ImagesList}
-           options={{
-            headerShown:false
-          }}
-        />
-      </Stack.Navigator>
-    )
-  }
+
+    const HomeStackScreen = ()=>{
+      return(
+        <Stack.Navigator>
+          <Stack.Screen
+              name="HomePage"
+              component={Home}
+              options={{
+                headerShown:false
+              }}
+          />
+          <Stack.Screen 
+            name="Images"
+            component={ImagesList}
+            options={{
+              headerShown:false
+            }}
+          />
+        </Stack.Navigator>
+      )
+    }
+    const ProfileScreen = () => {
+      return (
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Profile"
+            component={Profile}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SignIn"
+            component={SignIn}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SignUp"
+            component={SignUp}
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack.Navigator>
+      )
+    };
+        
     useEffect(() => {
 		const preloadImages = async () => {
     	const urls = [
@@ -52,31 +87,37 @@ export default function App() {
 
   if (loading) return <CustomSplashScreen />;
   return (
-	<NavigationContainer>
-		<Tab.Navigator
-			screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}> 
-      {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
-			<Tab.Screen name='Welcome' component={WelcomeScreen}
-				options={{
-					headerShown:false, 
-					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
-			<Tab.Screen name='HomePage' component={HomeStackScreen}
-				options={{
-					title:"Character Archive",
-					tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
-					}}/>
-			<Tab.Screen name='Wish' component={WishSimulator}
-				options={{
-          title:"Wish Simulator",
-					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
-      <Tab.Screen name='Profile' component={Profile}
-        options={{
-          title:"Profile",
-          tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
-        }}
-      />
-		</Tab.Navigator>
-	</NavigationContainer>
+	<SafeAreaProvider>
+	  <NavigationContainer>
+  		<Tab.Navigator
+  			screenOptions={{tabBarStyle:{height:70,paddingTop:10, display: isLandscape() ? 'none' : 'flex'} , animation: 'shift'}}
+        > 
+        {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
+  			<Tab.Screen name='Welcome' component={WelcomeScreen}
+  				options={{
+  					headerShown:false, 
+  					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
+  			<Tab.Screen name='HomePage' component={HomeStackScreen}
+  				options={{
+            headerShown:false,
+  					title:"Character Archive",
+  					tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
+  					}}/>
+  			<Tab.Screen name='Wish' component={WishSimulator}
+  				options={{
+            headerShown:false,
+            title:"Wish Simulator",
+  					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
+        <Tab.Screen name='ProfileScreen' component={ProfileScreen}
+          options={{
+            title:"Profile",
+            headerShown:false,
+            tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
+          }}
+        />
+  		</Tab.Navigator>
+  	</NavigationContainer>
+	</SafeAreaProvider>
   );
 }
 

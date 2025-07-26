@@ -4,6 +4,8 @@ type RootStackParamList = {
     
     "HomePage" : undefined,
     "Profile" : undefined,
+    "SignIn" : undefined,
+    "SignUp" : undefined,
     "Images" :  
      {  
         id: number,
