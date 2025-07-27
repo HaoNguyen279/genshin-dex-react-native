@@ -7,11 +7,11 @@ import {Image} from "expo-image";
 
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
-import { verticalScale } from "react-native-size-matters";
+import { scale, verticalScale } from "react-native-size-matters";
 import { useFonts } from "expo-font";
 const Tab = createBottomTabNavigator();
 
-const preload_icon_list = data.map( item => item.url_icon)
+const preload_icon_list = data.map( item => item.url_icon);
 
 type RenderListProps = {
     navigation : NavigationProp<RootStackParamList>;
@@ -24,7 +24,6 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                     <FlatList 
                         data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
                         numColumns={3}
-                        contentContainerStyle={{paddingBottom:120,flex:1}}
                         renderItem={({item}) =>{
                             return(
                                 <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
@@ -83,7 +82,6 @@ export function Home(){
             .then(() => console.log("Successfully preloaded url icon!"))
             .catch(err => console.warn("Failed to preload url icon :" + err))
             setLoading(false);
-            console.log("set false");
         }
         preload_url();
     })
@@ -119,19 +117,19 @@ const {width: wid, height: hei} = Dimensions.get("window");
 const styles = StyleSheet.create({
     list :{
         display: "flex",
+        flex: 1,
         paddingTop: 30,
         alignItems:"center",
     },
     icon:{
         width:wid/8*2,
-        height:100
+        height:hei/8,
     },
     box:{
         width:wid/8*2,
-        height:120,
+        height:hei/7,
         display:"flex",
         alignItems:"center",
-        flex:1,
         marginBottom:20,
         marginHorizontal:10,
         borderRadius: 20,

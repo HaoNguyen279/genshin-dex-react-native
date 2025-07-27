@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {NavigationContainer, NavigationProp, useNavigation} from '@react-navigation/native';
-import { StyleSheet, Text, View, Button, Image, Dimensions} from 'react-native';
+import {NavigationContainer } from '@react-navigation/native';
+import { StyleSheet, Image, Dimensions, StatusBar} from 'react-native';
 import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,15 +13,11 @@ import SignIn from './components/authenticationscreen/SignIn';
 import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-const isLandscape = () => {
-  const dim = Dimensions.get('screen');
-  return dim.width >= dim.height;
-};
-
 export default function App() {
     const Stack = createNativeStackNavigator<RootStackParamList>();
     const Tab = createBottomTabNavigator();
     const [loading, setLoading] = useState(true);
+    const [isLandscape, setIsLandscape] = useState((Dimensions.get('window').width >= Dimensions.get('window').height));
 
     const HomeStackScreen = ()=>{
       return(
@@ -42,7 +38,8 @@ export default function App() {
           />
         </Stack.Navigator>
       )
-    }
+    };
+
     const ProfileScreen = () => {
       return (
         <Stack.Navigator>
@@ -72,25 +69,25 @@ export default function App() {
     };
         
     useEffect(() => {
-		const preloadImages = async () => {
-    	const urls = [
-      "https://gensh.honeyhunterworld.com/img/skirknew_114_gacha_card_w145.webp",
-    ];
-    await Promise.all(urls.map(Image.prefetch));
-  };
+        const updateOrientation = () => {
+            const dim = Dimensions.get('window');
+            setIsLandscape(dim.width >= dim.height);
+            console.log("Current orientation: ", dim.width >= dim.height ? "Landscape" : "Portrait");
+        };
+      updateOrientation();
+      // Lắng nghe orientation change
+      const subscription = Dimensions.addEventListener('change', updateOrientation);
 
-  preloadImages();
-    	setTimeout(() => {
-			setLoading(false);
-		}, 4000); 
+      setLoading(false);
+      return () => subscription?.remove();
     }, []);
 
-  if (loading) return <CustomSplashScreen />;
+  if (loading) return <CustomSplashScreen/>;
   return (
 	<SafeAreaProvider>
 	  <NavigationContainer>
   		<Tab.Navigator
-  			screenOptions={{tabBarStyle:{height:70,paddingTop:10, display: isLandscape() ? 'none' : 'flex'} , animation: 'shift'}}
+  			screenOptions={{tabBarStyle:{height:70,paddingTop:10, display: isLandscape ? 'none' : 'flex'} , animation: 'shift'}}
         > 
         {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
   			<Tab.Screen name='Welcome' component={WelcomeScreen}

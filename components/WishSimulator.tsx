@@ -1,13 +1,14 @@
-import { StyleSheet, View, ImageBackground, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions} from "react-native"
+import { StyleSheet, View, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions, StatusBar} from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from "expo-font";
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
-import { Image } from "expo-image";
+import { Image, ImageBackground } from "expo-image";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Svg, { Path  } from 'react-native-svg';
+import { scale, verticalScale, moderateScale, s } from "react-native-size-matters";
 import * as FileSystem from 'expo-file-system';
 import { GoogleGenAI } from "@google/genai";
 
@@ -15,10 +16,11 @@ import data from "../assets/data/character.json";
 import banner from "../assets/data/banner.json";
 import { GEMINI_API_KEY } from "@env";
 import LoadingModal from "./splashscreen/Loading";
-const {width, height} = Dimensions.get('window');
+import { useNavigation } from "@react-navigation/native";
+
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
+var width : any; var height : any;
 async function getResponse(prompt : string) {
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-lite",
@@ -101,11 +103,11 @@ interface Character {
     gacha_card_url: string;
 }
 
-const backgroundSource = require("../assets/wish_animation/wish_background.jpg");
+const backgroundSource = require("../assets/wish_animation/wish_background.png");
 const gachaBackground = require("../assets/wish_animation/gacha_background.webp");
 const resultGachaCard = require("../assets/wish_animation/resultcard-bg.png");
 const closeButton = require("../assets/wish_animation/close_button.png");
-const pull_button_bg = require("../assets/wish_animation/pull_button_bg.webp");
+const button_bg = require("../assets/wish_animation/pull_button_bg.webp");
 const intertwined_fate = require("../assets/wish_animation/intertwined_fate.webp");
 const history_bg = require("../assets/wish_animation/history_bg.png");
 const star_rarity = require("../assets/wish_animation/star.png");
@@ -497,21 +499,20 @@ const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisible
         <Modal
             visible={isVisiblePityAnalysis}
             transparent={true}
-            // onRequestClose={() => setIsVisiblePityAnalysis(false)}
+            statusBarTranslucent={false}
             animationType="fade"
-            style={{justifyContent:"center",alignItems:"center"}}>
-            <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
-            <TouchableOpacity onPress={()=> {setIsVisiblePityAnalysis(false)}} style={styles.close_button_modal}>
-                <ImageBackground
-                    source={closeButton}
-                    style={{width:50,height:50}}
-                />
-            </TouchableOpacity>
-                <View style={styles.modalContainer}>
-                    <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
-                    <View style={{display:"flex",alignItems:"center"}}>
-                        <Text style={[globalFont.fonts,{fontSize:16,marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
-                        <Text style={[globalFont.fonts,{fontSize:12}]}>{responseText}</Text>
+            style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+            <View style={styles.modalContainer}>
+                <View style={styles.modal_button_bar}>
+                    <TouchableOpacity onPress={()=> {setIsVisiblePityAnalysis(false)}} style={styles.modal_close_button}>
+                        <ImageBackground source={closeButton} style={styles.modal_close_button} />
+                    </TouchableOpacity>
+                </View>
+                <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                <View style={styles.modal_content}>
+                    <View style={{flex:1,display:"flex",alignItems:"center",maxWidth:"60%"}}>
+                        <Text style={[globalFont.fonts,{fontSize:scale(16),marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
+                        <Text style={[globalFont.fonts,{fontSize:scale(12)}]}>{responseText}</Text>
                     </View>
                 </View>
             </View>
@@ -522,7 +523,6 @@ const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisible
 export function WishSimulator(){
 
     SplashScreen.preventAutoHideAsync();
-
     const [loaded, error] = useFonts({
         'genshin_font': require('../assets/fonts/genshin_font.ttf'),
     }); 
@@ -543,7 +543,9 @@ export function WishSimulator(){
     const [bannerUrl,setBannerUrl] = useState("");
     const [rateUpCharId,setRateUpCharId] = useState<number>(1);
 
+    const [size, setSize] = useState({width: 0, height: 0});
     const [loading, setLoading] = useState(true);
+    const [orientationReady, setOrientationReady] = useState(false);
 
     const handleStatus = (status : AVPlaybackStatus)=>{
         if(!status.isLoaded) return;
@@ -587,24 +589,33 @@ export function WishSimulator(){
         setTimeout(()=> {setLoading(false)}, 9000);
     }, []);
     useEffect(() => {
-    const lockToLandscape = async () => {
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE
-      );
-    };
+        const setupScreenAndStatusBar = async () => {
+            try {
+                StatusBar.setHidden(true, 'fade');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                ScreenOrientation.lockAsync(
+                    ScreenOrientation.OrientationLock.LANDSCAPE
+                ).then(() => {
+                    console.log("Screen orientation locked to landscape");
+                    setOrientationReady(true);
+                });
+            } catch (error) {
+                console.warn('Error setting up screen:', error);
+                setOrientationReady(true);
+                setSize({width: Dimensions.get('window').width, height: Dimensions.get('window').height});
+                height = size.height;
+                width = size.width;
+            }
+        }; 
+        setupScreenAndStatusBar();
+        return () => {
+            StatusBar.setHidden(false, 'fade');
+            ScreenOrientation.unlockAsync();
+        };
+    }, []);
 
-    const unlockOrientation = async () => {
-      await ScreenOrientation.unlockAsync(); // hoặc lock lại Portrait nếu muốn
-    };
 
-    lockToLandscape(); // khi vào tab
-
-    return () => {
-      unlockOrientation(); // khi rời tab
-    };
-  }, []);
-
-    if (loading) return <CustomSplashScreen />;
+    if (loading || !orientationReady) return <CustomSplashScreen />;
         if (!loaded && !error) {
             return null;
     }
@@ -612,133 +623,104 @@ export function WishSimulator(){
     return(
     <SafeAreaProvider>
         <LoadingModal visible={isLoading} />
-        <PityAnlysisModal   isVisiblePityAnalysis={isVisiblePityAnalysis} 
-                            setIsVisiblePityAnalysis={setIsVisiblePityAnalysis} 
+        <PityAnlysisModal   isVisiblePityAnalysis={isVisiblePityAnalysis}
+                            setIsVisiblePityAnalysis={setIsVisiblePityAnalysis}
                             responseText={analysisResult} />
+        <View style={{flex:1}}>
+                <ImageBackground style={styles.container} source={backgroundSource} contentFit="cover">
 
-
-        <SafeAreaView style={{backgroundColor:"black", flex:1,}}>
-            <View style={styles.container}>
-                <ImageBackground style={styles.box} source={backgroundSource}>
-
+                {/* Modal for selecting banner */}
                 <Modal
                     visible={isVisibleBanner}
                     transparent={true}
+                    statusBarTranslucent={false}
                     onRequestClose={() => setIsVisibleBanner(false)}
                     animationType="fade"
-                    style={{justifyContent:"center",alignItems:"center"}}>
-                    <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
-                    <TouchableOpacity onPress={()=> {setIsVisibleBanner(false)}} style={styles.close_button_modal}>
-                        <ImageBackground
-                            source={closeButton}
-                            style={{width:50,height:50}}
-                        />
-                    </TouchableOpacity>
+                    style={{flex:1,justifyContent:"center",alignItems:"center"}}>
                         <View style={styles.modalContainer}>
-                            <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
-                            <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
-                                <Text style={[globalFont.fonts,{fontSize:22,marginRight:20}]}>Select banner:</Text>
+                            <View style={styles.modal_button_bar}>
+                                <TouchableOpacity onPress={()=> {setIsVisibleBanner(false)}} style={styles.modal_close_button}>
+                                    <ImageBackground source={closeButton} style={styles.modal_close_button} />
+                                </TouchableOpacity>
                             </View>
-                            <FlatList
-                                data={banner}
-                                scrollEnabled={true}
-                                style={{height:200}}
-                                showsVerticalScrollIndicator
-                                renderItem={({item}) =>{
-                                    return(
-                                        <TouchableOpacity style={styles.select_item_banner}
-                                            onPress={()=>{
-                                                setSelectedBanner(item.id_banner);
-                                                setIsVisibleBanner(false)
-                                            }}
-                                        >
-                                            <View style={{display:"flex",flexDirection:"row"}}>
-                                                <Text style={[globalFont.fonts,{fontSize:14,marginLeft:20}]}>{item.id_banner}. {item.five_stars_character}</Text>
-                                                { isBannerChecked(item.id_banner,selectedBanner) && (
-                                                    <Text>    ✓</Text>
-                                                )}
-                                            </View>
-                                        </TouchableOpacity>
-                                    )
-                                }}
-                            />
+                            <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                            <View style={styles.modal_content}>
+                                <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
+                                    <Text style={[globalFont.fonts,{fontSize:scale(18),marginRight:20}]}>Select banner:</Text>
+                                </View>
+                                <FlatList
+                                    data={banner}
+                                    scrollEnabled={true}
+                                    showsVerticalScrollIndicator
+                                    renderItem={({item}) =>{
+                                        return(
+                                            <TouchableOpacity style={styles.select_item_banner}
+                                                onPress={()=>{
+                                                    setSelectedBanner(item.id_banner);
+                                                    setIsVisibleBanner(false)
+                                                }}
+                                            >
+                                                <View style={{display:"flex",flexDirection:"row"}}>
+                                                    <Text style={[globalFont.fonts,{fontSize:14,marginLeft:20}]}>{item.id_banner}. {item.five_stars_character}</Text>
+                                                    { isBannerChecked(item.id_banner,selectedBanner) && (
+                                                        <Text>    ✓</Text>
+                                                    )}
+                                                </View>
+                                            </TouchableOpacity>
+                                        )
+                                    }}
+                                />
+                            </View>
                         </View>
-                    </View>
                 </Modal>
                 
+
                  <Modal
                     visible={isVisibleHistory}
                     transparent={true}
+                    statusBarTranslucent={false}
                     onRequestClose={() => setIsVisibleHistory(false)}
                     animationType="fade"
-                    style={{justifyContent:"center",alignItems:"center"}}
-                    
-                    >
-                    <View style={{flex:1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent:"center"}}>
-                        <TouchableOpacity onPress={()=> {setIsVisibleHistory(false)}}  style={styles.close_button_modal}>
-                        <ImageBackground
-                            source={closeButton}
-                            style={{width:50,height:50}}
-                        />
-                        </TouchableOpacity>
+                    style={{flex:1,justifyContent:"center",alignItems:"center"}}>
                         <View style={styles.modalContainer}>
-                            <ImageBackground style={{position:"absolute",width:622.3, height:350}} source={history_bg}/>
-                            <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
-                                <Text style={[globalFont.fonts,{fontSize:22,marginRight:20}]}>History:</Text>
+                            <View style={styles.modal_button_bar}>
+                                <TouchableOpacity onPress={()=> {setIsVisibleHistory(false)}}  style={styles.modal_close_button}>
+                                    <ImageBackground source={closeButton}style={styles.modal_close_button} />
+                                </TouchableOpacity>
                             </View>
-                            <FlatList
-                                    style={{width:450,height:170}}
-                                    numColumns={4}
-                                    contentContainerStyle={{alignItems:"center"}} 
-                                    data={five_stars_history_pity}
-                                    renderItem={({item}) =>{
-                                        return(   <PityCard data_history={item}/>)
-                                    }}
-                                    
-                            />
-                            <TouchableOpacity
-                                onPress={() => {
-                                    resetHistoryFromFile();
-                                    initHistoryData();
-                                    setIsVisibleHistory(false);
-                                }}
-                            >
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Reset History</Text>
-                            </TouchableOpacity>
+                            <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                            <View style={styles.modal_content}>
+                                <Text style={[globalFont.fonts,{fontSize:22,marginRight:20,textAlign:"center",padding:scale(10)}]}>History:</Text>
+                                <FlatList
+                                        style={{width:450,height:170}}
+                                        numColumns={4}
+                                        contentContainerStyle={{alignItems:"center"}} 
+                                        data={five_stars_history_pity}
+                                        renderItem={({item}) =>{
+                                            return(   <PityCard data_history={item}/>)
+                                        }} />
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            resetHistoryFromFile();
+                                            initHistoryData();
+                                            setIsVisibleHistory(false);
+                                        }}
+                                    >
+                                        <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Reset History</Text>
+                                    </TouchableOpacity>
+                            </View>
+                            
                         </View>
-                    </View>
+                    
                 </Modal>               
                 
-                {showVideo &&  (
-                <View>
-                    <Video 
-                        ref={videoRef} 
-                        style={[styles.box]}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay
-                        useNativeControls={false}
-                        source={getVideoPullPath(listGacha)} 
-                        onPlaybackStatusUpdate={handleStatus}
-                        /> 
-                    <TouchableOpacity
-                        style={styles.skip_button}
-                        onPress={()=>{
-                            SplashScreen.preventAutoHideAsync();
-                            setTimeout( () => {SplashScreen.hideAsync()}, 3000);
-                            setShowVideo(false);
-                            setShowGachaList(true);
-                        }}
-                        >
-                        <Text style={[globalFont.fonts, {color:"white", fontSize:14}]}>Skip ▶</Text>
-                    </TouchableOpacity>
-                </View>
-                )}
+                
                 { showGachaList &&
                 (<ImageBackground
                     source={gachaBackground}
-                    style={styles.box}
+                    style={{flex:1, justifyContent:"center", alignItems:"center", zIndex:2}}
                     >
-                    <View style={{position:"relative"}}>
+                    <View style={{flex:1, alignItems:"center",display:"flex", flexDirection:"column"}}>
                         <FlatList
                             data={listGacha}
                             horizontal={true}
@@ -752,181 +734,206 @@ export function WishSimulator(){
                             }}
                                
                         />
+
+                        <View style={{width:"80%",display:"flex",flexDirection:"row",position:"absolute",justifyContent:"flex-end",marginTop:scale(40)}}>
+                            <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={()=> {setShowGachaList(false)}}
+                            >
+                                <ImageBackground
+                                source={closeButton}
+                                style={{width:30,height:30}}
+                            />
+                        </TouchableOpacity>
+                        </View>
                     </View>
-                    <TouchableOpacity 
-                        style={styles.closeButton}
-                        onPress={()=> {setShowGachaList(false)}}
-                        >
-                        <ImageBackground
-                            source={closeButton}
-                            style={{width:30,height:30}}
-                        />
-                    </TouchableOpacity>
                 </ImageBackground>
                 )}
-
-
-
-
-
-
-
 
                 {!showGachaList && !showVideo &&(
                 <View style={styles.button_view}>
                     
-                    <View style={styles.button_bar}>
-                        <TouchableOpacity
-                        style={styles.store_button}
-                        onPress={()=>{
-                            setInterwinedFate(intertwinedFate+100);
-                        }}>
-                            <ImageBackground
-                                source={pull_button_bg}
-                                resizeMode="cover"
-                                style={{position:'absolute',width:140,height:35,}}
-                            >
-                            <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Shop</Text>
-                            </View>
-                            </ImageBackground>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                        style={[styles.store_button,{marginTop:110}]}
-                        onPress={()=>{
-                            setIsVisibleHistory(true)
-                        }}>
-                            <ImageBackground
-                                source={pull_button_bg}
-                                resizeMode="cover"
-                                style={{position:'absolute',width:140,height:35,}}
-                            >
-                            <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>History</Text></View>
-                            </ImageBackground>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.pull_button,{marginTop:200}]}
-                            onPress={()=>{
-                                if(intertwinedFate -1 >= 0){
-                                    setShowVideo(true)
-                                    setListGacha(gacha(rateUpCharId,1,selectedBanner));
-                                    setInterwinedFate(intertwinedFate-1);
-                                }
-                            }}>
+                    {/* Button bar 1 */}
+                    <View style={[styles.button_bar,{marginTop:scale(20)}]}>
+                        <View  style={styles.button_group_2}>
+                            <TouchableOpacity style={styles.button_} onPress={()=>{navigation.navigate("Welcome")}}>
                                 <ImageBackground
-                                    source={pull_button_bg}
-                                    resizeMode="cover"
-                                    style={{position:'absolute',width:140,height:35}}
-                                >
-                                <View>
-                                    <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:10,color:"#a49a90",marginTop:3}]}>Wish x1</Text>
-                                    <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:10,color:"#a49a90",marginRight:20}]}>x1</Text>
-                                    <Image
-                                        source={intertwined_fate}
-                                        style={{width:15, height:15,position:"absolute",top:"50%",left:"55%"}}
-                                        resizeMode="cover"
-                                    />
+                                    source={button_bg}
+                                    contentFit="cover"
+                                    style={styles.img_bg_button}>
+                                <View style={styles.view_text_button}>
+                                    <Text style={styles.text_button}>Exit</Text>
                                 </View>
                                 </ImageBackground>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.pull_button,{marginTop:110}]}
-                            onPress={()=>{
-                                if(intertwinedFate -10 >= 0){
-                                    setListGacha(gacha(rateUpCharId,10,selectedBanner));
-                                    setShowVideo(true);
-                                    setInterwinedFate(intertwinedFate-10);
-                                }
-                            }}>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity style={styles.button_} onPress={()=>{setIsVisibleBanner(true);}}>
                                 <ImageBackground
-                                    source={pull_button_bg}
-                                    resizeMode="cover"
-                                    style={{position:'absolute',width:140,height:35,}}
-                                >
-                                <View>
-                                    <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:10,color:"#a49a90",marginTop:3}]}>Wish x10</Text>
-                                    <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:10,color:"#a49a90",marginRight:20}]}>x10</Text>
-                                    <Image
-                                        source={intertwined_fate}
-                                        style={{width:15, height:15,position:"absolute",top:"50%",left:"55%"}}
-                                        resizeMode="cover"
-                                    />
+                                    source={button_bg}
+                                    contentFit="cover"
+                                    style={styles.img_bg_button}>
+                                <View style={styles.view_text_button}>
+                                    <Text style={styles.text_button}>Select banner</Text>
                                 </View>
                                 </ImageBackground>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={[styles.button_view]}>
-                        <Image
-                        style={styles.banner_style}
-                        source={{uri: bannerUrl}}
-                    />
-                    </View>
-                    <View style={[styles.button_bar]}>
+                            </TouchableOpacity>
+    
+                            <TouchableOpacity style={styles.button_}
+                            onPress={()=>{
+                                setIsLoading(true);
+                                readHistoryFromFile()
+                                    .then(dataRead => {
+                                        getLuckyAnalysis(dataRead)
+                                            .then((result) => {
+                                                setAnalysisResult(result);
+                                                setIsLoading(false);
+                                                setIsVisiblePityAnalysis(true);
+                                            })
+                                            .catch(error => {
+                                                setIsLoading(false);
+                                                console.log("Error analyzing history: " + error);
+                                            });
+                                    })
+                                    .catch(error => {
+                                        setIsLoading(false);
+                                        alert("Error reading history: " + error);
+                                    });
+                            }}>
+                                <ImageBackground
+                                    source={button_bg}
+                                    contentFit="cover"
+                                    style={styles.img_bg_button}
+                                >
+                                <View style={styles.view_text_button}>
+                                    <Text style={styles.text_button}>Pity analysis AI</Text>
+                                </View>
+                                </ImageBackground>
+                            </TouchableOpacity>
+                        </View>
 
-                        <TouchableOpacity
-                        style={styles.select_banner_button}
-                        onPress={()=>{
-                            setIsVisibleBanner(true);
-                        }}>
-                            <ImageBackground
-                                source={pull_button_bg}
-                                resizeMode="cover"
-                                style={{position:'absolute',width:140,height:35,}}
-                            >
-                            <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Select banner</Text>
-                            </View>
-                            </ImageBackground>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                        style={[styles.select_banner_button, {marginTop: 120}]}
-                        onPress={()=>{
-                            setIsLoading(true);
-                            readHistoryFromFile()
-                                .then(dataRead => {
-                                    getLuckyAnalysis(dataRead)
-                                        .then((result) => {
-                                            setAnalysisResult(result);
-                                            setIsLoading(false);
-                                            setIsVisiblePityAnalysis(true);
-                                        })
-                                        .catch(error => {
-                                            setIsLoading(false);
-                                            console.log("Error analyzing history: " + error);
-                                        });
-                                })
-                                .catch(error => {
-                                    setIsLoading(false);
-                                    alert("Error reading history: " + error);
-                                });
-                        }}>
-                            <ImageBackground
-                                source={pull_button_bg}
-                                resizeMode="cover"
-                                style={{position:'absolute',width:140,height:35,}}
-                            >
-                            <View>
-                                <Text style={[globalFont.fonts,{alignSelf:"center",fontSize:12,color:"#a49a90",top:"50%"}]}>Pity analysis AI</Text>
-                            </View>
-                            </ImageBackground>
-                        </TouchableOpacity>
                         <View style={styles.intertwined_fate_amount}>
                             <View style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
                                 <Image
                                     source={intertwined_fate}
                                     style={{width:20, height:20}}
-                                    resizeMode="cover"/>
+                                    contentFit="cover"/>
                                 <Text style={[globalFont.fonts, {fontSize:14, alignSelf:"center", color:"white"}]}>{intertwinedFate}</Text>
                             </View>
                         </View>
                     </View>
+                    
+                    {/* Banner image */}
+                        <View style={styles.banner_image_container}>
+                            <ImageBackground
+                                source={bannerUrl}
+                                style={styles.banner_image}
+                                contentFit="contain"
+                                priority={"high"}
+                            />
+                        </View>
 
-                </View>
+                    {/* Button bar 2 */}
+                    <View style={styles.button_bar}>
+                        <View style={styles.button_group_2}>
+                            <TouchableOpacity
+                            style={styles.button_}
+                            onPress={()=>{
+                                setInterwinedFate(intertwinedFate+100);
+                            }}>
+                                <ImageBackground
+                                    source={button_bg}
+                                    contentFit="cover"
+                                    style={styles.img_bg_button}
+                                >
+                                <View style={styles.view_text_button}> 
+                                    <Text style={styles.text_button}>Shop</Text>
+                                </View>
+                                </ImageBackground>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            style={styles.button_}
+                            onPress={()=>{
+                                setIsVisibleHistory(true)
+                            }}>
+                                <ImageBackground
+                                    source={button_bg}
+                                    contentFit="cover"
+                                    style={styles.img_bg_button}
+                                >
+                                <View style={styles.view_text_button}>
+                                    <Text style={styles.text_button}>History</Text></View>
+                                </ImageBackground>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.button_group_2}>
+                            <TouchableOpacity style={styles.button_}
+                                onPress={()=>{
+                                    if(intertwinedFate -1 >= 0){
+                                        setShowVideo(true)
+                                        setListGacha(gacha(rateUpCharId,1,selectedBanner));
+                                        setInterwinedFate(intertwinedFate-1);
+                                    }
+                                }}>
+                                    <ImageBackground
+                                        source={button_bg}
+                                        contentFit="cover"
+                                        style={styles.img_bg_button}
+                                    >
+                                    <View style={styles.view_text_button}>
+                                        <Text style={styles.text_button}>Wish x1</Text>
+                                        <Text style={styles.text_button}>x1 <Image source={intertwined_fate} style={{width:15, height:15,position:"absolute"}} contentFit="cover" /></Text>
+                                    </View>
+                                    </ImageBackground>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.button_}
+                                onPress={()=>{
+                                    if(intertwinedFate -10 >= 0){
+                                        setListGacha(gacha(rateUpCharId,10,selectedBanner));
+                                        setShowVideo(true);
+                                        setInterwinedFate(intertwinedFate-10);
+                                    }
+                                }}>
+                                    <ImageBackground source={button_bg} contentFit="cover" style={styles.img_bg_button}>
+                                    <View style={styles.view_text_button}>
+                                        <Text style={styles.text_button}>Wish x10</Text>
+                                        <Text style={styles.text_button}>x10 <Image source={intertwined_fate} style={{width:15, height:15,position:"absolute"}} contentFit="cover" /></Text>
+                                    </View>
+                                    </ImageBackground>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                </View> /*end button_view */
                 )}
                 </ImageBackground>
-            </View>
-        </SafeAreaView>
+
+                {showVideo &&  (
+                <View style={styles.video_overlay}>
+                    <Video 
+                        ref={videoRef} 
+                        style={styles.video_fullscreen}
+                        resizeMode={ResizeMode.COVER}
+                        shouldPlay
+                        useNativeControls={false}
+                        source={getVideoPullPath(listGacha)} 
+                        onPlaybackStatusUpdate={handleStatus}
+                        /> 
+                    <TouchableOpacity
+                        style={styles.skip_button}
+                        onPress={()=>{
+                            // SplashScreen.preventAutoHideAsync();
+                            // setTimeout( () => {SplashScreen.hideAsync()}, 3000);
+                            setShowVideo(false);
+                            setShowGachaList(true);
+                        }}
+                        >
+                        <Text style={[globalFont.fonts, {color:"white", fontSize:14}]}>Skip ▶</Text>
+                    </TouchableOpacity>
+                </View>
+                )}
+           
+        </View>
     </SafeAreaProvider>
     )
 }
@@ -1079,70 +1086,102 @@ const styles = StyleSheet.create({
         overflow: 'visible',
         marginTop:35
     },
-    container:{
-        position: 'relative',
-        alignSelf:"center",
-        flex:1
+        video_overlay:{
+        position: "absolute",
+        flex: 1,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor:"white",
+
     },
-    box: {
-        width: width,
-        height: height*0.86,
+    video_fullscreen:{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        top: 0,
+        left: 0,
     },
-    button:{
-        width:50,
-        borderColor:"black",
-        borderWidth:2
+    container: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    banner_style:{
-        margin:"auto",
-        width:440,
-        height:220,
-        transform:[{rotate:"90deg"}],
-        right:"35%"
-    },
+    // Button view ( chiếm toàn bộ màn hình landscape )
+    // Chia layout 1:1:1 3 row, row giữa là banner, 2 row còn lại là button
     button_view:{
+        display:"flex",
         flex:1,
-        // backgroundColor:"red",
+        width: width,
+        height: height,
+        alignItems:"center",
+        flexDirection:"column",
+        justifyContent:"space-between",
+    },
+    // Button bar style, each button bar is a row of the layout
+    button_bar:{
+        width:"90%",
+        minHeight: scale(50),
+        paddingVertical: scale(10),
         display:"flex",
         flexDirection:"row",
-        justifyContent:"space-between"
+        justifyContent:"space-between",
+        zIndex:1,
     },
-    button_bar:{
-        width:70,
-        top:"10%",
-        alignItems:"center",
-        // backgroundColor:"black"
+    // Gôm 2 button lại thành 1 group_button
+    button_group_2:{
+        display:"flex",
+        flexDirection:"row",
     },
-    store_button:{
-        transform: [{rotate:'90deg'}],
-        borderRadius:20,       
-        width:140,height:35,
+    // Button style
+    button_:{
+        borderRadius:20,
+        width:scale(120),
+        height:scale(30),
+        marginHorizontal:scale(5),
     },
-    select_banner_button:{
-        transform: [{rotate:'90deg'}],
-        width:100,
-        height:25,
-        borderRadius:25,
+    // Image background for button
+    img_bg_button:{
+        flex:1,
+    },
+    // View that contains text for button
+    view_text_button:{
+        flex:1,
         alignItems:"center",
         justifyContent:"center"
     },
-    pull_button:{
-        transform: [{rotate:'90deg'}],
-        borderRadius:20,
-        width:140,height:35,
-        
+    text_button:{
+        fontFamily:"genshin_font",
+        fontSize:scale(11),
+        color: "#a49a90"
+    },
+    banner_image_container:{
+        position:"absolute",
+        width: scale(width * 0.45),
+        // display:"flex",
+        // flexDirection:"column",
+        // alignItems:"center",
+        // justifyContent:"center",
+        height: height,
+    },
+    banner_image:{
+        width: "100%",
+        height: "100%",
     },
     intertwined_fate_amount:{
-        transform: [{rotate:'90deg'}],
         width:100,
         height:25,
         backgroundColor:"rgba(92, 113, 124,0.6)",
         borderRadius:25,
         alignItems:"center",
         justifyContent:"center",
-        marginTop:370
     },
-      resultGachaCard: {
+    resultGachaCard: {
         width: 54, 
         // height: 230,
         height:300,
@@ -1158,7 +1197,6 @@ const styles = StyleSheet.create({
         margin: 0,
         padding: 0,
         overflow: 'hidden',
-
     },
     gachaCharacter: {
         width: 48,
@@ -1169,47 +1207,62 @@ const styles = StyleSheet.create({
         borderRadius:5
     },
     closeButton:{
-        width:30,
-        height:30,
-        top: '92%',
-        left: '87%',
-        position:"absolute"
+        width:scale(30),
+        height:scale(30),
     },
     flatList:{
-        transform: [{ rotate: "90deg" }],
         alignSelf:"center",
-        width:610,
-        position:"absolute",
-        marginTop:200,
-        padding:10
+        width:"100%",
     },
     skip_button:{
-        transform:[{rotate:"90deg"}],
         zIndex:2,
-        position:"absolute",
+        position:"absolute", // ====================================
         top: '92%',
         left: '85%',
     },
     modalContainer:{
-        transform:[{rotate:"90deg"}],
+        flex:1,
+        position:"relative",
         alignContent:"center",
         justifyContent:"center",
         alignItems:"center",
-
+        backgroundColor:"rgba(0,0,0,0.5)",
+    },
+    modal_content:{
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"center",
+        paddingBottom:scale(40),
+        maxHeight:height * 0.7,
+    },
+    modal_button_bar:{
+        display:"flex",
+        position:"absolute",
+        width:"70%",
+        flexDirection:"row",
+        justifyContent:"flex-end",
+        zIndex:2,
+        top:scale(40),
+    },
+    modal_close_button:{
+        width:scale(40),
+        height:scale(40),
+    },
+    modal_book_bg:{
+        position:"absolute",
+        width:scale(width*0.7),
+        height:scale(height*0.8)
     },
     select_item_banner:{
         backgroundColor:"#f6f1e7",
         borderColor:"#d5bf94",
         borderWidth:1,
-        width:250,
-        height:50,
+        width:width * 0.4,
+        height:scale(40),
         justifyContent: "center",
 
     },
     close_button_modal:{
-        position:"absolute",
-        top:"78%",
-        left:"73%",
-        zIndex:2
+        // position:"absolute",
     }
 })
