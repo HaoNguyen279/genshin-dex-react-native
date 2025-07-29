@@ -1,15 +1,14 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, FlatList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, Pressable, Dimensions } from "react-native";
+import { View, FlatList, StyleSheet, Text, TouchableOpacity, TextInput, Pressable, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {Image} from "expo-image";
 
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
 import { scale, verticalScale } from "react-native-size-matters";
 import { useFonts } from "expo-font";
-const Tab = createBottomTabNavigator();
+
 
 const preload_icon_list = data.map( item => item.url_icon);
 
@@ -71,9 +70,8 @@ export function Home(){
     }
     const [loaded,error] = useFonts({
         'montserrat': require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
-    });
-    const [fontsLoaded, setFontsLoaded] = useFonts({
-        'montserrat-semi-bold': require('../assets/fonts/Montserrat-SemiBold.ttf'),
+        'montserrat-semi-bold': require("../assets/fonts/Montserrat-SemiBold.ttf"),
+        'genshin_font': require('../assets/fonts/genshin_font.ttf'),
     });
 
     useEffect(() =>{
@@ -85,7 +83,7 @@ export function Home(){
         }
         preload_url();
     })
-    if(loading) return <CustomSplashScreen/>
+    if(loading || !loaded) return <CustomSplashScreen/>
 
     return(
         <SafeAreaView style={{backgroundColor:"#f4f4f4ff", flex:1}}>
@@ -139,11 +137,13 @@ const styles = StyleSheet.create({
      search_bar:{
         display:"flex",
         flexDirection:"row",
+        justifyContent:"center",
+        alignItems:"center",
         margin:"auto",
         marginTop:10
     },
     search_input:{
-        width: wid - 100,
+        width: scale(wid*0.6),
         borderWidth: 2,
         borderRadius: 10,
         height: verticalScale(32),
@@ -151,11 +151,11 @@ const styles = StyleSheet.create({
     },
     text:{
         backgroundColor:"rgba(40, 50, 70, 1)",
-        fontWeight: "600",
-        fontFamily: "montserrat",
+        fontFamily: "genshin_font",
+        fontSize:scale(10),
         width:wid/8*2,
         textAlign:"center",
-        color:"white",
+        color:"#dcdcdc",
         borderBottomLeftRadius:20,
         borderBottomRightRadius:20,
         borderWidth:1,

@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions, StatusBar} from "react-native"
+import { StyleSheet, View, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions, StatusBar, Platform, Alert} from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { use, useEffect, useRef, useState } from "react";
@@ -8,7 +8,7 @@ import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image, ImageBackground } from "expo-image";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Svg, { Path  } from 'react-native-svg';
-import { scale, verticalScale, moderateScale, s } from "react-native-size-matters";
+import { scale, verticalScale, moderateScale } from "react-native-size-matters";
 import * as FileSystem from 'expo-file-system';
 import { GoogleGenAI } from "@google/genai";
 
@@ -16,7 +16,8 @@ import data from "../assets/data/character.json";
 import banner from "../assets/data/banner.json";
 import { GEMINI_API_KEY } from "@env";
 import LoadingModal from "./splashscreen/Loading";
-import { useNavigation } from "@react-navigation/native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+
 
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -30,9 +31,10 @@ async function getResponse(prompt : string) {
     return response.text;
 }
 async function getLuckyAnalysis(data : HistoryPity[]) {
+    if(data.length === 0) return "Không có dữ liệu để phân tích";
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: "Đọc file json sau đây và phân tích độ may mắn của tôi (Mỗi document là 1 character gồm name là tên, won là có trúng rate hay không, (trong gacha, trúng rate là win 1 tỷ lệ 50%, nếu lose thì lần tiếp theo chắc chắn sẽ trúng)), phân tích ghi ra, character nào mà user sở hữu nhiều nhất, với 'c0' là 1 nhân vật, 'c1' là 2 nhân vật,... Trả về khoảng vài dòng text( ko dùng markdown, với mỗi dòng thêm ký tự '> '), bao gồm: Độ may mắn, Nhân vật sở hữu nhiều nhất, Số lần pull : (bằng tổng pity của từng document), Win/Total: (won là số document có won: true, Total là tổng số document ), Tỉ lệ win: ,  List char : (Ví dụ Dehya c2,..) của các nhân vật, Pity trung bình: (Số lần pull/ tổng số document)  " + JSON.stringify(data),
+        contents : "Đọc chuỗi JSON sau, mỗi phần tử (document) đại diện cho một lần người dùng nhận được một nhân vật từ gacha. Mỗi document bao gồm: name (tên nhân vật), won (true nếu trúng rate-up, tức thắng 50/50), pity (số roll). Hãy phân tích và trả về kết quả bằng một vài dòng text (không dùng markdown, mỗi dòng bắt đầu bằng '> '). Bao gồm: Độ may mắn (dựa trên tỷ lệ win >50% thì 'Rất may mắn', =50% thì 'Bình thường', <50% thì 'Kém may mắn'), Nhân vật sở hữu nhiều nhất (dạng c0, c1,... c0 là sở hữu 1 lần, c1 là 2 lần..), Số lần pull (tổng pity), Win/Total (số lần won true / tổng document), Tỉ lệ win (phần trăm, làm tròn 2 chữ số), List char (ví dụ: Diluc c1, Dehya c2,...), Pity trung bình (Tổng pity chia số document, làm tròn 2 chữ số). Dữ liệu JSON: " + JSON.stringify(data),
     });
 
     console.log(response.text);
@@ -192,6 +194,12 @@ async function readHistoryFromFile(){
 async function resetHistoryFromFile(){
     const emptyData : HistoryPity[] = [];
     await writeHistoryToFile(emptyData);
+    history = {
+        "pity" : 0,
+        "pulled" : [] as number[],
+        "isGuaranteed_fiveStars": false,
+        "isGuaranteed_fourStars": false,
+    };
     console.log("Successfully reset pull history!");
 }
 
@@ -242,7 +250,7 @@ const getWinResult4starsCharacterId = (isGuaranteed_fourStars : boolean,listIdCh
 
 // Chance
 const FOUR_STAR_CHANCE = 51; // 5.1% = 51/1000
-const FIVE_STAR_CHANCE = 7; // 0.7% = 7/1000
+const FIVE_STAR_CHANCE = 6; // 0.6% = 6/1000
 
 
 // Lấy random ra (url) của 1 trong 5 vũ khí 3 sao
@@ -325,6 +333,7 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
                         else history.isGuaranteed_fiveStars = true;
                         
                         five_stars_history_pity.push({idChar :idCharGot, pity:pity_5, won, name: getCharacterNameById(idCharGot)});
+                        console.log("Pulled 5 stars : " + data.find(item => item.id === idCharGot)?.name + " with won: " + won);
                         history.pulled.push(5);
                         writeHistoryToFile(five_stars_history_pity);
                     }
@@ -357,6 +366,7 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
 
                 five_stars_history_pity.push({idChar :idCharGot, pity:pity_5, won, name: getCharacterNameById(idCharGot)});
                 history.pulled.push(5);
+                console.log("Pulled 5 stars : " + data.find(item => item.id === idCharGot)?.name + " with won: " + won);
                 writeHistoryToFile(five_stars_history_pity);
             }
         }
@@ -465,8 +475,6 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
   );
 };
 
-
-
 const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
     const color10 = "#bdf070";
     const color30 = "#60d74c"; 
@@ -495,24 +503,35 @@ const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
 }
 
 const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisiblePityAnalysis: (visible: boolean) => void, responseText : string }> = ({ isVisiblePityAnalysis, setIsVisiblePityAnalysis, responseText }) => {
+    // const [modalReady, setModalReady] = useState(false);
+    // useEffect(() => {
+    //     if (isVisiblePityAnalysis) {
+    //         // Delay để đảm bảo iOS ready
+    //         setTimeout(() => setModalReady(true), Platform.OS === 'ios' ? 1000 : 500);
+    //     } else {
+    //         setModalReady(false);
+    //     }
+    // }, [isVisiblePityAnalysis]);
     return (
         <Modal
             visible={isVisiblePityAnalysis}
-            transparent={true}
-            statusBarTranslucent={false}
+            transparent={true}// Quan trọng cho iOS
+            statusBarTranslucent={Platform.OS !== 'ios'} // ✅ iOS-specific
+            supportedOrientations={['landscape']}  // Cho iOS landscape
+            onRequestClose={() => setIsVisiblePityAnalysis(false)}
             animationType="fade"
-            style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+            >
             <View style={styles.modalContainer}>
                 <View style={styles.modal_button_bar}>
                     <TouchableOpacity onPress={()=> {setIsVisiblePityAnalysis(false)}} style={styles.modal_close_button}>
-                        <ImageBackground source={closeButton} style={styles.modal_close_button} />
+                        <ImageBackground source={closeButton} style={styles.modal_close_button} resizeMode="cover" />  
                     </TouchableOpacity>
                 </View>
-                <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                <ImageBackground style={styles.modal_book_bg} source={history_bg}  resizeMode="cover"/>
                 <View style={styles.modal_content}>
-                    <View style={{flex:1,display:"flex",alignItems:"center",maxWidth:"60%"}}>
-                        <Text style={[globalFont.fonts,{fontSize:scale(16),marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
-                        <Text style={[globalFont.fonts,{fontSize:scale(12)}]}>{responseText}</Text>
+                    <View style={{flex:1,display:"flex",alignItems:"center",maxWidth:"70%"}}>
+                        <Text style={[globalFont.fonts,{fontSize:16,marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
+                        <Text style={[globalFont.fonts,{fontSize:12}]}>{responseText}</Text>
                     </View>
                 </View>
             </View>
@@ -526,6 +545,7 @@ export function WishSimulator(){
     const [loaded, error] = useFonts({
         'genshin_font': require('../assets/fonts/genshin_font.ttf'),
     }); 
+    const navigation : NavigationProp<RootStackParamList> = useNavigation();
 
     const videoRef = useRef<Video>(null);
     const [showVideo,setShowVideo] = useState(false);
@@ -554,14 +574,17 @@ export function WishSimulator(){
             setShowGachaList(true);
         }
     }
+    
     useEffect(() => {
         const foundBanner = banner.find((item) => item.id_banner === selectedBanner);
         const charId : number = data.find((item) => item.name === foundBanner?.five_stars_character)?.id!
         if (foundBanner) {
             setBannerUrl(foundBanner.banner_url);
             setRateUpCharId(charId);
+            console.log("Selected banner:", foundBanner.five_stars_character, "with id:", charId);
         } else {
             setBannerUrl("");
+            console.warn("Banner not found for id:", selectedBanner);
         }
     }, [selectedBanner]);
 
@@ -588,6 +611,37 @@ export function WishSimulator(){
         preloadImages();
         setTimeout(()=> {setLoading(false)}, 9000);
     }, []);
+    useEffect(() => {   
+        const unsubscribe = navigation.addListener("focus", async () =>{
+            try {
+                setOrientationReady(false);
+                await ScreenOrientation.lockAsync(
+                    ScreenOrientation.OrientationLock.LANDSCAPE
+                );
+                const { width: newWidth, height: newHeight } = Dimensions.get('window');
+                setSize({ width: newWidth, height: newHeight });
+                setOrientationReady(true);
+                
+                StatusBar.setHidden(true, 'fade');
+            } catch (error) {
+                console.warn('Error handling focus event:', error);
+            }
+        });
+        const unsubscribeBlur = navigation.addListener('blur', () => {
+            console.log("WishSimulator blurred");
+            StatusBar.setHidden(false, 'fade');
+        });
+
+        return () => {
+            unsubscribe();
+            unsubscribeBlur();
+        };
+    }, [navigation]);
+
+
+
+
+    
     useEffect(() => {
         const setupScreenAndStatusBar = async () => {
             try {
@@ -598,6 +652,9 @@ export function WishSimulator(){
                 ).then(() => {
                     console.log("Screen orientation locked to landscape");
                     setOrientationReady(true);
+                    setSize({width: Dimensions.get('window').width, height: Dimensions.get('window').height});
+                    height = size.height;
+                    width = size.width;
                 });
             } catch (error) {
                 console.warn('Error setting up screen:', error);
@@ -607,13 +664,13 @@ export function WishSimulator(){
                 width = size.width;
             }
         }; 
-        setupScreenAndStatusBar();
+        if(!orientationReady) setupScreenAndStatusBar();
         return () => {
             StatusBar.setHidden(false, 'fade');
             ScreenOrientation.unlockAsync();
         };
     }, []);
-
+    
 
     if (loading || !orientationReady) return <CustomSplashScreen />;
         if (!loaded && !error) {
@@ -626,24 +683,25 @@ export function WishSimulator(){
         <PityAnlysisModal   isVisiblePityAnalysis={isVisiblePityAnalysis}
                             setIsVisiblePityAnalysis={setIsVisiblePityAnalysis}
                             responseText={analysisResult} />
-        <View style={{flex:1}}>
+            <View style={{flex:1}}>
                 <ImageBackground style={styles.container} source={backgroundSource} contentFit="cover">
 
                 {/* Modal for selecting banner */}
                 <Modal
                     visible={isVisibleBanner}
                     transparent={true}
-                    statusBarTranslucent={false}
+                    // 
+                    presentationStyle="overFullScreen" // Quan trọng cho iOS
+                    supportedOrientations={['landscape']} // Cho iOS landscape
                     onRequestClose={() => setIsVisibleBanner(false)}
-                    animationType="fade"
-                    style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                    animationType="fade">
                         <View style={styles.modalContainer}>
                             <View style={styles.modal_button_bar}>
                                 <TouchableOpacity onPress={()=> {setIsVisibleBanner(false)}} style={styles.modal_close_button}>
                                     <ImageBackground source={closeButton} style={styles.modal_close_button} />
                                 </TouchableOpacity>
                             </View>
-                            <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                            <ImageBackground style={styles.modal_book_bg} source={history_bg}/>
                             <View style={styles.modal_content}>
                                 <View style={{display:"flex",flexDirection:"row",alignItems:"center"}}>
                                     <Text style={[globalFont.fonts,{fontSize:scale(18),marginRight:20}]}>Select banner:</Text>
@@ -652,6 +710,7 @@ export function WishSimulator(){
                                     data={banner}
                                     scrollEnabled={true}
                                     showsVerticalScrollIndicator
+                                    style={{width:400,height:200}}
                                     renderItem={({item}) =>{
                                         return(
                                             <TouchableOpacity style={styles.select_item_banner}
@@ -678,19 +737,21 @@ export function WishSimulator(){
                  <Modal
                     visible={isVisibleHistory}
                     transparent={true}
-                    statusBarTranslucent={false}
+                    
+                    presentationStyle="overFullScreen" // Quan trọng cho iOS
+                    supportedOrientations={['landscape']} // Cho iOS landscape
                     onRequestClose={() => setIsVisibleHistory(false)}
                     animationType="fade"
-                    style={{flex:1,justifyContent:"center",alignItems:"center"}}>
+                    >
                         <View style={styles.modalContainer}>
                             <View style={styles.modal_button_bar}>
                                 <TouchableOpacity onPress={()=> {setIsVisibleHistory(false)}}  style={styles.modal_close_button}>
                                     <ImageBackground source={closeButton}style={styles.modal_close_button} />
                                 </TouchableOpacity>
                             </View>
-                            <ImageBackground style={styles.modal_book_bg}source={history_bg} contentFit="cover"/>
+                            <ImageBackground style={styles.modal_book_bg} source={history_bg}/>
                             <View style={styles.modal_content}>
-                                <Text style={[globalFont.fonts,{fontSize:22,marginRight:20,textAlign:"center",padding:scale(10)}]}>History:</Text>
+                                <Text style={[globalFont.fonts,{fontSize:22,marginRight:20,textAlign:"center",padding:10}]}>History:</Text>
                                 <FlatList
                                         style={{width:450,height:170}}
                                         numColumns={4}
@@ -754,7 +815,7 @@ export function WishSimulator(){
                 <View style={styles.button_view}>
                     
                     {/* Button bar 1 */}
-                    <View style={[styles.button_bar,{marginTop:scale(20)}]}>
+                    <View style={[styles.button_bar,{marginTop:scale(5)}]}>
                         <View  style={styles.button_group_2}>
                             <TouchableOpacity style={styles.button_} onPress={()=>{navigation.navigate("Welcome")}}>
                                 <ImageBackground
@@ -779,25 +840,25 @@ export function WishSimulator(){
                             </TouchableOpacity>
     
                             <TouchableOpacity style={styles.button_}
-                            onPress={()=>{
-                                setIsLoading(true);
-                                readHistoryFromFile()
-                                    .then(dataRead => {
-                                        getLuckyAnalysis(dataRead)
-                                            .then((result) => {
-                                                setAnalysisResult(result);
-                                                setIsLoading(false);
-                                                setIsVisiblePityAnalysis(true);
-                                            })
-                                            .catch(error => {
-                                                setIsLoading(false);
-                                                console.log("Error analyzing history: " + error);
-                                            });
-                                    })
-                                    .catch(error => {
+                            onPress={async ()=>{
+                                try {
+                                    setIsLoading(true);
+                                    const dataRead = await readHistoryFromFile();
+                                    const result = await getLuckyAnalysis(dataRead);
+                                    // Batch updates
+                                    setTimeout(() => {
+                                        setAnalysisResult(result);
                                         setIsLoading(false);
-                                        alert("Error reading history: " + error);
-                                    });
+                                        setIsVisiblePityAnalysis(true);
+                                    }, 100);
+                                } catch (error) {
+                                    setIsLoading(false);
+                                    console.log("Error analyzing history: " + error);
+                                    // iOS-specific error handling
+                                    if (Platform.OS === 'ios') {
+                                        Alert.alert('Error', 'Failed to analyze history. Please try again.');
+                                    }
+                                }
                             }}>
                                 <ImageBackground
                                     source={button_bg}
@@ -919,17 +980,19 @@ export function WishSimulator(){
                         source={getVideoPullPath(listGacha)} 
                         onPlaybackStatusUpdate={handleStatus}
                         /> 
-                    <TouchableOpacity
-                        style={styles.skip_button}
-                        onPress={()=>{
-                            // SplashScreen.preventAutoHideAsync();
-                            // setTimeout( () => {SplashScreen.hideAsync()}, 3000);
-                            setShowVideo(false);
-                            setShowGachaList(true);
-                        }}
-                        >
-                        <Text style={[globalFont.fonts, {color:"white", fontSize:14}]}>Skip ▶</Text>
-                    </TouchableOpacity>
+                    <View  style={{position:"absolute",top:0, width:"100%", height:100, justifyContent:"center", alignItems:"flex-end"}}>
+                        <TouchableOpacity
+                            style={styles.skip_button}
+                            onPress={()=>{
+                                // SplashScreen.preventAutoHideAsync();
+                                // setTimeout( () => {SplashScreen.hideAsync()}, 3000);
+                                setShowVideo(false);
+                                setShowGachaList(true);
+                            }}
+                            >
+                            <Text style={[globalFont.fonts, {color:"white", fontSize:16}]}>Skip ▶</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 )}
            
@@ -1162,12 +1225,12 @@ const styles = StyleSheet.create({
     },
     banner_image_container:{
         position:"absolute",
-        width: scale(width * 0.45),
-        // display:"flex",
-        // flexDirection:"column",
-        // alignItems:"center",
-        // justifyContent:"center",
-        height: height,
+        width: "60%",
+        height: "100%",
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        justifyContent:"center",
     },
     banner_image:{
         width: "100%",
@@ -1216,9 +1279,10 @@ const styles = StyleSheet.create({
     },
     skip_button:{
         zIndex:2,
+        padding:10,
+        margin:10,
+        marginRight:20,
         position:"absolute", // ====================================
-        top: '92%',
-        left: '85%',
     },
     modalContainer:{
         flex:1,
@@ -1227,11 +1291,15 @@ const styles = StyleSheet.create({
         justifyContent:"center",
         alignItems:"center",
         backgroundColor:"rgba(0,0,0,0.5)",
+
     },
     modal_content:{
+        position:"absolute",
         display:"flex",
         flexDirection:"column",
         justifyContent:"center",
+        alignContent:"center",
+        alignItems:"center",
         paddingBottom:scale(40),
         maxHeight:height * 0.7,
     },
@@ -1249,9 +1317,10 @@ const styles = StyleSheet.create({
         height:scale(40),
     },
     modal_book_bg:{
-        position:"absolute",
-        width:scale(width*0.7),
-        height:scale(height*0.8)
+        position: "absolute",
+        width: "70%", 
+        height: "80%", 
+        zIndex: 0, 
     },
     select_item_banner:{
         backgroundColor:"#f6f1e7",
@@ -1262,7 +1331,4 @@ const styles = StyleSheet.create({
         justifyContent: "center",
 
     },
-    close_button_modal:{
-        // position:"absolute",
-    }
 })
