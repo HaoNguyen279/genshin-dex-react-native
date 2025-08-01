@@ -1,24 +1,28 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {NavigationContainer } from '@react-navigation/native';
-import { StyleSheet, Image, Dimensions, StatusBar} from 'react-native';
+import {NavigationContainer, NavigationProp, useNavigation } from '@react-navigation/native';
+import { StyleSheet, Image, Dimensions} from 'react-native';
 import { Home } from './components/Home';
 import { ImagesList } from './components/ImagesList';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { WishSimulator } from './components/WishSimulator';
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import CustomSplashScreen from './components/splashscreen/CustomSplashScreen';
 import WelcomeScreen from './components/WelcomeScreen';
 import Profile from './components/Profile';
 import SignIn from './components/authenticationscreen/SignIn';
 import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
 
 export default function App() {
     const Stack = createNativeStackNavigator<RootStackParamList>();
     const Tab = createBottomTabNavigator();
-    const [loading, setLoading] = useState(true);
     const [isLandscape, setIsLandscape] = useState((Dimensions.get('window').width >= Dimensions.get('window').height));
-
+    const [loaded,error] = useFonts({
+            'montserrat': require("./assets/fonts/Montserrat-VariableFont_wght.ttf"),
+            'montserrat-semi-bold': require("./assets/fonts/Montserrat-SemiBold.ttf"),
+            'genshin_font': require("./assets/fonts/genshin_font.ttf"),
+  });
     const HomeStackScreen = ()=>{
       return(
         <Stack.Navigator>
@@ -67,63 +71,60 @@ export default function App() {
         </Stack.Navigator>
       )
     };
-        
     useEffect(() => {
-        const updateOrientation = () => {
-            const dim = Dimensions.get('window');
-            setIsLandscape(dim.width >= dim.height);
-            console.log("Current orientation: ", dim.width >= dim.height ? "Landscape" : "Portrait");
+        const handleOrientationChange = () => {
+            setIsLandscape(Dimensions.get('window').width >= Dimensions.get('window').height);
         };
-      updateOrientation();
-      // Lắng nghe orientation change
-      const subscription = Dimensions.addEventListener('change', updateOrientation);
+        const subscription = Dimensions.addEventListener('change', handleOrientationChange);
+        console.log("Orientation listener added 123123132");
+        return () => {
+            subscription?.remove();
+        };
+    },[]);
 
-      setLoading(false);
-      return () => subscription?.remove();
-    }, []);
-
-  if (loading) return <CustomSplashScreen/>;
-  return (
-	<SafeAreaProvider>
-	  <NavigationContainer>
-  		<Tab.Navigator
-  			screenOptions={{tabBarStyle:{height:70,paddingTop:10, display: isLandscape ? 'none' : 'flex'} , animation: 'shift'}}
-        > 
-        {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
-  			<Tab.Screen name='Welcome' component={WelcomeScreen}
-  				options={{
-  					headerShown:false, 
-  					tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
-  			<Tab.Screen name='HomePage' component={HomeStackScreen}
-  				options={{
-            headerShown:false,
-  					title:"Character Archive",
-  					tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
-  					}}/>
-  			<Tab.Screen name='Wish' component={WishSimulator}
-  				options={{
-            headerShown:false,
-            title:"Wish Simulator",
-  					tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
-        <Tab.Screen name='ProfileScreen' component={ProfileScreen}
-          options={{
-            title:"Profile",
-            headerShown:false,
-            tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
-          }}
-        />
-  		</Tab.Navigator>
-  	</NavigationContainer>
-	</SafeAreaProvider>
+    if (!loaded) return <CustomSplashScreen/>;
+    return (
+    <SafeAreaProvider>
+        <NavigationContainer>
+            <Tab.Navigator
+                screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}
+            > 
+            {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
+                <Tab.Screen name='Welcome' component={WelcomeScreen}
+                    options={{
+                        headerShown:false, 
+                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
+                <Tab.Screen name='HomePage' component={HomeStackScreen}
+                    options={{
+                        headerShown:false,
+                        title:"Character Archive",
+                        tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
+                        }}/>
+                <Tab.Screen name='Wish' component={WishSimulator}
+                    options={{
+                        headerShown:false,
+                        title:"Wish Simulator",
+                        tabBarStyle: {display: isLandscape ? 'none' : 'flex'},
+                        tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
+                <Tab.Screen name='ProfileScreen' component={ProfileScreen}
+                    options={{
+                        title:"Profile",
+                        headerShown:false,
+                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
+                }}
+            />
+            </Tab.Navigator>
+        </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  home:{
-    display: "flex",
-    flex: 1,
-    justifyContent: "center",
-    alignItems:"center",
-    alignContent:"center"
-  }
+    home:{
+        display: "flex",
+        flex: 1,
+        justifyContent: "center",
+        alignItems:"center",
+        alignContent:"center"
+    }
 });

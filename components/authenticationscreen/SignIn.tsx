@@ -10,7 +10,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import { signInWithCredential, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { WEB_CLIENT_ID } from "@env";
-import { useFonts } from "expo-font";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -82,9 +82,7 @@ export default function SignIn() {
                     setIsLoadingVisible(false);
                 });
         }
-        const [font, setFont] = useFonts({
-            'montserrat-semi-bold': require('../../assets/fonts/Montserrat-SemiBold.ttf'),
-        });
+
     
   return (
     <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>

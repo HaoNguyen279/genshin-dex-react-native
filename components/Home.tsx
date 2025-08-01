@@ -7,7 +7,7 @@ import {Image} from "expo-image";
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
 import { scale, verticalScale } from "react-native-size-matters";
-import { useFonts } from "expo-font";
+
 
 
 const preload_icon_list = data.map( item => item.url_icon);
@@ -68,22 +68,18 @@ export function Home(){
         if(searchInputRef != null)
             searchInputRef.current?.clear();
     }
-    const [loaded,error] = useFonts({
-        'montserrat': require("../assets/fonts/Montserrat-VariableFont_wght.ttf"),
-        'montserrat-semi-bold': require("../assets/fonts/Montserrat-SemiBold.ttf"),
-        'genshin_font': require('../assets/fonts/genshin_font.ttf'),
-    });
+
 
     useEffect(() =>{
         const preload_url = async () =>{
             await Promise.all(preload_icon_list.map( url_icon => Image.prefetch(url_icon)))
-            .then(() => console.log("Successfully preloaded url icon!"))
+            // .then(() => console.log("Successfully preloaded url icon!"))
             .catch(err => console.warn("Failed to preload url icon :" + err))
             setLoading(false);
         }
         preload_url();
     })
-    if(loading || !loaded) return <CustomSplashScreen/>
+    if(loading ) return <CustomSplashScreen/>
 
     return(
         <SafeAreaView style={{backgroundColor:"#f4f4f4ff", flex:1}}>

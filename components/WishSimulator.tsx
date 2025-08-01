@@ -3,7 +3,6 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { use, useEffect, useRef, useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from "expo-font";
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image, ImageBackground } from "expo-image";
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -340,18 +339,18 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
                     else if(four_stars_numbers_array.includes(randNumb)){
                         const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
                         console.log("Pulled 4 stars : " + data.find(item => item.id === randomChar)?.name);
-                        character_id.push(randomChar && randomChar ? randomChar : 99);
+                        character_id.push(randomChar && randomChar ? randomChar : 999);
                         history.pulled.push(4);
                     }
                     else{
-                        character_id.push(99);
+                        character_id.push(999);
                         history.pulled.push(3);
                     }
                 }
                 else{
                     const randomChar : number = getWinResult4starsCharacterId(history.isGuaranteed_fourStars, getListId4StarsRateUp(idBanner))!
                     console.log("Pulled 4 stars : " + data.find(item => item.id === randomChar)?.name);
-                    character_id.push(randomChar && randomChar ? randomChar : 99);
+                    character_id.push(randomChar && randomChar ? randomChar : 999);
                     history.pulled.push(4);
                 }
             }
@@ -542,9 +541,7 @@ const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisible
 export function WishSimulator(){
 
     SplashScreen.preventAutoHideAsync();
-    const [loaded, error] = useFonts({
-        'genshin_font': require('../assets/fonts/genshin_font.ttf'),
-    }); 
+
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
 
     const videoRef = useRef<Video>(null);
@@ -581,73 +578,58 @@ export function WishSimulator(){
         if (foundBanner) {
             setBannerUrl(foundBanner.banner_url);
             setRateUpCharId(charId);
-            console.log("Selected banner:", foundBanner.five_stars_character, "with id:", charId);
+            // console.log("Selected banner:", foundBanner.five_stars_character, "with id:", charId);
         } else {
             setBannerUrl("");
-            console.warn("Banner not found for id:", selectedBanner);
+            // console.warn("Banner not found for id:", selectedBanner);
         }
     }, [selectedBanner]);
 
     useEffect(() => {
-        const hide = async() =>{
-            if (loaded || error) {
-                SplashScreen.hideAsync();
-            }
-        };
-        hide();
-        console.log("Off")
-    }, [loaded, error]);
-
-    useEffect(() => {
 	    const preloadImages = async () => {
         await Promise.all(preload_gacha_cards.map( url => Image.prefetch(url)))
-            .then(() => console.log("Preloaded gacha card successfully!"))
+            // .then(() => console.log("Preloaded gacha card successfully!"))
             .catch(err => console.warn("Failed to preload gacha card? -----" + err) );
         await Promise.all(preload_gacha_banners.map(item => Image.prefetch(item)))
-            .then(() => console.log("Preloaded banner image successfully!"))
+            // .then(() => console.log("Preloaded banner image successfully!"))
             .catch(err => console.warn("Failed to preload banner image? -----" + err) );
         setLoading(false);
         };
         preloadImages();
-        setTimeout(()=> {setLoading(false)}, 9000);
+        setTimeout(()=> {setLoading(false)}, 15000);
     }, []);
-    useEffect(() => {   
-        const unsubscribe = navigation.addListener("focus", async () =>{
-            try {
-                setOrientationReady(false);
-                await ScreenOrientation.lockAsync(
-                    ScreenOrientation.OrientationLock.LANDSCAPE
-                );
-                const { width: newWidth, height: newHeight } = Dimensions.get('window');
-                setSize({ width: newWidth, height: newHeight });
-                setOrientationReady(true);
-                
-                StatusBar.setHidden(true, 'fade');
-            } catch (error) {
-                console.warn('Error handling focus event:', error);
-            }
-        });
-        const unsubscribeBlur = navigation.addListener('blur', () => {
-            console.log("WishSimulator blurred");
-            StatusBar.setHidden(false, 'fade');
-        });
-
-        return () => {
-            unsubscribe();
-            unsubscribeBlur();
-        };
-    }, [navigation]);
-
-
-
-
     
+        useEffect(() => {
+            const unsubscribe = navigation.addListener("focus", async () =>{
+                try {
+                    await ScreenOrientation.lockAsync(
+                        ScreenOrientation.OrientationLock.LANDSCAPE
+                    );
+                    const { width: newWidth, height: newHeight } = Dimensions.get('window');
+                    setSize({ width: newWidth, height: newHeight });
+                    setOrientationReady(true);
+                    StatusBar.setHidden(true, 'fade');
+                } catch (error) {
+                    console.warn('Error handling focus event:', error);
+                }
+            });
+            const unsubscribeBlur = navigation.addListener('blur', () => {
+                // console.log("WishSimulator blurred");
+                StatusBar.setHidden(false, 'fade');
+            });
+
+            return () => {
+                unsubscribe();
+                unsubscribeBlur();
+            };
+        }, [navigation]);
+
     useEffect(() => {
         const setupScreenAndStatusBar = async () => {
             try {
                 StatusBar.setHidden(true, 'fade');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                ScreenOrientation.lockAsync(
+                // await new Promise(resolve => setTimeout(resolve, 1000));
+                await ScreenOrientation.lockAsync(
                     ScreenOrientation.OrientationLock.LANDSCAPE
                 ).then(() => {
                     console.log("Screen orientation locked to landscape");
@@ -665,6 +647,7 @@ export function WishSimulator(){
             }
         }; 
         if(!orientationReady) setupScreenAndStatusBar();
+
         return () => {
             StatusBar.setHidden(false, 'fade');
             ScreenOrientation.unlockAsync();
@@ -673,9 +656,8 @@ export function WishSimulator(){
     
 
     if (loading || !orientationReady) return <CustomSplashScreen />;
-        if (!loaded && !error) {
-            return null;
-    }
+
+    
 
     return(
     <SafeAreaProvider>

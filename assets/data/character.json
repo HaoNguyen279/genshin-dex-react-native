@@ -1371,8 +1371,8 @@
         "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/48dba0c10560a3ef573f17d97408b5a0_2527001828446746987.png?x-oss-process=image%2Fformat%2Cwebp",
         "gacha_card_url": "https://i.ibb.co/N6SyX7P3/skirknew-114-gacha-card-w145.webp"
     },
-    {   
-        "id": 99,
+    { 
+        "id": 999,
         "name": "TestingCard",
         "element": "Geo",
         "rarity": 3,

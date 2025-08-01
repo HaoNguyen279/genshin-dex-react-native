@@ -18,6 +18,7 @@ import { createUserContent, GoogleGenAI } from "@google/genai";
 
 import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
 
+
 const provider = new GoogleAuthProvider(); // Firebase Google Auth Provider
 
 provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
@@ -128,7 +129,7 @@ export default function Profile(){
                 setPassword(""); 
             })
             .catch((error) => {
-                console.log('Firebase login error:', error.code); // 👈 Bắt buộc có dòng này
+                console.log('Firebase login error:', error.code);
                 switch(error.code){
                     case "auth/user-not-found":
                         alert('Không tìm thấy người dùng. Vui lòng kiểm tra lại email.');
@@ -166,22 +167,21 @@ export default function Profile(){
     }, [response]);
   };
     return(
-        <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>
+        <SafeAreaView style={{flex:1, backgroundColor:"#F8F7F0"}}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
-                        <View> 
-                            <View style={{width:width,height: height*0.1,flexDirection:"row",alignItems:"center", justifyContent:"center", backgroundColor:"#f0f0f0"}}>
-                                    <Image
-                                        style={{width: 50, height:50, margin:10}}
-                                        source={require("../assets/png/profile.png")}
-                                    />
-                                <View>
-                                    <Text style={{color:"#000", fontSize:24}}>{userData.displayName}</Text>
-                                    <Text style={{color:"#888", fontSize:16}}>Email : {userData.email}</Text>
-                                </View>
-                            </View>
+                    <View style={styles.profile_container}>
+                        <View style={styles.img_profile_container}>
+                            <Image
+                                style={styles.img_profile}
+                                source={require("../assets/png/profile.png")}
+                            />
+                        </View>
+                        <Text style={styles.username}>{userData.displayName}</Text>
+                        <Text style={styles.email}> {userData.email}</Text>
+                    </View>
                             <View style={{margin:20}}>
                                 <Text style={{fontSize:24,textAlign:'center'}}>Login</Text>
                                 <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:20}}>
@@ -230,25 +230,7 @@ export default function Profile(){
                                     onPress={() => {promptAsync()}}>
                                     <Text>Login with Google</Text>
                                 </Button>
-                                <TextInput placeholder="Ask a question..." style={{marginTop:20}} onChangeText={setInputText}/>
-                                <Button 
-                                    mode="contained-tonal"
-                                    style={{marginTop:20}}
-                                    onPress={async () => {
-                                        setIsLoadingVisible(true);
-                                        getResponse(inputText)
-                                            .then(() => {
-                                                setIsLoadingVisible(false);
-                                            })
-                                            .catch((error) => {
-                                                setIsLoadingVisible(false);
-                                                console.log("Error asking AI: " + error);
-                                            });
-                                    }}>
-                                    <Text>Ask AI</Text>
-                                </Button>
                             </View>
-                        </View>
                 </ScrollView>
             </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
@@ -259,5 +241,42 @@ export default function Profile(){
 const styles = StyleSheet.create({
     fonts :{
         fontSize: 18,
+    },
+    profile_container: {
+        width: width,
+        alignItems: 'center',
+    },
+    img_profile: {
+        width:width*0.25,
+        height:width*0.25,
+
+    },
+    img_profile_container:{
+        width:width*0.25,
+        height:width*0.25,
+        backgroundColor:"#fff",
+        borderRadius:"50%",
+        alignItems:"center",
+        // Shadow for iOS
+        shadowColor: "#858585ff",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        // Shadow for Android
+        elevation: 5,
+    },
+    username: {
+        fontFamily:'genshin_font',
+        color:"#000",
+        fontSize:22,
+        marginTop:10,
+    },
+    email: {
+        color:"#888",
+        fontSize:16,
+        marginTop:5,
     }
 });

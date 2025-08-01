@@ -3,18 +3,13 @@ import { RouteProp, useIsFocused, useNavigation, useRoute } from "@react-navigat
 import { Shadow } from "react-native-shadow-2";
 import { Video, ResizeMode } from "expo-av";
 import { useEffect, useState } from "react";
-import { useFonts } from "expo-font";
-import * as SplashScreen from 'expo-splash-screen';
+
 import { DataTable } from "react-native-paper";
 import { scale } from "react-native-size-matters";
 
+import { BASE_URL, H_API_KEY } from "@env";
 
 
-const globalFont = StyleSheet.create({
-    fonts:{
-        fontFamily:"genshin_font"
-    }
-})
 
 const damage_data = {
   "Level": ["Lv.1", "Lv.2", "Lv.3"],
@@ -140,7 +135,7 @@ const RenderAscend = ({ region, element }: { region?: string, element?: string }
     return(
         <View>
             <View style={{marginLeft:30}}>
-                <Text style={[globalFont.fonts, {color:"white"}]}>Ascension Materials</Text>
+                <Text style={{fontFamily: "genshin_font" ,color:"white"}}>Ascension Materials</Text>
             </View>
             <View style={styles.ascend_mat_bar}>
                 <View style={{marginHorizontal:10}}>
@@ -284,31 +279,64 @@ const getFontColor = (element : string | undefined) =>{
             })
     }
 }
+
+const getVoiceLine = (voice : any) => {
+    const result1 = voice.friendLines.find(item => item.voicelineType === '3001');
+    const result2 = voice.friendLines.find(item => item.voicelineType === '3002');
+    const result3 = voice.friendLines.find(item => item.voicelineType === '3003');
+    var returned = {
+        1 : result1,
+        2 : result2,
+        3 : result3
+    }
+    return returned;
+}
+
 const { width, height } = Dimensions.get('window');
 
 export function ImagesList(){
+    const [data,setData] = useState({});
+    const [voice,setVoice] = useState({});
+    const [loaded,setLoaded] = useState(false);
 
-    SplashScreen.preventAutoHideAsync();
-    console.log("--SplashScreen is on --")
-    const [loaded, error] = useFonts({
-        'genshin_font': require('../assets/fonts/genshin_font.ttf'),
-    });
     const navigation = useNavigation();
     const route : RouteProp<RootStackParamList, "Images"> = useRoute();
-    const [loading,setLoading] = useState(true);
-    useEffect(() => {
-        const hide = async() =>{
-            if (loaded || error) {
-            SplashScreen.hideAsync();
-            }
-        };
-        hide();
-        console.log("__Off__")
-    }, [loaded, error]);
 
-    if (!loaded && !error) {
-        return null;
-    }
+
+    useEffect(() => {
+        const char_name : string = route.params?.name || "Lumine";
+        const fetchData = async () => {
+            const requestURL1 = BASE_URL + "/api/char?name=" + encodeURIComponent(char_name);
+            const requestURL2 = BASE_URL + "/api/voiceline?name=" + encodeURIComponent(char_name);
+            const responese1 = await fetch( requestURL1 ,{
+                method: 'GET',
+                headers:{
+                    'Accept': 'application/json',
+                    'x-api-key' : H_API_KEY
+                }
+            });
+            const responese2 = await fetch( requestURL2 ,{
+                method: 'GET',
+                headers:{
+                    'Accept': 'application/json',
+                    'x-api-key' : H_API_KEY
+                }
+            });
+            if(!responese1.ok || !responese2.ok){
+                console.warn("Error response");
+                
+            }
+            else{
+                const responseData = await responese1.json();
+                const responseVoice = await responese2.json();
+                setVoice(responseVoice);
+                setData(responseData);
+                console.log(responseData);
+                setLoaded(true);
+            }
+        }
+        if(!loaded) fetchData();
+    }, [loaded]);
     return(
         <SafeAreaView style={{flex:1}}>
                 <Video
@@ -321,7 +349,7 @@ export function ImagesList(){
                 <ScrollView style={{flex:1,paddingTop:scale(20),paddingBottom:scale(50)}}>
                 <View>
                     <TouchableOpacity onPress={() => navigation.goBack()}> 
-                        <Text style={[globalFont.fonts, {color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
+                        <Text style={[{fontFamily: 'genshin_font',color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
                     </TouchableOpacity>
                     <View style={{display:"flex", alignItems:"center", marginTop:40}}>
                         <Shadow
@@ -336,13 +364,6 @@ export function ImagesList(){
                                     source={{uri:route.params?.url_image}}
                                     style={styles.image}
                                     resizeMode="contain"
-                                    onLoad={() =>{
-                                        // Load xong
-                                        setLoading(false);
-                                    }}
-                                    onError={() =>{
-                                        setLoading(false);
-                                    }}
                                 />
                             </View>
                         </Shadow>
@@ -350,26 +371,48 @@ export function ImagesList(){
 
                         <View >
                             <View style={styles.text_box}>
-                                <Text style={[{textAlign:"left", fontSize:24},globalFont.fonts, getFontColor(route.params?.element)?.font]}>{ route.params?.name}</Text>
-                                <Text style={[globalFont.fonts, {color:"white", marginRight:60}]}>   
+                                <Text style={[{textAlign:"left", fontSize:24, fontFamily: 'genshin_font'}, getFontColor(route.params?.element)?.font]}>{ route.params?.name}</Text>
+                                <Text style={[ {fontFamily: 'genshin_font',color:"white", marginRight:60}]}>   
                                     <Image source={getElementIcon(route.params?.element)} style={styles.element_icon}/>
                                     {route.params?.role}
                                 </Text>
                             </View>
                             <View style={styles.info}>
-                                
                                     <View>
-                                        <Text style={[globalFont.fonts, styles.info_text]}>Element :{route.params?.element}</Text>
+                                        <Text style={[{fontFamily: 'genshin_font'}, styles.info_text]}>Element :{route.params?.element}</Text>
                                     </View>
-
                                     <View>
-                                        <Text style={[globalFont.fonts, styles.info_text]}>Weapon: {route.params?.weapon}</Text>
+                                        <Text style={[{fontFamily: 'genshin_font'}, styles.info_text]}>Weapon: {route.params?.weapon}</Text>
                                     </View>
-                                
                             </View>
-                            <View style={{padding: 20}}>
-                                <Text style={{color:"white"}}> 
-                                    {route.params?.about}
+                            <View style={[styles.info_row, {marginTop:10}]}>
+                                <Text style={[getFontColor(route.params?.element)?.font,{fontFamily: 'genshin_font',fontSize:18}]}> 
+                                    {data.title}
+                                </Text>
+                            </View>
+                            <View style={[styles.info_row, {marginRight:10}]}>
+                                <Text style={{color:"white",fontFamily: 'genshin_font',fontSize:12}}> 
+                                    {'\t'}{'\t'}{data.description}
+                                </Text>
+                            </View>
+                            <View style={styles.info_row}>
+                                <Text style={styles.info_text_row}> 
+                                    Ngày sinh: {data.birthday}
+                                </Text>
+                            </View>
+                            <View style={styles.info_row}>
+                                <Text style={styles.info_text_row}> 
+                                    Quốc gia: {data.region}
+                                </Text>
+                            </View>
+                            <View style={styles.info_row}>
+                                <Text style={styles.info_text_row}> 
+                                    Cung mệnh: {data.constellation}
+                                </Text>
+                            </View>
+                            <View style={styles.info_row}>
+                                <Text style={styles.info_text_row}> 
+                                    Chiều cao: {getVoiceLine(voice)?.[1]?.description || "Unknown"}
                                 </Text>
                             </View>
                         </View>
@@ -404,9 +447,18 @@ const styles = StyleSheet.create({
         justifyContent:"center",
         alignItems:"center",
     },
+    info_row:{
+        marginLeft: 20,
+        paddingVertical:2,
+    },
+    info_text_row:{
+        color:"white",
+        fontFamily: 'genshin_font'
+    },
     text_box:{
         display:"flex",
         flexDirection: "row",
+        flexWrap : 'wrap', // Flex wrap giúp item được tự động đẩy xuống hàng dưới tương tự flex CSS web, nếu ko thì đéo có
         marginLeft:60,
         marginTop: 20,
         marginBottom: 10,

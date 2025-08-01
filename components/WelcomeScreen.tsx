@@ -1,45 +1,53 @@
-import React, { use, useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, StatusBar  } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from 'expo-font';
+import React, {  useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useFocusEffect } from '@react-navigation/native';
-
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { BASE_URL,H_API_KEY } from '@env';
 const WelcomeScreen = () => {
-  const [loaded, error] = useFonts({
-			'genshin_font': require('../assets/fonts/genshin_font.ttf'),
-		});
-  useEffect(() =>{
-    SplashScreen.preventAutoHideAsync();
-  }, []);
+    const navigation : NavigationProp<RootStackParamList> = useNavigation();
+    const [name,setName] = useState('');
+    useEffect(() => {
+        const unsubcribe = navigation.addListener('focus', async () =>{
+            await ScreenOrientation.getOrientationAsync()
+                .then(async (orientation) =>{
+                    if((orientation === 1 || orientation === 2)) return;
+                    await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);  
+                });
+        })
+        return unsubcribe;
+    }, [navigation]);
 
+    useEffect(() => {
+        const name = "Es";
+        console.log("WelcomeScreen: ");
 
-	useEffect(() => {
-		const hide = async() =>{
-			if (loaded === true) {
-        await console.log("Loaded successfully");
-				await SplashScreen.hideAsync();
-			}
-      else{
-        console.log("Loaded failed");
-      }
-		};
-		hide();
-		console.log("Loading fonts");
-	}, [loaded,error]);
-
-    useFocusEffect(
-        useCallback(() => { 
-            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
-            return () => {
-                ScreenOrientation.unlockAsync();
-            };
-        }, [])
-    );
-    if(!loaded)
-        return null;
-
+        const urlString = BASE_URL + "/api?name=" + encodeURIComponent(name);
+        const callApi = async () => {
+            try {
+                const response = await fetch( urlString, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'x-api-key': H_API_KEY,
+                    }
+                }
+            );
+            console.log("Response: ", response);
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.log("Lỗi server: ", text);
+                    return;
+                }
+                const data = await response.json();
+                console.log("Data: ", data);
+                setName(data.name);
+            } catch (error) {
+                console.log("LOI ____: " + error);
+            }
+        }
+        callApi();
+    }, [navigation]);
 
     return (
         <View style={styles.container}>
@@ -53,6 +61,7 @@ const WelcomeScreen = () => {
             <Image source={require("../assets/png/furina_sticker.webp")} style={{width:100,height:100,marginTop:20}}/>
             <View style={{alignItems:"center", position:"absolute", bottom:"5%"}}>
                 <Text style={{marginTop:200}}>To use app, please choose tab below</Text>
+                <Text>{name}</Text>
                 <Text style={{fontSize:30}}>↓↓↓</Text>
             </View>
         </View>
