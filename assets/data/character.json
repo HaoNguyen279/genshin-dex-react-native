@@ -1191,7 +1191,7 @@
     },
     {
         "id": 86,
-        "name": "Childe",
+        "name": "Tartaglia",
         "element": "Hydro",
         "rarity": 5,
         "weapon": "Bow",
@@ -1233,14 +1233,14 @@
     },
     {
         "id": 89,
-        "name": "Yao Yao",
+        "name": "Yaoyao",
         "element": "Dendro",
         "rarity": 4,
         "weapon": "Polearm",
         "region": "Liyue",
         "role": "Support",
         "birthday": "March 6",
-        "about": "Yao Yao is a Dendro character in Genshin Impact, a young disciple of the Adepti in Liyue. Cheerful and caring, she heals with her pet bunny. As a Support, Yao Yao provides healing and applies Dendro for reactions.",
+        "about": "Yaoyao is a Dendro character in Genshin Impact, a young disciple of the Adepti in Liyue. Cheerful and caring, she heals with her pet bunny. As a Support, Yaoyao provides healing and applies Dendro for reactions.",
         "url_image": "https://upload-static.hoyoverse.com/hoyolab-wiki/2022/12/10/35428890/83a68ac0ef9842b6121b029f066d8b1e_5584137347742560769.png?x-oss-process=image%2Fformat%2Cwebp",
         "url_icon": "https://cdn.wanderer.moe/genshin-impact/character-icons/ui-avataricon-yaoyao.png",
         "gacha_card_url": "https://genshin.ch/templates/assets/img/avatar_icons/a077_gacha_card.webp"

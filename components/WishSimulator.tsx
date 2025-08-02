@@ -1207,7 +1207,7 @@ const styles = StyleSheet.create({
     },
     banner_image_container:{
         position:"absolute",
-        width: "60%",
+        width: "50%",
         height: "100%",
         display:"flex",
         flexDirection:"column",

@@ -8,6 +8,7 @@ import { DataTable } from "react-native-paper";
 import { scale } from "react-native-size-matters";
 
 import { BASE_URL, H_API_KEY } from "@env";
+import {defaultCharacter, defaultVoiceover} from "../utils/constant";
 
 
 
@@ -280,7 +281,11 @@ const getFontColor = (element : string | undefined) =>{
     }
 }
 
-const getVoiceLine = (voice : any) => {
+const getVoiceLine = (voice : Voiceover) => {
+        if (!Array.isArray(voice.friendLines)) {
+        console.error('Caught error:', voice.friendLines);
+        return { 1: undefined, 2: undefined, 3: undefined };
+    }
     const result1 = voice.friendLines.find(item => item.voicelineType === '3001');
     const result2 = voice.friendLines.find(item => item.voicelineType === '3002');
     const result3 = voice.friendLines.find(item => item.voicelineType === '3003');
@@ -295,8 +300,8 @@ const getVoiceLine = (voice : any) => {
 const { width, height } = Dimensions.get('window');
 
 export function ImagesList(){
-    const [data,setData] = useState({});
-    const [voice,setVoice] = useState({});
+    const [data,setData] = useState<Character>(defaultCharacter);
+    const [voice,setVoice] = useState<Voiceover>(defaultVoiceover);
     const [loaded,setLoaded] = useState(false);
 
     const navigation = useNavigation();
@@ -324,7 +329,6 @@ export function ImagesList(){
             });
             if(!responese1.ok || !responese2.ok){
                 console.warn("Error response");
-                
             }
             else{
                 const responseData = await responese1.json();
@@ -332,6 +336,7 @@ export function ImagesList(){
                 setVoice(responseVoice);
                 setData(responseData);
                 console.log(responseData);
+                console.log(responseVoice);
                 setLoaded(true);
             }
         }
@@ -390,31 +395,50 @@ export function ImagesList(){
                                     {data.title}
                                 </Text>
                             </View>
-                            <View style={[styles.info_row, {marginRight:10}]}>
-                                <Text style={{color:"white",fontFamily: 'genshin_font',fontSize:12}}> 
-                                    {'\t'}{'\t'}{data.description}
+                            <View style={styles.voice_line_row}>
+                                <Text style={styles.info_text_row}> 
+                                    ▶{'\t'}{data.description}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    Ngày sinh: {data.birthday}
+                                    <Text style={styles.title_text}>Ngày sinh:</Text> {data.birthday || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    Quốc gia: {data.region}
+                                    <Text style={styles.title_text}>Quốc gia:</Text> {data.region || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    Cung mệnh: {data.constellation}
+                                    <Text style={styles.title_text}>Cung mệnh:</Text> {data.constellation || "<No data>"}
                                 </Text>
                             </View>
-                            <View style={styles.info_row}>
+                            <View style={{marginHorizontal: 20, marginTop: 15}}>
                                 <Text style={styles.info_text_row}> 
-                                    Chiều cao: {getVoiceLine(voice)?.[1]?.description || "Unknown"}
+                                    Voice lines :
                                 </Text>
                             </View>
+                            {loaded && (
+                            <View>
+                            <View style={styles.voice_line_row}>
+                                <Text style={styles.info_text_row}> 
+                                    ▶{'\t'}<Text style={styles.title_text}>{getVoiceLine(voice)?.[1]?.title}</Text> : {getVoiceLine(voice)?.[1]?.description || "<No data>"}
+                                </Text>
+                            </View>
+                            <View style={styles.voice_line_row}>
+                                <Text style={styles.info_text_row}> 
+                                    ▶{'\t'}<Text style={styles.title_text}>{getVoiceLine(voice)?.[2]?.title}</Text> : {getVoiceLine(voice)?.[2]?.description || "<No data>"}
+                                </Text>
+                            </View>
+                            <View style={styles.voice_line_row}>
+                                <Text style={styles.info_text_row}> 
+                                    ▶{'\t'}<Text style={styles.title_text}>{getVoiceLine(voice)?.[3]?.title}</Text> : {getVoiceLine(voice)?.[3]?.description || "<No data>"}
+                                </Text>
+                            </View>
+                            </View>
+                            )}
                         </View>
                 </View>
                 <RenderTable/>
@@ -447,9 +471,16 @@ const styles = StyleSheet.create({
         justifyContent:"center",
         alignItems:"center",
     },
+    title_text:{
+        color:"pink",
+    },
     info_row:{
-        marginLeft: 20,
+        marginHorizontal: 20,
         paddingVertical:2,
+    },
+    voice_line_row:{
+        marginHorizontal: 20,
+        marginVertical:5,   
     },
     info_text_row:{
         color:"white",

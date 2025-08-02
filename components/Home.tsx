@@ -38,8 +38,8 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                             )
                         }}
                         ListEmptyComponent={() =>(
-                            <View style={{alignItems:"center", marginTop:200}}>
-                                <Text>The world is wide, try to search something else</Text>
+                            <View style={{alignItems:"center", marginTop:90,display:"flex",justifyContent:"center",marginHorizontal:50}}>
+                                <Text style={{fontFamily:"genshin_font", color: "black",textAlign:"center"}}>The world is wide, try to search something else!</Text>
                                 <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
                             </View>
                         )}

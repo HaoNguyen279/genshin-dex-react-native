@@ -22,7 +22,7 @@ const WelcomeScreen = () => {
         const name = "Es";
         console.log("WelcomeScreen: ");
 
-        const urlString = BASE_URL + "/api?name=" + encodeURIComponent(name);
+        const urlString = BASE_URL + "/api/char?name=" + encodeURIComponent(name);
         const callApi = async () => {
             try {
                 const response = await fetch( urlString, {
