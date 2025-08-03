@@ -11,8 +11,10 @@ const WelcomeScreen = () => {
         const unsubcribe = navigation.addListener('focus', async () =>{
             await ScreenOrientation.getOrientationAsync()
                 .then(async (orientation) =>{
+                    console.log("Current orientation: ", orientation);
                     if((orientation === 1 || orientation === 2)) return;
                     await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);  
+                    console.log("Current orientation: ", orientation);
                 });
         })
         return unsubcribe;
@@ -33,14 +35,12 @@ const WelcomeScreen = () => {
                     }
                 }
             );
-            console.log("Response: ", response);
                 if (!response.ok) {
                     const text = await response.text();
                     console.log("Lỗi server: ", text);
                     return;
                 }
                 const data = await response.json();
-                console.log("Data: ", data);
                 setName(data.name);
             } catch (error) {
                 console.log("LOI ____: " + error);

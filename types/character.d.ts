@@ -63,3 +63,24 @@ type Character = {
     stats: StatFunction;
     version: string;
 }
+
+type CharacterStats = {
+    baseStats:{
+        level: number,
+        ascension: number,
+        hp: number,
+        attack: number,
+        defense: number,
+        specialized: number
+    },
+    maxStats: {
+        level: number,
+        ascension: number,
+        hp: number,
+        attack: number,
+        defense: number,
+        specialized: number
+    },
+    typeSubstatText: string,
+    version: string
+}

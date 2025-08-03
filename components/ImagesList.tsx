@@ -8,63 +8,52 @@ import { DataTable } from "react-native-paper";
 import { scale } from "react-native-size-matters";
 
 import { BASE_URL, H_API_KEY } from "@env";
-import {defaultCharacter, defaultVoiceover} from "../utils/constant";
+import {defaultCharacter, defaultVoiceover, defaultCharacterStats} from "../utils/constant";
+import {getRounded1Number,getPercentage} from "../utils/functions";
 
 
 
-const damage_data = {
-  "Level": ["Lv.1", "Lv.2", "Lv.3"],
-  "1-Hit DMG": ["80.0%", "86.6%", "93.1%"],
-  "2-Hit DMG": ["36.5%x2", "39.4%x2", "42.4%x2"],
-  "3-Hit DMG": ["33.2%x3", "35.9%x3", "38.6%x3"],
-  "4-Hit DMG": ["116.2%", "125.6%", "135.1%"],
-  "Charged Attack DMG": ["194%", "210%", "225%"],
-  "Charged Attack Stamina Cost": ["50.0", "50.0", "50.0"],
-  "Plunge DMG": ["74.6%", "80.7%", "86.7%"],
-  "Low/High Plunge DMG": [
-    "149%/186%",
-    "161%/201%",
-    "173%/217%"
-  ]
-}
-const RenderTable = () =>{
+
+const RenderTable : React.FC<{stats: CharacterStats}> = ({stats}) =>{
     return (
-        <DataTable style={{margin:10}}>
-            <DataTable.Header style={{backgroundColor: 'rgba(52, 52, 52, 0.3)'}}>
-                <DataTable.Title textStyle={styles.table_title}>Level</DataTable.Title>
-                <DataTable.Title textStyle={styles.table_title}>{damage_data["Level"][0]}</DataTable.Title>
-                <DataTable.Title textStyle={styles.table_title}>{damage_data["Level"][1]}</DataTable.Title>
-                <DataTable.Title textStyle={styles.table_title}>{damage_data["Level"][2]}</DataTable.Title>
-            </DataTable.Header>
+            <View style={{paddingHorizontal: 20, marginTop: 20}}>
+                <DataTable>
+                    <DataTable.Header style={{backgroundColor: 'rgba(52, 52, 52, 0.3)'}}>
+                        <DataTable.Title textStyle={styles.table_title}>Level</DataTable.Title>
+                        <DataTable.Title textStyle={styles.table_title}>Lv.1(Base)</DataTable.Title>
+                        <DataTable.Title textStyle={styles.table_title}>Lv.90(Max)</DataTable.Title>
+    
+                    </DataTable.Header>
+        
+                    <DataTable.Row> 
+                        <DataTable.Cell textStyle={styles.table_title}>HP</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.baseStats.hp)}</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.maxStats.hp)}</DataTable.Cell>
 
-            <DataTable.Row> 
-                <DataTable.Cell textStyle={styles.table_title}>1-Hit DMG</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["1-Hit DMG"][0]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["1-Hit DMG"][1]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["1-Hit DMG"][2]}</DataTable.Cell>
-            </DataTable.Row>
+                    </DataTable.Row>
+        
+                    <DataTable.Row>
+                        <DataTable.Cell textStyle={styles.table_title}>ATK</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.baseStats.attack)}</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.maxStats.attack)}</DataTable.Cell>
 
-            <DataTable.Row>
-                <DataTable.Cell textStyle={styles.table_title}>2-Hit DMG</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["2-Hit DMG"][0]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["2-Hit DMG"][1]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["2-Hit DMG"][2]}</DataTable.Cell>
-            </DataTable.Row> 
+                    </DataTable.Row>
 
-            <DataTable.Row>
-                <DataTable.Cell textStyle={styles.table_title}>3-Hit DMG</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["3-Hit DMG"][0]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["3-Hit DMG"][1]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["3-Hit DMG"][2]}</DataTable.Cell>
-            </DataTable.Row>
+                    <DataTable.Row>
+                        <DataTable.Cell textStyle={styles.table_title}>DEF</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.baseStats.defense)}</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getRounded1Number(stats.maxStats.defense)}</DataTable.Cell>
 
-            <DataTable.Row>
-                <DataTable.Cell textStyle={styles.table_title}>Low/High Plunge DMG</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["Low/High Plunge DMG"][0]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["Low/High Plunge DMG"][1]}</DataTable.Cell>
-                <DataTable.Cell textStyle={styles.cell}>{damage_data["Low/High Plunge DMG"][2]}</DataTable.Cell>
-            </DataTable.Row>
-        </DataTable>
+                    </DataTable.Row>
+        
+                    <DataTable.Row>
+                        <DataTable.Cell textStyle={styles.table_title}>{stats.typeSubstatText}</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getPercentage(stats.baseStats.specialized, stats.typeSubstatText)}</DataTable.Cell>
+                        <DataTable.Cell textStyle={styles.cell}>{getPercentage(stats.maxStats.specialized, stats.typeSubstatText)}</DataTable.Cell>
+                    </DataTable.Row>
+                </DataTable>
+            </View>
+
     )
 }
 
@@ -302,6 +291,7 @@ const { width, height } = Dimensions.get('window');
 export function ImagesList(){
     const [data,setData] = useState<Character>(defaultCharacter);
     const [voice,setVoice] = useState<Voiceover>(defaultVoiceover);
+    const [characterStats,setCharacterStats] = useState<CharacterStats>(defaultCharacterStats);
     const [loaded,setLoaded] = useState(false);
 
     const navigation = useNavigation();
@@ -312,7 +302,7 @@ export function ImagesList(){
         const char_name : string = route.params?.name || "Lumine";
         const fetchData = async () => {
             const requestURL1 = BASE_URL + "/api/char?name=" + encodeURIComponent(char_name);
-            const requestURL2 = BASE_URL + "/api/voiceline?name=" + encodeURIComponent(char_name);
+            const requestURL2 = BASE_URL + "/api/charInfo?name=" + encodeURIComponent(char_name);
             const responese1 = await fetch( requestURL1 ,{
                 method: 'GET',
                 headers:{
@@ -329,14 +319,19 @@ export function ImagesList(){
             });
             if(!responese1.ok || !responese2.ok){
                 console.warn("Error response");
+                return;
             }
             else{
                 const responseData = await responese1.json();
-                const responseVoice = await responese2.json();
-                setVoice(responseVoice);
+                const responseInfo = await responese2.json();
+                setVoice(responseInfo.voice);
+                setCharacterStats({
+                    baseStats: responseInfo.statsBase,
+                    maxStats: responseInfo.statsMax,
+                    typeSubstatText: responseInfo.typeSubstatText,
+                    version: responseInfo.version
+                });
                 setData(responseData);
-                console.log(responseData);
-                console.log(responseVoice);
                 setLoaded(true);
             }
         }
@@ -415,6 +410,11 @@ export function ImagesList(){
                                     <Text style={styles.title_text}>Cung mệnh:</Text> {data.constellation || "<No data>"}
                                 </Text>
                             </View>
+                            <View style={styles.info_row}>
+                                <Text style={styles.info_text_row}> 
+                                    <Text style={styles.title_text}>Phiên bản ra mắt:</Text> {characterStats.version || "<No data>"}
+                                </Text>
+                            </View>
                             <View style={{marginHorizontal: 20, marginTop: 15}}>
                                 <Text style={styles.info_text_row}> 
                                     Voice lines :
@@ -441,7 +441,14 @@ export function ImagesList(){
                             )}
                         </View>
                 </View>
-                <RenderTable/>
+                <RenderTable
+                    stats={characterStats || {
+                        baseStats: { hp: 0, attack: 0, defense: 0, specialized: 0, level: 0, ascension: 0 },
+                        maxStats: { hp: 0, attack: 0, defense: 0, specialized: 0, level: 0, ascension: 0 },
+                        typeSubstatText: "",
+                        version: ""
+                    }}
+                />
                 <RenderAscend
                     region={route.params?.region}
                     element={route.params?.element}
@@ -525,11 +532,11 @@ const styles = StyleSheet.create({
         marginHorizontal:5
     },
     cell:{
-        color:"white"
+        color:"white",
+        paddingLeft:20
     },
     table_title:{
         color:"rgb(211, 188, 142)",
-        
     },
     box_materials:{
         width:80,

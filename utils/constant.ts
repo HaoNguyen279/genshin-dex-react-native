@@ -56,3 +56,23 @@ export const defaultVoiceover: Voiceover = {
     actionLines: [],
     version: {}
 };
+export const defaultCharacterStats: CharacterStats = {
+    baseStats: {
+        level: 1,
+        ascension: 0,
+        hp: 0,
+        attack: 0,
+        defense: 0,
+        specialized: 0
+    },
+    maxStats: {
+        level: 1,
+        ascension: 0,
+        hp: 0,
+        attack: 0,
+        defense: 0,
+        specialized: 0
+    },
+    typeSubstatText: "",
+    version: ""
+};
