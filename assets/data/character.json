@@ -1371,6 +1371,20 @@
         "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/48dba0c10560a3ef573f17d97408b5a0_2527001828446746987.png?x-oss-process=image%2Fformat%2Cwebp",
         "gacha_card_url": "https://i.ibb.co/N6SyX7P3/skirknew-114-gacha-card-w145.webp"
     },
+    {
+        "id": 99,
+        "name": "Ineffa",
+        "element": "Electro",
+        "rarity": 5,
+        "weapon": "Polearm",
+        "region": "Natlan",
+        "role": "Sub-DPS",
+        "birthday": "Data not available",
+        "about": "Skirk is a Cryo character in Genshin Impact. Fierce and skilled, she is known for her swordsmanship. As a Main DPS, Skirk deals high Cryo damage with swift melee attacks.",
+        "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/3/35/Skirk_Card.png/revision/latest?cb=20250513040246",
+        "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/48dba0c10560a3ef573f17d97408b5a0_2527001828446746987.png?x-oss-process=image%2Fformat%2Cwebp",
+        "gacha_card_url": "https://i.ibb.co/N6SyX7P3/skirknew-114-gacha-card-w145.webp"
+    },
     { 
         "id": 999,
         "name": "TestingCard",
@@ -1384,5 +1398,5 @@
         "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/0/0d/Traveler_Male_Card.png/revision/latest?cb=20220725205310",
         "url_icon": "https://cdn.wanderer.moe/genshin-impact/character-icons/ui-avataricon-playerboy.png",
         "gacha_card_url": "https://genshin.ch/templates/assets/img/gacha_weapons/w11302g.webp"
-    } 
+    }
 ]

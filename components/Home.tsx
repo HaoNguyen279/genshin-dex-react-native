@@ -97,7 +97,7 @@ export function Home(){
                     <Image
                         style={{width:30,height:30,margin:"auto"}}
                         source={require("../assets/png/search_icon.png")}
-                        resizeMode="contain"/>
+                        contentFit="contain"/>
                 </Pressable>
             </View>
             <RenderList

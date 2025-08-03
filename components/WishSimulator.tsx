@@ -17,8 +17,6 @@ import { GEMINI_API_KEY } from "@env";
 import LoadingModal from "./splashscreen/Loading";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 
-
-
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 var width : any; var height : any;
 async function getResponse(prompt : string) {
@@ -84,7 +82,6 @@ async function initHistoryData() {
     catch(error){
         console.warn("Caught error when trying to check if file is exists!");
     }
-
 };
 
 initHistoryData().then(test => console.log("Initialized history data!"));
