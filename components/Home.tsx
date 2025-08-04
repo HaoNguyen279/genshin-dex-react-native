@@ -39,7 +39,7 @@ const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
                         }}
                         ListEmptyComponent={() =>(
                             <View style={{alignItems:"center", marginTop:90,display:"flex",justifyContent:"center",marginHorizontal:50}}>
-                                <Text style={{fontFamily:"genshin_font", color: "black",textAlign:"center"}}>The world is wide, try to search something else!</Text>
+                                <Text style={{fontFamily:"genshin_font", color: "white",textAlign:"center"}}>The world is wide, try to search something else!</Text>
                                 <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
                             </View>
                         )}
@@ -82,12 +82,13 @@ export function Home(){
     if(loading ) return <CustomSplashScreen/>
 
     return(
-        <SafeAreaView style={{backgroundColor:"#f4f4f4ff", flex:1}}>
+        <SafeAreaView style={{backgroundColor:"#2a2a2a", flex:1}}>
             <View style={styles.search_bar}>
                 <TextInput
                     ref={searchInputRef}
                     style= {styles.search_input}
                     placeholder='Search'
+                    multiline={true}
                     onChangeText={setSearchText}
                     keyboardType='default'
                 /> 
@@ -126,9 +127,7 @@ const styles = StyleSheet.create({
         alignItems:"center",
         marginBottom:20,
         marginHorizontal:10,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: "#ffffffff",
+        borderRadius: 10,
     } ,
      search_bar:{
         display:"flex",
@@ -139,11 +138,13 @@ const styles = StyleSheet.create({
         marginTop:10
     },
     search_input:{
-        width: scale(wid*0.6),
+        backgroundColor:"rgba(202, 207, 217, 1)",
+        width: scale(wid*0.7),
         borderWidth: 2,
         borderRadius: 10,
         height: verticalScale(32),
         borderColor: "#dcdcdcff",
+        lineHeight:30
     },
     text:{
         backgroundColor:"rgba(40, 50, 70, 1)",
@@ -152,10 +153,8 @@ const styles = StyleSheet.create({
         width:wid/8*2,
         textAlign:"center",
         color:"#dcdcdc",
-        borderBottomLeftRadius:20,
-        borderBottomRightRadius:20,
-        borderWidth:1,
-        borderColor:"#dcdcdc",
+        borderBottomLeftRadius:10,
+        borderBottomRightRadius:10,
         borderTopWidth:0,
     },
     x_button:{

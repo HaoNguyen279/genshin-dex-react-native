@@ -7,7 +7,7 @@ import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import { Image, ImageBackground } from "expo-image";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Svg, { Path  } from 'react-native-svg';
-import { scale, verticalScale, moderateScale } from "react-native-size-matters";
+import { scale  } from "react-native-size-matters";
 import * as FileSystem from 'expo-file-system';
 import { GoogleGenAI } from "@google/genai";
 
@@ -246,7 +246,7 @@ const getWinResult4starsCharacterId = (isGuaranteed_fourStars : boolean,listIdCh
 
 // Chance
 const FOUR_STAR_CHANCE = 51; // 5.1% = 51/1000
-const FIVE_STAR_CHANCE = 6; // 0.6% = 6/1000
+const FIVE_STAR_CHANCE = 7; // 0.7% = 7/1000
 
 
 // Lấy random ra (url) của 1 trong 5 vũ khí 3 sao

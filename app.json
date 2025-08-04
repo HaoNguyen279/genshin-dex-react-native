@@ -7,7 +7,7 @@
     "orientation": "default",
     "icon": "./assets/gi_dex_icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/gi_dex_icon.png",
       "resizeMode": "contain",

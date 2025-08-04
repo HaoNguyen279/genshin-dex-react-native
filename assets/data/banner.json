@@ -326,6 +326,29 @@
         "banner_start": "November 5, 2024",
         "banner_end": "November 26, 2024",
         "banner_url": "https://paimon.moe/images/banners/Gentry%20of%20Hermitage%206.png"
+    },{
+        "id_banner": 42,
+        "five_stars_character": "Ineffa",
+        "four_stars_character": ["Xingqiu", "Fischl", "Sethos"],
+        "banner_start": "July 30, 2025",
+        "banner_end": "August 19, 2025",
+        "banner_url": "https://paimon.moe/images/banners/Astral%20Actuation%201.png"
+    },
+    {
+        "id_banner": 43,
+        "five_stars_character": "Lauma",
+        "four_stars_character": ["Xingqiu", "Kuki Shinobu", "Dahlia"],
+        "banner_start": "August 19, 2025",
+        "banner_end": "September 9, 2025",
+        "banner_url": "https://paimon.moe/images/banners/Wanderlust%20Invocation%201.png"
+    },
+    {
+        "id_banner": 44,
+        "five_stars_character": "Flins",
+        "four_stars_character": ["Xingqiu", "Kuki Shinobu", "Dahlia"],
+        "banner_start": "September 9, 2025",
+        "banner_end": "September 30, 2025",
+        "banner_url": "https://paimon.moe/images/banners/Wanderlust%20Invocation%201.png"
     }
 ]
 

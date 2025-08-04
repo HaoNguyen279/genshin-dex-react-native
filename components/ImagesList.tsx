@@ -91,6 +91,9 @@ const RenderAscend = ({ region, element }: { region?: string, element?: string }
                 case "Geo":
             jade =  jade_data["geo"]
             break;
+                default:
+            jade =  jade_data["cryo"];  
+            break;
     }
 
     const mat_data = {
@@ -120,6 +123,10 @@ const RenderAscend = ({ region, element }: { region?: string, element?: string }
             break;
                 case "Natlan":
             material =  mat_data["Natlan"]
+            break;
+                default:
+            material =  mat_data["Mondstadt"];
+            break;
 
     }
     return(
@@ -392,17 +399,17 @@ export function ImagesList(){
                             </View>
                             <View style={styles.voice_line_row}>
                                 <Text style={styles.info_text_row}> 
-                                    ▶{'\t'}{data.description}
+                                    ▶{'\t'}{data.description || route.params?.about || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Ngày sinh:</Text> {data.birthday || "<No data>"}
+                                    <Text style={styles.title_text}>Ngày sinh:</Text> {data.birthday || route.params?.birthday || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Quốc gia:</Text> {data.region || "<No data>"}
+                                    <Text style={styles.title_text}>Quốc gia:</Text> {data.region || route.params?.region || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>

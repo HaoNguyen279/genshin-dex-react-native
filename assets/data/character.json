@@ -1355,7 +1355,7 @@
         "about": "Dahlia is a Hydro character in Genshin Impact, a tribal dancer from Mondstadt. Graceful and free-spirited, she moves like flowing water. As a Sub-DPS, Dahlia deals Hydro damage and supports Vaporize reactions.",
         "url_image": "https://act-upload.hoyoverse.com/event-ugc-hoyowiki/2025/05/13/151578876/4d0005f59813b5593d32571c05f54fcf_7191654248602392598.png?x-oss-process=image%2Fformat%2Cwebp",
         "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/255dedc5048565aec2c5af510c6f74a5_7726536808309970424.png?x-oss-process=image%2Fformat%2Cwebp",
-        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/dahlia_115_gacha_card_w145.webp"
+        "gacha_card_url": "https://genshin.ch/templates/assets/img/avatar_icons/a115_gacha_card.webp"
     },
     {
         "id": 98,
@@ -1369,7 +1369,7 @@
         "about": "Skirk is a Cryo character in Genshin Impact. Fierce and skilled, she is known for her swordsmanship. As a Main DPS, Skirk deals high Cryo damage with swift melee attacks.",
         "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/3/35/Skirk_Card.png/revision/latest?cb=20250513040246",
         "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/48dba0c10560a3ef573f17d97408b5a0_2527001828446746987.png?x-oss-process=image%2Fformat%2Cwebp",
-        "gacha_card_url": "https://i.ibb.co/N6SyX7P3/skirknew-114-gacha-card-w145.webp"
+        "gacha_card_url": "https://genshin.ch/templates/assets/img/avatar_icons/a114_gacha_card.webp"
     },
     {
         "id": 99,
@@ -1379,13 +1379,55 @@
         "weapon": "Polearm",
         "region": "Natlan",
         "role": "Sub-DPS",
-        "birthday": "Data not available",
-        "about": "Skirk is a Cryo character in Genshin Impact. Fierce and skilled, she is known for her swordsmanship. As a Main DPS, Skirk deals high Cryo damage with swift melee attacks.",
-        "url_image": "https://static.wikia.nocookie.net/gensin-impact/images/3/35/Skirk_Card.png/revision/latest?cb=20250513040246",
-        "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/06/16/48dba0c10560a3ef573f17d97408b5a0_2527001828446746987.png?x-oss-process=image%2Fformat%2Cwebp",
-        "gacha_card_url": "https://i.ibb.co/N6SyX7P3/skirknew-114-gacha-card-w145.webp"
+        "birthday": "February 4",
+        "about": "A multifunctional robot containing integrated mechanical components from various nations. The Source Core in her chest has endured the passage of countless years.",
+        "url_image": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/07/28/7fab4a3bdf540c903a44be719b385a47_1766589904978857968.jpg?x-oss-process=image%2Fformat%2Cwebp",
+        "url_icon": "https://act-webstatic.hoyoverse.com/event-static-hoyowiki-admin/2025/07/28/7c221918444852e9a3c2ad609ccacea2_8687518447126752117.png?x-oss-process=image%2Fformat%2Cwebp",
+        "gacha_card_url": "https://genshin.ch/templates/assets/img/avatar_icons/a116_gacha_card.webp"
     },
-    { 
+    {
+        "id": 100,
+        "name": "Flins",
+        "element": "Electro",
+        "rarity": 5,
+        "weapon": "Polearm",
+        "region": "Nod-Krai",
+        "role": "Main DPS",
+        "birthday": "January 1",
+        "about": "Mr. Flins lives under the distant lighthouse. His combat abilities are very strong, and he seems to understand tactics very well... right? Sorry, I can't make any conclusions about this, because I joined the team quite late and have never fought alongside him. All I know is what Starshyna has told me. Asking for my opinion? Hmm... I feel he must have many stories. Moreover, isn’t it surprising? Though he is a warrior, he is extremely refined and knows how to use language to achieve his goals.",
+        "url_image": "https://i.ibb.co/Pzr0sp8m/528053825-1063300455957238-26978006762450554-n.jpg",
+        "url_icon": "https://gensh.honeyhunterworld.com/img/flins_120_icon.webp",
+        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/flins_120_gacha_card.webp"
+    },
+    {
+        "id": 101,
+        "name": "Lauma",
+        "element": "Dendro",
+        "rarity": 5,
+        "weapon": "Catalyst",
+        "region": "Nod-Krai",
+        "role": "Support",
+        "birthday": "January 1",
+        "about": "At the kind residence of Lord Moon Envoy Bay, no innocent person or animal will be harmed... Alas, but when the rule of the big fish eating the small fish no longer applies, some wild beasts accustomed to eating meat will suffer.",
+        "url_image": "https://i.ibb.co/67bpjCbw/528306525-3296742027133816-2547453728791305965-n.jpg",
+        "url_icon": "https://gensh.honeyhunterworld.com/img/lauma_119_icon.webp",
+        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/lauma_119_gacha_card.webp"
+    },
+    {
+        "id": 102,
+        "name": "Aino",
+        "element": "Hydro",
+        "rarity": 4,
+        "weapon": "Sword",
+        "region": "Nod-Krai",
+        "role": "Sub-DPS",
+        "birthday": "January 1",
+        "about": "How to become friends with Aino? Analyzing data... Here’s the answer: First, oppose salty Krumkake. Second, praise Aino's inventions. Finally, play with Aino regularly.",
+        "url_image": "https://i.ibb.co/PvQhSyGg/526807388-2211356932658812-1377084905219226348-n.jpg",
+        "url_icon": "https://gensh.honeyhunterworld.com/img/aino_121_icon.webp",
+        "gacha_card_url": "https://gensh.honeyhunterworld.com/img/aino_121_gacha_card.webp"
+    },
+    {
         "id": 999,
         "name": "TestingCard",
         "element": "Geo",
