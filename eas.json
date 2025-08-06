@@ -5,7 +5,14 @@
   },
   "build": {
     "development": {
-      "distribution": "internal"
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -13,15 +20,14 @@
         "buildType": "apk"
       },
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "EXPO_NO_CAPABILITY_SYNC": "1"
+      },
+      "cache": {
+        "disabled": true
       }
     },
     "production": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "production-apk": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"

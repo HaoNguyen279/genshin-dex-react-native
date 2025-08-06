@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions, StatusBar, Platform, Alert} from "react-native"
+import { StyleSheet, View, TouchableOpacity ,Text, FlatList, Modal, Animated, Dimensions, StatusBar, Platform, Alert, ScrollView} from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { AVPlaybackStatus, Video, ResizeMode } from "expo-av";
 import React, { use, useEffect, useRef, useState } from "react";
@@ -371,7 +371,6 @@ function gacha(idChar5StarsBannerRateUp : number, pull : number, idBanner : numb
         }
     }
 
-
     var resultSet : Character[]  = [];
     for( let i = 0 ;i < character_id.length; i++){
         var char = data.find(item => item.id == character_id[i]);
@@ -405,9 +404,7 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
   
   if (!shadowColor) {
     return (
-       
       <View style={styles.resultGachaCard}>
-        
         <View style={{ alignItems:"center"}}>
             <View style={{position:"absolute", zIndex:2, flexDirection:"row",top:"80%"}}>
                 <Image source={star_rarity} style={{width:10,height:10}}/>
@@ -434,7 +431,6 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
   }
   
   return (
-
       <View style={styles.resultGachaCard}>
         <ShadowEffect isFiveStars={item.rarity === 5}/>
             <View style={{ alignItems:"center"}}>
@@ -467,7 +463,6 @@ const GachaCard: React.FC<GachaCardProps> = ({ item }) => {
             </ImageBackground>
             </View>
       </View>
-
   );
 };
 
@@ -499,20 +494,19 @@ const PityCard  = ( { data_history }: { data_history: HistoryPity }) =>{
 }
 
 const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisiblePityAnalysis: (visible: boolean) => void, responseText : string }> = ({ isVisiblePityAnalysis, setIsVisiblePityAnalysis, responseText }) => {
-    // const [modalReady, setModalReady] = useState(false);
-    // useEffect(() => {
-    //     if (isVisiblePityAnalysis) {
-    //         // Delay để đảm bảo iOS ready
-    //         setTimeout(() => setModalReady(true), Platform.OS === 'ios' ? 1000 : 500);
-    //     } else {
-    //         setModalReady(false);
-    //     }
-    // }, [isVisiblePityAnalysis]);
+    const [modalReady, setModalReady] = useState(false);
+    useEffect(() => {
+    if(isVisiblePityAnalysis){
+        setTimeout(() => setModalReady(true) , Platform.OS === 'ios' ? 300 : 100 );
+    }else{
+        setModalReady(false);
+    }
+    }, [isVisiblePityAnalysis]); 
     return (
         <Modal
             visible={isVisiblePityAnalysis}
-            transparent={true}// Quan trọng cho iOS
-            statusBarTranslucent={Platform.OS !== 'ios'} // ✅ iOS-specific
+            // transparent={true}// Quan trọng cho iOS
+            // statusBarTranslucent={Platform.OS !== 'ios'}
             supportedOrientations={['landscape']}  // Cho iOS landscape
             onRequestClose={() => setIsVisiblePityAnalysis(false)}
             animationType="fade"
@@ -524,12 +518,20 @@ const PityAnlysisModal : React.FC<{ isVisiblePityAnalysis: boolean, setIsVisible
                     </TouchableOpacity>
                 </View>
                 <ImageBackground style={styles.modal_book_bg} source={history_bg}  resizeMode="cover"/>
+                {modalReady ? (
                 <View style={styles.modal_content}>
                     <View style={{flex:1,display:"flex",alignItems:"center",maxWidth:"70%"}}>
-                        <Text style={[globalFont.fonts,{fontSize:16,marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
-                        <Text style={[globalFont.fonts,{fontSize:12}]}>{responseText}</Text>
+                        <ScrollView>
+                            <Text style={[globalFont.fonts,{fontSize:16,marginBottom:10}]}>Pity Analysis by Gemini Flash 2.5</Text>
+                            <Text style={[globalFont.fonts,{fontSize:12}]}>{responseText || "Loading.."}</Text>
+                        </ScrollView>
                     </View>
                 </View>
+                ):(
+                    <View style={styles.modal_content}>
+                        <Text>Waiting for response...</Text>
+                    </View>
+                )}
             </View>
         </Modal>
     )
@@ -553,9 +555,9 @@ export function WishSimulator(){
     const [isVisibleHistory,setIsVisibleHistory] = useState(false);
     const [isVisiblePityAnalysis,setIsVisiblePityAnalysis] = useState(false);
 
-    const [selectedBanner,setSelectedBanner] = useState(1);
+    const [selectedBanner,setSelectedBanner] = useState(42);
     const [bannerUrl,setBannerUrl] = useState("");
-    const [rateUpCharId,setRateUpCharId] = useState<number>(1);
+    const [rateUpCharId,setRateUpCharId] = useState<number>(99);
 
     const [size, setSize] = useState({width: 0, height: 0});
     const [loading, setLoading] = useState(true);
@@ -716,7 +718,6 @@ export function WishSimulator(){
                  <Modal
                     visible={isVisibleHistory}
                     transparent={true}
-                    
                     presentationStyle="overFullScreen" // Quan trọng cho iOS
                     supportedOrientations={['landscape']} // Cho iOS landscape
                     onRequestClose={() => setIsVisibleHistory(false)}
@@ -820,7 +821,6 @@ export function WishSimulator(){
     
                             <TouchableOpacity style={styles.button_}
                             onPress={async ()=>{
-                                try {
                                     setIsLoading(true);
                                     const dataRead = await readHistoryFromFile();
                                     const result = await getLuckyAnalysis(dataRead);
@@ -830,14 +830,7 @@ export function WishSimulator(){
                                         setIsLoading(false);
                                         setIsVisiblePityAnalysis(true);
                                     }, 100);
-                                } catch (error) {
-                                    setIsLoading(false);
-                                    console.log("Error analyzing history: " + error);
-                                    // iOS-specific error handling
-                                    if (Platform.OS === 'ios') {
-                                        Alert.alert('Error', 'Failed to analyze history. Please try again.');
-                                    }
-                                }
+
                             }}>
                                 <ImageBackground
                                     source={button_bg}

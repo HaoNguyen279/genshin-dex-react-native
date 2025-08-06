@@ -1,4 +1,4 @@
-import React, {  useEffect, useState } from 'react';
+import React,  {  useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -19,35 +19,6 @@ const WelcomeScreen = () => {
                 });
         })
         return unsubcribe;
-    }, [navigation]);
-
-    useEffect(() => {
-        const name = "Es";
-        console.log("WelcomeScreen: ");
-
-        const urlString = BASE_URL + "/api/char?name=" + encodeURIComponent(name);
-        const callApi = async () => {
-            try {
-                const response = await fetch( urlString, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'x-api-key': H_API_KEY,
-                    }
-                }
-            );
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.log("Lỗi server: ", text);
-                    return;
-                }
-                const data = await response.json();
-                setName(data.name);
-            } catch (error) {
-                console.log("LOI ____: " + error);
-            }
-        }
-        callApi();
     }, [navigation]);
 
     return (

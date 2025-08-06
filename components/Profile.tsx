@@ -11,10 +11,10 @@ import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, up
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
-import { signInWithCredential, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 
 import LoadingModal from "./splashscreen/Loading";
-import { createUserContent, GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
 
@@ -53,12 +53,17 @@ export default function Profile(){
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
 
     const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
+
+    const redirectUri = AuthSession.makeRedirectUri({
+        path: 'auth',
+        scheme: 'anime_picture'
+    });
+
+    console.log('Redirect URI 2:', redirectUri); 
     const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: WEB_CLIENT_ID, // Dùng cho Firebase Auth
+        clientId: WEB_CLIENT_ID, 
         scopes: ['profile', 'email'],
-        redirectUri: AuthSession.makeRedirectUri({
-            useProxy: true,  // cần cho Expo Go
-     } as any),
+        redirectUri: 'https://auth.expo.io/@your-username/your-app-name',// replace it
     });
 
 
@@ -165,6 +170,18 @@ export default function Profile(){
                 });
         }
     }, [response]);
+    useEffect(() => {   
+        console.log('Google Auth Request:', request);
+    if (response) {
+        console.log('Google Auth Response:', response);
+        if (response.type === 'error') {
+            console.log('Google Auth Error:', response.error); // log lỗi nếu có
+        }
+        if (response.type === 'success') {
+            console.log('Google Auth Success:', response.params); // log token nếu thành công
+        }
+    }
+}, [response]);
   };
     return(
         <SafeAreaView style={{flex:1, backgroundColor:"#F8F7F0"}}>

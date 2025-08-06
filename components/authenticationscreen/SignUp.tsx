@@ -4,11 +4,10 @@ import LoadingModal from "../splashscreen/Loading";
 import { Button } from "react-native-paper";
 import { useState } from "react";
 import { scale, verticalScale } from "react-native-size-matters";
-import * as WebBrowser from 'expo-web-browser';
 import { auth } from "../../firebaseConfig"
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
-import { signInWithCredential, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {  createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { WEB_CLIENT_ID } from "@env";
 
 

@@ -2,12 +2,12 @@
   "expo": {
     "name": "Genshin Dex",
     "slug": "anime_picture",
-    "scheme": "genshindex",
-    "version": "1.0.0",
+    "scheme": "anime_picture",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/gi_dex_icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/gi_dex_icon.png",
       "resizeMode": "contain",
@@ -24,14 +24,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/gi_dex_icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.haonguyen279z.genshin_dex"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-font",
@@ -43,6 +44,12 @@
         "projectId": "c5cdf951-bfb2-4956-a946-002327c421d6"
       }
     },
-    "owner": "haonguyen279z"
+    "owner": "haonguyen279z",
+    "jsEngine": "jsc",
+    "platforms": ["ios", "android"],
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+
   }
 }
