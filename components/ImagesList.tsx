@@ -282,9 +282,12 @@ const getVoiceLine = (voice : Voiceover) => {
         console.error('Caught error:', voice.friendLines);
         return { 1: undefined, 2: undefined, 3: undefined };
     }
-    const result1 = voice.friendLines.find(item => item.voicelineType === '3001');
-    const result2 = voice.friendLines.find(item => item.voicelineType === '3002');
-    const result3 = voice.friendLines.find(item => item.voicelineType === '3003');
+    var result1 = voice.friendLines.find(item => item.voicelineType === '3001');
+    if(result1 === undefined){
+        result1 = voice.friendLines.find(item => item.voicelineType === '3006');
+    }
+    var result2 = voice.friendLines.find(item => item.voicelineType === '3002');
+    var result3 = voice.friendLines.find(item => item.voicelineType === '3003');
     var returned = {
         1 : result1,
         2 : result2,

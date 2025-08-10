@@ -3,7 +3,11 @@
 type RootStackParamList = {
     "Welcome" : undefined,
     "HomePage" : undefined,
-    "Profile" : undefined,
+    "Profile" : {
+        email: string | null,   
+        uid: string | null,
+        displayName: string | null
+    } | undefined,
     "SignIn" : undefined,
     "SignUp" : undefined,
     "Images" :  
@@ -20,8 +24,7 @@ type RootStackParamList = {
         url_image: string,
         url_icon: string,
         gacha_card_url : string
-    }  
-    | undefined ,
+    } | undefined,
 }
 
 type FontOfElement = {

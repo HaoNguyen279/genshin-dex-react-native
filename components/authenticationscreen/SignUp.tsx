@@ -9,38 +9,45 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import {  createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { WEB_CLIENT_ID } from "@env";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 
 
 const { width, height } = Dimensions.get("window");
 
 export default function SignIn() {
-
+    const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [inputText, setInputText] = useState("");
-        const [name, setName] = useState("");
-        const [email, setEmail] = useState("");
-        const [password, setPassword] = useState("");
-        const [message, setMessage] = useState("");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState("");
 
-        const [loading, setLoading] = useState(false);
-        const [isLoadingVisible, setIsLoadingVisible] = useState(false);
-        const [secureText, setSecureText] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [isLoadingVisible, setIsLoadingVisible] = useState(false);
+    const [secureText, setSecureText] = useState(true);
 
-        const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
-
-        const setErrorMessage = (message: string) => {
-            setMessage(message);
-            setTimeout(() =>{
-                setMessage("");
-            }, 3000);
-        };
-        
-        const [request, response, promptAsync] = Google.useAuthRequest({
-            clientId: WEB_CLIENT_ID,
-            scopes: ['profile', 'email'],
-            redirectUri: AuthSession.makeRedirectUri({
-                useProxy: true, 
-         } as any),
-        });
+    const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
+    
+    var timeout : any;
+    const setErrorMessage = (message: string) => {
+        setMessage(message + "5");
+        for (let i = 5; i > 0; i--) {
+            setTimeout(() => {
+                setMessage(message + " (" + i + ")");
+            }, 5000 - i * 1000);
+        }
+        setTimeout(() =>{
+            setMessage("");
+        }, 5000);
+    };
+    
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        clientId: WEB_CLIENT_ID,
+        scopes: ['profile', 'email'],
+        redirectUri: AuthSession.makeRedirectUri({
+            useProxy: true, 
+        } as any),
+    });
         const signUp = async () =>{
             if (email === "" || password === ""){
                 setErrorMessage("Email and password cannot be empty!");
@@ -52,9 +59,23 @@ export default function SignIn() {
                     updateProfile(userCredential.user, {
                         displayName: name
                     })
+                    alert("Đăng ký thành công!");
+                    
                 })
                 .catch((error)=>{
-
+                    switch(error.code){
+                        case "auth/email-already-in-use":
+                            setErrorMessage("Email đã được đăng ký.");
+                            break;
+                        case "auth/invalid-email":
+                            setErrorMessage("Email không hợp lệ. Vui lòng nhập email đúng định dạng.");
+                            break;
+                        case "auth/weak-password":
+                            setErrorMessage("Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn.");
+                            break;
+                        default:
+                            setErrorMessage("Đăng ký không thành công. Vui lòng thử lại sau.");
+                    }
                 })
                 .finally(() => {
                     setIsLoadingVisible(false);
@@ -62,15 +83,15 @@ export default function SignIn() {
         }
 
     
-  return (
-    <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>
+    return (
+        <SafeAreaView style={styles.container}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
-                        <View>
+                        <View style={styles.content_container}>
                             <View style={{margin:20}}>
-                                <Text style={{fontSize:24,textAlign:'center'}}>Sign Up</Text>
+                                <Text style={{fontSize:24,textAlign:'center',fontFamily:'genshin_font'}}>Sign Up</Text>
                                 <Text style={styles.textLabel}>Enter your name</Text>
                                 <TextInput
                                     value={name}
@@ -101,9 +122,9 @@ export default function SignIn() {
                                 <Text style={{marginTop:10, color:"red"}}>{message}</Text>
                                 <Button              
                                     mode="contained-tonal"
-                                    style={{marginTop:10, backgroundColor:"#70f5ffff"}}
+                                    style={{marginTop:10, backgroundColor:"#4460f0"}}
                                     onPress={() => {signUp()}}>
-                                    <Text>Sign In</Text>
+                                    <Text style={{color:"white"}}>Sign Up</Text>
                                 </Button>
                             </View>
                         </View>
@@ -115,13 +136,21 @@ export default function SignIn() {
 }
 
 const styles = StyleSheet.create({
+    container:{
+        flex: 1,
+        backgroundColor: "#f6f6f6"
+    },
+    content_container:{
+        flex:1,
+        justifyContent: 'center',
+    },
     input: {
         marginTop: scale(10),
         fontSize: scale(16),
         borderRadius: scale(8),
-        borderWidth: scale(2),
         height: verticalScale(50),
-        borderColor: "#ededed",
+        backgroundColor: "#ebeff8",
+        paddingLeft:20
     },
     textLabel: {
         fontFamily: "montserrat-semi-bold",

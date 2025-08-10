@@ -1,11 +1,12 @@
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 import {  Button, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { auth } from "../firebaseConfig";
+import {getUserData,getIsLoggedIn,logout} from "../utils/functions"
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import * as WebBrowser from 'expo-web-browser';
@@ -17,21 +18,18 @@ import LoadingModal from "./splashscreen/Loading";
 import { GoogleGenAI } from "@google/genai";
 
 import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
+import { s } from "react-native-size-matters";
 
 
 const provider = new GoogleAuthProvider(); // Firebase Google Auth Provider
-
+ 
 provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
 
 WebBrowser.maybeCompleteAuthSession();
 
-
-
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const {width, height} = Dimensions.get("window");
-
-
 
 async function getResponse(prompt : string) {
     const response = await ai.models.generateContent({
@@ -43,7 +41,9 @@ async function getResponse(prompt : string) {
 }
 
 export default function Profile(){
+
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
+    const route : RouteProp<RootStackParamList, "Profile"> = useRoute();
     const [inputText, setInputText] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -51,7 +51,7 @@ export default function Profile(){
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
-
+    const [isLoggedIn, setLoggedIn] = useState(false);
     const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
 
     const redirectUri = AuthSession.makeRedirectUri({
@@ -59,13 +59,11 @@ export default function Profile(){
         scheme: 'anime_picture'
     });
 
-    console.log('Redirect URI 2:', redirectUri); 
     const [request, response, promptAsync] = Google.useAuthRequest({
         clientId: WEB_CLIENT_ID, 
         scopes: ['profile', 'email'],
-        redirectUri: 'https://auth.expo.io/@your-username/your-app-name',// replace it
+        redirectUri: redirectUri,
     });
-
 
     const signUp = async () => {
     try {
@@ -113,78 +111,48 @@ export default function Profile(){
         .finally(() => {
             setIsLoadingVisible(false);
         });
-    } catch (error : any) {
-        setMessage(error.message);
-    }
-  };
+        } catch (error : any) {
+            setMessage(error.message);
+        }
+    };
 
-  const signIn = async () => {
-    try {
-        setIsLoadingVisible(true);
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                user.email && user.displayName ? setUserData({ email: user.email, uid: user.uid, displayName: user.displayName }) : setUserData({ email: "null", uid: "null", displayName: "null" });
-                setIsLoadingVisible(false);
-                setTimeout(() => {
-                    setMessage('');
-                }, 3000);
-                alert('Đăng nhập thành công! Chào mừng bạn trở lại.');
-                setEmail("");
-                setPassword(""); 
-            })
-            .catch((error) => {
-                console.log('Firebase login error:', error.code);
-                switch(error.code){
-                    case "auth/user-not-found":
-                        alert('Không tìm thấy người dùng. Vui lòng kiểm tra lại email.');
-                        break;
-                    case 'auth/wrong-password':
-                        alert('Mật khẩu không đúng. Vui lòng thử lại.');
-                        break;
-                    case "auth/invalid-credential":
-                        alert('Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.');
-                        break;
-                    default:
-                        alert('Đăng nhập không thành công. Vui lòng thử lại sau.');
+    useFocusEffect(
+        useCallback(()=>{
+            let mounted = true;
+            (
+                async () =>{
+                    try {
+                        const loadUserData = async () =>{
+                            const userDisplayName = await getUserData('displayName');
+                            const userEmail = await getUserData('email');
+                            const userUid = await getUserData('uid');
+                            const newData = {
+                                displayName : userDisplayName,
+                                email: userEmail,
+                                uid : userUid,
+                            }
+                            setUserData( prev => {
+                                if(JSON.stringify(prev) === JSON.stringify(newData)){
+                                    return prev;
+                                }
+                                return newData;
+                            });
+                        }
+                        loadUserData();  
+                        const ok = await getIsLoggedIn();
+                        if(mounted && ok) setLoggedIn(true);
+                    } catch (error) {
+                        if (mounted) setLoggedIn(false);
+                    }
                 }
-            })
-            .finally(() => {
-                setIsLoadingVisible(false);
-            });
+            )();
+            return () => { mounted = false; };
+        }, [])
+    );
 
-    } catch (error : any) {
-        setMessage(error.message);
-    }
-    useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.params;
-            const credential = GoogleAuthProvider.credential(id_token);
-            signInWithCredential(auth, credential)
-                .then(() => {
-                    setMessage('Successfully signed in with Google!');
-                })
-                .catch((error) => {
-                    setMessage(error.message);
-                    console.error('Error signing in with Google:', error);
-                });
-        }
-    }, [response]);
-    useEffect(() => {   
-        console.log('Google Auth Request:', request);
-    if (response) {
-        console.log('Google Auth Response:', response);
-        if (response.type === 'error') {
-            console.log('Google Auth Error:', response.error); // log lỗi nếu có
-        }
-        if (response.type === 'success') {
-            console.log('Google Auth Success:', response.params); // log token nếu thành công
-        }
-    }
-}, [response]);
-  };
+
     return(
-        <SafeAreaView style={{flex:1, backgroundColor:"#F8F7F0"}}>
+        <SafeAreaView style={{flex:1, backgroundColor:"#e6e7e2"}}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -196,58 +164,62 @@ export default function Profile(){
                                 source={require("../assets/png/profile.png")}
                             />
                         </View>
-                        <Text style={styles.username}>{userData.displayName}</Text>
-                        <Text style={styles.email}> {userData.email}</Text>
+                        <Text style={styles.username}>{userData.displayName === "null" ? "Guest" : userData.displayName}</Text>
+                        <Text style={styles.email}> {userData.email === "null" ? "No email" : userData.email}</Text>
                     </View>
-                            <View style={{margin:20}}>
-                                <Text style={{fontSize:24,textAlign:'center'}}>Login</Text>
-                                <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:20}}>
-                                    <Button style={{marginHorizontal:5}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignUp")}}>
-                                        <Text>Sign up</Text>
-                                    </Button>
-                                    <Button style={{marginHorizontal:5}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignIn")}}>
-                                        <Text>Sign in</Text>
-                                    </Button>
-                                </View>
-                                <Text style={{marginTop:20}}>Enter your name</Text>
-                                <TextInput
-                                    label="Name"
-                                    value={name}
-                                    onChangeText={text => setName(text)}/>
-                                <Text style={{marginTop:20}}>Enter your email</Text>
-                                <TextInput
-                                    label="Email"  
-                                    value={email}
-                                    onChangeText={text => setEmail(text)}/>
-                                <Text style={{marginTop:20}}>Enter your password</Text>
-                                <TextInput
-                                    label="Password"
-                                    value={password}
-                                    onChangeText={text => setPassword(text)}
-                                    secureTextEntry
-                                />
-                                <Text style={{marginTop:20, color:"red", textAlign:"center"}}>{message}</Text>
-                                <Button 
-                                    mode="contained-tonal"
-                                    style={{marginTop:20}}
-                                    onPress={() => {signIn()}}>
-                                    <Text>Login</Text>
+
+                    {!isLoggedIn ? (
+                        <View style={{margin:10}}>
+                            <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:10}}>
+                                <Button style={{marginHorizontal:5,backgroundColor:"#7cc6ffff"}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignUp")}}>
+                                    <Text>Sign up</Text>
                                 </Button>
-                                <Button 
-                                    mode="contained-tonal"
-                                    style={{marginTop:20}}
-                                    onPress={() => {
-                                        signUp();
-                                    }}>
-                                    <Text>Register</Text>
-                                </Button>
-                                <Button 
-                                    mode="contained-tonal"
-                                    style={{marginTop:20}}
-                                    onPress={() => {promptAsync()}}>
-                                    <Text>Login with Google</Text>
+                                <Button style={{marginHorizontal:5,backgroundColor:"#7091ffff"}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignIn")}}>
+                                    <Text>Sign in</Text>
                                 </Button>
                             </View>
+                        </View>
+                    ) : (
+                        <View style={{margin:10}}>
+                            <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:10}}>
+                                <Button
+                                    onPress={async () => {
+                                        setUserData({email: "null", uid: "null", displayName: "null"});
+                                        await logout();
+                                        setLoggedIn(false);
+                                    }}
+                                    mode="contained-tonal"
+                                    style={styles.logout_button}
+                                >
+                                    <Text>Log out</Text>
+                                </Button>
+                            </View>
+                        </View>
+                    )}
+                    <View style={{marginHorizontal:20,marginVertical:5}}><Text style={{color:"#5b5b5b",fontFamily:'genshin_font'}}>Settings</Text></View>
+                    <View style={styles.setting_container}>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Theme</Text>
+                        </View>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Avatar</Text>
+                        </View>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Deo buiet nua</Text>
+                        </View>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Deo buiet nua</Text>
+                        </View>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Deo buiet nua</Text>
+                        </View>
+                        <View style={styles.setting_item}>
+                            <Text style={styles.text_item}>Deo buiet nua</Text>
+                        </View>
+                    </View>
+
+
+
                 </ScrollView>
             </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
@@ -262,6 +234,7 @@ const styles = StyleSheet.create({
     profile_container: {
         width: width,
         alignItems: 'center',
+        marginTop:20
     },
     img_profile: {
         width:width*0.25,
@@ -295,5 +268,23 @@ const styles = StyleSheet.create({
         color:"#888",
         fontSize:16,
         marginTop:5,
+    },
+    logout_button:{
+        backgroundColor:"#f4f4f4",
+    },
+    setting_container:{
+        marginHorizontal:20
+    },
+    setting_item:{
+        backgroundColor:"#f4f4f4",
+        height:50,
+        borderRadius:10,
+        justifyContent:"center",
+        marginVertical:5,
+    },
+    text_item:{
+        marginLeft:20,
+        color:"#1a1a1a",
+        fontFamily:'genshin_font',
     }
 });

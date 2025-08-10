@@ -4,29 +4,35 @@ import LoadingModal from "../splashscreen/Loading";
 import { Button } from "react-native-paper";
 import { useState } from "react";
 import { scale, verticalScale } from "react-native-size-matters";
-import * as WebBrowser from 'expo-web-browser';
 import { auth } from "../../firebaseConfig"
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { WEB_CLIENT_ID } from "@env";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 
+import {storeUserData} from "../../utils/functions"
 
 const { width, height } = Dimensions.get("window");
 
+interface UserDataType {
+    email: string | null;
+    uid: string | null;
+    displayName: string | null;
+}
 export default function SignIn() {
-
+        const navigation : NavigationProp<RootStackParamList> = useNavigation();
         const [inputText, setInputText] = useState("");
         const [name, setName] = useState("");
         const [email, setEmail] = useState("");
         const [password, setPassword] = useState("");
         const [message, setMessage] = useState("");
-
+        const [isLoggedIn, setLoggedIn] = useState(false);
         const [loading, setLoading] = useState(false);
         const [isLoadingVisible, setIsLoadingVisible] = useState(false);
         const [secureText, setSecureText] = useState(true);
 
-        const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
+        const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" });
 
         const setErrorMessage = (message: string) => {
             setMessage(message);
@@ -49,13 +55,20 @@ export default function SignIn() {
             }
             setIsLoadingVisible(true);
             signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) =>{
+                .then(async (userCredential) =>{
                     const user = userCredential.user;
-                    setUserData({
-                        email: user.email || "null",
-                        uid: user.uid,
-                        displayName: user.displayName || "null"
-                    }); 
+                    const payload: UserDataType = {
+                        email: user.email ?? "null",
+                        uid: user.uid ?? "null",
+                        displayName: user.displayName ?? "null", 
+                    };
+                    await storeUserData(payload).then(() => {
+                        console.log("Thành công");
+                    });
+                    setUserData(payload);
+                    setTimeout(() => {
+                        navigation.goBack();
+                    }, 500);
                 })
                 .catch((error)=>{
                     switch (error.code) {
@@ -82,17 +95,19 @@ export default function SignIn() {
                     setIsLoadingVisible(false);
                 });
         }
+        
+
 
     
   return (
-    <SafeAreaView style={{flex:1, backgroundColor:"#fff"}}>
+    <SafeAreaView style={styles.container}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
-                        <View>
+                        <View style={styles.content_container}>
                             <View style={{margin:20}}>
-                                <Text style={{fontSize:24,textAlign:'center'}}>Sign In</Text>
+                                <Text style={{fontSize:24,textAlign:'center',fontFamily:'genshin_font'}}>Sign In</Text>
                                 <Text style={styles.textLabel}>Enter your email</Text>
                                 <TextInput
                                     value={email}
@@ -117,9 +132,9 @@ export default function SignIn() {
                                 <Text style={{marginTop:10, color:"red"}}>{message}</Text>
                                 <Button              
                                     mode="contained-tonal"
-                                    style={{marginTop:10, backgroundColor:"#70f5ffff"}}
+                                    style={{marginTop:10, backgroundColor:"#4460f0"}}
                                     onPress={() => {signIn()}}>
-                                    <Text>Sign In</Text>
+                                    <Text style={{color:"white"}}>Sign In</Text>
                                 </Button>
                             </View>
                         </View>
@@ -131,13 +146,21 @@ export default function SignIn() {
 }
 
 const styles = StyleSheet.create({
+    container:{
+        flex: 1,
+        backgroundColor: "#f6f6f6",
+    },
+    content_container:{
+        flex:1,
+        justifyContent: 'center',
+    },
     input: {
         marginTop: scale(10),
         fontSize: scale(16),
         borderRadius: scale(8),
-        borderWidth: scale(2),
         height: verticalScale(50),
-        borderColor: "#ededed",
+        backgroundColor: "#ebeff8",
+        paddingLeft:20
     },
     textLabel: {
         fontFamily: "montserrat-semi-bold",
