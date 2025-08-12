@@ -1,24 +1,19 @@
 import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
+import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {  Button, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { auth } from "../firebaseConfig";
-import {getUserData,getIsLoggedIn,logout} from "../utils/functions"
-import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-
+import {getUserData,getIsLoggedIn,logout, getAvatarByCharacterName, storeUserData} from "../utils/functions"
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
-import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { signInWithCredential, GoogleAuthProvider , getAuth, reload, updateProfile } from "firebase/auth";
 
 import LoadingModal from "./splashscreen/Loading";
-import { GoogleGenAI } from "@google/genai";
+
 
 import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
-import { s } from "react-native-size-matters";
+
 
 
 const provider = new GoogleAuthProvider(); // Firebase Google Auth Provider
@@ -27,95 +22,47 @@ provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
 
 WebBrowser.maybeCompleteAuthSession();
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
 const {width, height} = Dimensions.get("window");
+//{email, uid, displayName, photoURL} : {email : string, uid : string, displayName : string, photoURL : string}
 
-async function getResponse(prompt : string) {
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: "Trả lời ngắn gọn câu hỏi của người dùng (Không dùng markdown): " + prompt,
-    });
-    alert(response.text);
-    return response.text;
-}
 
 export default function Profile(){
 
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
-    const route : RouteProp<RootStackParamList, "Profile"> = useRoute();
-    const [inputText, setInputText] = useState("");
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
-    const [loading, setLoading] = useState(false);
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
     const [isLoggedIn, setLoggedIn] = useState(false);
-    const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
+    const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null", photoURL: "null" });
 
-    const redirectUri = AuthSession.makeRedirectUri({
-        path: 'auth',
-        scheme: 'anime_picture'
-    });
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: WEB_CLIENT_ID, 
-        scopes: ['profile', 'email'],
-        redirectUri: redirectUri,
-    });
-
-    const signUp = async () => {
-    try {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !password || !emailRegex.test(email)) {
-            alert('Vui lòng nhập email và mật khẩu hợp lệ.');
-            return;
+    const changeAvatar = useCallback(async (charName : string) =>{
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if(user) await reload(user);
+        else console.log("No user is currently logged in.");
+        // console.log(user?.displayName + "<user_display_name>" + user?.photoURL!);
+        if(user){
+            await updateProfile(auth.currentUser, {
+            photoURL : getAvatarByCharacterName(charName)
+            }).then(async() => {
+                setUserData(prev => {
+                    const newData = {
+                        ...prev,
+                        photoURL: getAvatarByCharacterName(charName)
+                    };
+                    console.log("-------------> Updated thành công");
+                    return newData;
+                });
+                    const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
+                        getUserData('displayName'),
+                        getUserData('email'),
+                        getUserData('uid'),
+                        getUserData('photoURL')
+                    ]);
+                    console.log("Focused 123 36:" + userEmail, userDisplayName, userUid, userPhotoURL );
+            })
+            await storeUserData(userData);
         }
-        if (password.length < 6) {
-            alert('Mật khẩu phải có ít nhất 6 ký tự.');
-            return;
-        }
-        setIsLoadingVisible(true);
-        createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed in 
-            const user = userCredential.user;
-            console.log("User registered:", user);
-            updateProfile(userCredential.user, {
-                displayName: name,
-            }).then(() => {console.log("User profile updated:", user); });
-            setIsLoadingVisible(false);
-            alert('Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.');
-            setEmail("");
-            setPassword("");
-            setTimeout(() => {
-                setMessage('');
-            }, 3000); 
-        })
-        .catch((error) => {
-             switch(error.code){
-                case "auth/email-already-in-use":
-                    alert('Email đã được sử dụng. Vui lòng đăng nhập hoặc sử dụng email khác.');
-                    break;
-                case "auth/invalid-email":
-                    alert('Email không hợp lệ. Vui lòng nhập email đúng định dạng.');
-                    break;
-                case "auth/weak-password":
-                    alert('Mật khẩu quá yếu. Vui lòng sử dụng mật khẩu mạnh hơn.');
-                    break;
-                default:
-                    alert('Đăng ký không thành công. Vui lòng thử lại sau.');
-            }
-        })
-        .finally(() => {
-            setIsLoadingVisible(false);
-        });
-        } catch (error : any) {
-            setMessage(error.message);
-        }
-    };
-
+        
+    }, []);
     useFocusEffect(
         useCallback(()=>{
             let mounted = true;
@@ -123,13 +70,22 @@ export default function Profile(){
                 async () =>{
                     try {
                         const loadUserData = async () =>{
-                            const userDisplayName = await getUserData('displayName');
-                            const userEmail = await getUserData('email');
-                            const userUid = await getUserData('uid');
+                            const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
+                                getUserData('displayName'),
+                                getUserData('email'),
+                                getUserData('uid'),
+                                getUserData('photoURL')
+                            ]);
+                          
+                            // const userDisplayName = await getUserData('displayName');
+                            // const userEmail = await getUserData('email');
+                            // const userUid = await getUserData('uid');
+                            // const userPhotoURL = await getUserData('photoURL');
                             const newData = {
                                 displayName : userDisplayName,
                                 email: userEmail,
                                 uid : userUid,
+                                photoURL: userPhotoURL
                             }
                             setUserData( prev => {
                                 if(JSON.stringify(prev) === JSON.stringify(newData)){
@@ -137,6 +93,11 @@ export default function Profile(){
                                 }
                                 return newData;
                             });
+                            if(userData.photoURL){
+                                Image.prefetch(userData.photoURL).then(()=>{
+                                    console.log("Image prefetch successful for " + userData.photoURL);
+                                })
+                            }
                         }
                         loadUserData();  
                         const ok = await getIsLoggedIn();
@@ -150,7 +111,6 @@ export default function Profile(){
         }, [])
     );
 
-
     return(
         <SafeAreaView style={{flex:1, backgroundColor:"#e6e7e2"}}>
             <LoadingModal visible={isLoadingVisible}/>
@@ -160,8 +120,16 @@ export default function Profile(){
                     <View style={styles.profile_container}>
                         <View style={styles.img_profile_container}>
                             <Image
+                                key={userData.photoURL}
                                 style={styles.img_profile}
-                                source={require("../assets/png/profile.png")}
+                                source={
+                                    userData.photoURL !== 'null' 
+                                    ? {uri:userData.photoURL}
+                                    : require("../assets/png/profile.png")
+                                }
+                                contentFit="contain"
+                                priority={`high`}
+
                             />
                         </View>
                         <Text style={styles.username}>{userData.displayName === "null" ? "Guest" : userData.displayName}</Text>
@@ -169,13 +137,13 @@ export default function Profile(){
                     </View>
 
                     {!isLoggedIn ? (
-                        <View style={{margin:10}}>
+                        <View style={{margin:10}}>  
                             <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:10}}>
                                 <Button style={{marginHorizontal:5,backgroundColor:"#7cc6ffff"}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignUp")}}>
-                                    <Text>Sign up</Text>
+                                    <Text style={{color:"white"}}>Sign up</Text>
                                 </Button>
                                 <Button style={{marginHorizontal:5,backgroundColor:"#7091ffff"}} mode="contained-tonal" onPress={()=>{navigation.navigate("SignIn")}}>
-                                    <Text>Sign in</Text>
+                                    <Text style={{color:"white"}}>Sign in</Text>
                                 </Button>
                             </View>
                         </View>
@@ -184,7 +152,7 @@ export default function Profile(){
                             <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:10}}>
                                 <Button
                                     onPress={async () => {
-                                        setUserData({email: "null", uid: "null", displayName: "null"});
+                                        setUserData({email: "null", uid: "null", displayName: "null", photoURL : 'null'});
                                         await logout();
                                         setLoggedIn(false);
                                     }}
@@ -210,12 +178,18 @@ export default function Profile(){
                         <View style={styles.setting_item}>
                             <Text style={styles.text_item}>Deo buiet nua</Text>
                         </View>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Deo buiet nua</Text>
-                        </View>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Deo buiet nua</Text>
-                        </View>
+                        <TouchableOpacity onPress={() => {
+                            console.log(JSON.stringify(userData))
+                        }}>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>Deo buiet nua</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => changeAvatar('Yae Miko').catch((error) => console.error(error))}>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>test</Text>
+                            </View>
+                        </TouchableOpacity>
                     </View>
 
 
@@ -239,7 +213,8 @@ const styles = StyleSheet.create({
     img_profile: {
         width:width*0.25,
         height:width*0.25,
-
+        borderRadius:(width * 0.25) / 2,
+        overflow:"hidden",
     },
     img_profile_container:{
         width:width*0.25,

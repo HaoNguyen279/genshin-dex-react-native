@@ -106,27 +106,27 @@ const RenderAscend = ({ region, element }: { region?: string, element?: string }
 
     }
     switch (region){
-                case "Mondstadt":
-            material =  mat_data["Mondstadt"]
-            break;
-                case "Liyue":
-            material =  mat_data["Liyue"]
-            break;
-                case "Inazuma":
-            material =  mat_data["Inazuma"]
-            break;
-                case "Sumeru":
-            material =  mat_data["Sumeru"]
-            break;
-                case "Fontaine":
-            material =  mat_data["Fontaine"]
-            break;
-                case "Natlan":
-            material =  mat_data["Natlan"]
-            break;
-                default:
-            material =  mat_data["Mondstadt"];
-            break;
+            case "Mondstadt":
+        material =  mat_data["Mondstadt"]
+        break;
+            case "Liyue":
+        material =  mat_data["Liyue"]
+        break;
+            case "Inazuma":
+        material =  mat_data["Inazuma"]
+        break;
+            case "Sumeru":
+        material =  mat_data["Sumeru"]
+        break;
+            case "Fontaine":
+        material =  mat_data["Fontaine"]
+        break;
+            case "Natlan":
+        material =  mat_data["Natlan"]
+        break;
+            default:
+        material =  mat_data["Mondstadt"];
+        break;
 
     }
     return(
@@ -185,20 +185,20 @@ const getBackground = (element : string | undefined) =>{
         "geo" : require("../assets/background_videos/bg_geo.mp4"),
     }
     switch (element){
-                case "Cryo":
-            return data_background["cryo"];
-                case "Pyro":
-            return data_background["pyro"];
-                case "Hydro":
-            return data_background["hydro"];
-                case "Dendro":
-            return data_background["dendro"];
-                case "Electro":
-            return data_background["electro"];
-                case "Anemo":
-            return data_background["anemo"];
-                case "Geo":
-            return data_background["geo"];
+            case "Cryo":
+        return data_background["cryo"];
+            case "Pyro":
+        return data_background["pyro"];
+            case "Hydro":
+        return data_background["hydro"];
+            case "Dendro":
+        return data_background["dendro"];
+            case "Electro":
+        return data_background["electro"];
+            case "Anemo":
+        return data_background["anemo"];
+            case "Geo":
+        return data_background["geo"];
     }
 }
 
@@ -213,62 +213,61 @@ const getElementIcon = (element : string | undefined) =>{
         "geo" : require("../assets/element_icons/Element_Geo.webp"),
     }
     switch (element){
-                case "Cryo":
-            return data_background["cryo"]
-                case "Pyro":
-            return data_background["pyro"]
-                case "Hydro":
-            return data_background["hydro"]
-                case "Dendro":
-            return data_background["dendro"]
-                case "Electro":
-            return data_background["electro"]
-                case "Anemo":
-            return data_background["anemo"]
-                case "Geo":
-            return data_background["geo"]
+        case "Cryo":
+    return data_background["cryo"]
+        case "Pyro":
+    return data_background["pyro"]
+        case "Hydro":
+    return data_background["hydro"]
+        case "Dendro":
+    return data_background["dendro"]
+        case "Electro":
+    return data_background["electro"]
+        case "Anemo":
+    return data_background["anemo"]
+        case "Geo":
+    return data_background["geo"]
     }
 }
 const getFontColor = (element : string | undefined) =>{
-
     switch (element){
-                case "Cryo":
+        case "Cryo":
             return StyleSheet.create({
                 font:{
                     color:"#61d5ff"
                 }
             })
-                case "Pyro":
+        case "Pyro":
             return StyleSheet.create({
                 font:{
                     color:"#e8782a"
                 }
             })
-                case "Hydro":
+        case "Hydro":
             return StyleSheet.create({
                 font:{
                     color:"#35bafc"
                 }
             })
-                case "Dendro":
+        case "Dendro":
             return StyleSheet.create({
                 font:{
                     color:"#02cc05"
                 }
             })
-                case "Electro":
+        case "Electro":
             return StyleSheet.create({
                 font:{
                     color:"#ab16e0"
                 }
             })
-                case "Anemo":
+        case "Anemo":
             return StyleSheet.create({
                 font:{
                     color:"#64f5a8"
                 }
             })
-                case "Geo":
+        case "Geo":
             return StyleSheet.create({
                 font:{
                     color:"#f5bc20"
@@ -306,7 +305,6 @@ export function ImagesList(){
 
     const navigation = useNavigation();
     const route : RouteProp<RootStackParamList, "Images"> = useRoute();
-
 
     useEffect(() => {
         const char_name : string = route.params?.name || "Lumine";
@@ -358,10 +356,10 @@ export function ImagesList(){
                 />
                 <ScrollView style={{flex:1,paddingTop:scale(20),paddingBottom:scale(50)}}>
                 <View>
-                    <TouchableOpacity onPress={() => navigation.goBack()}> 
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{position:'absolute',zIndex:1}}> 
                         <Text style={[{fontFamily: 'genshin_font',color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
                     </TouchableOpacity>
-                    <View style={{display:"flex", alignItems:"center", marginTop:40}}>
+                    <View style={{display:"flex", alignItems:"center", marginTop:60}}>
                         <Shadow
                             distance={10}
                             startColor="#00000020"

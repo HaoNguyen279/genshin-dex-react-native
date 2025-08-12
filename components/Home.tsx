@@ -8,8 +8,6 @@ import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from '../assets/data/character.json';
 import { scale, verticalScale } from "react-native-size-matters";
 
-
-
 const preload_icon_list = data.map( item => item.url_icon);
 
 type RenderListProps = {
@@ -19,34 +17,34 @@ type RenderListProps = {
 }
 const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
     return(
-            <View style={styles.list}>
-                    <FlatList 
-                        data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
-                        numColumns={3}
-                        renderItem={({item}) =>{
-                            return(
-                                <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
-                                        <View style={[getBackgroundFrame(item.rarity).background,styles.box]}>
-                                            <Image
-                                                source={{uri:item.url_icon}}
-                                                style={styles.icon}
-                                                priority={"high"}
-                                            />
-                                            <Text style={[styles.text]}>{item.name}</Text>
-                                        </View>
-                                </TouchableOpacity>
-                            )
-                        }}
-                        ListEmptyComponent={() =>(
-                            <View style={{alignItems:"center", marginTop:90,display:"flex",justifyContent:"center",marginHorizontal:50}}>
-                                <Text style={{fontFamily:"genshin_font", color: "white",textAlign:"center"}}>The world is wide, try to search something else!</Text>
-                                <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
-                            </View>
-                        )}
-                        keyExtractor={ (item) => item.id.toString()}
-                    >
-                    </FlatList>
-                </View>
+        <View style={styles.list}>
+            <FlatList 
+                data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
+                numColumns={3}
+                renderItem={({item}) =>{
+                    return(
+                        <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
+                                <View style={[getBackgroundFrame(item.rarity).background,styles.box]}>
+                                    <Image
+                                        source={{uri:item.url_icon}}
+                                        style={styles.icon}
+                                        priority={"high"}
+                                    />
+                                    <Text style={[styles.text]}>{item.name}</Text>
+                                </View>
+                        </TouchableOpacity>
+                    )
+                }}
+                ListEmptyComponent={() =>(
+                    <View style={{alignItems:"center", marginTop:90,display:"flex",justifyContent:"center",marginHorizontal:50}}>
+                        <Text style={{fontFamily:"genshin_font", color: "white",textAlign:"center"}}>The world is wide, try to search something else!</Text>
+                        <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
+                    </View>
+                )}
+                keyExtractor={ (item) => item.id.toString()}
+            >
+            </FlatList>
+        </View>
     )
 }
 
@@ -58,7 +56,6 @@ const getBackgroundFrame = (rarity :number) =>{
     })
 }
 
-
 export function Home(){
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [searchText,setSearchText]  = useState("");
@@ -68,7 +65,6 @@ export function Home(){
         if(searchInputRef != null)
             searchInputRef.current?.clear();
     }
-
 
     useEffect(() =>{
         const preload_url = async () =>{

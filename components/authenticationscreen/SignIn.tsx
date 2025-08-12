@@ -1,16 +1,16 @@
-import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View, TextInput } from "react-native";
+import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View, TextInput, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingModal from "../splashscreen/Loading";
 import { Button } from "react-native-paper";
 import { useState } from "react";
 import { scale, verticalScale } from "react-native-size-matters";
 import { auth } from "../../firebaseConfig"
-import * as Google from 'expo-auth-session/providers/google';
+import * as GoogleImport from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { WEB_CLIENT_ID } from "@env";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-
+import { Google} from "@lobehub/icons-rn"
 import {storeUserData} from "../../utils/functions"
 
 const { width, height } = Dimensions.get("window");
@@ -19,20 +19,17 @@ interface UserDataType {
     email: string | null;
     uid: string | null;
     displayName: string | null;
+    photoURL: string | null;
 }
 export default function SignIn() {
         const navigation : NavigationProp<RootStackParamList> = useNavigation();
-        const [inputText, setInputText] = useState("");
-        const [name, setName] = useState("");
         const [email, setEmail] = useState("");
         const [password, setPassword] = useState("");
         const [message, setMessage] = useState("");
-        const [isLoggedIn, setLoggedIn] = useState(false);
-        const [loading, setLoading] = useState(false);
         const [isLoadingVisible, setIsLoadingVisible] = useState(false);
         const [secureText, setSecureText] = useState(true);
 
-        const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" });
+        const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" , photoURL: "null"});
 
         const setErrorMessage = (message: string) => {
             setMessage(message);
@@ -41,7 +38,7 @@ export default function SignIn() {
             }, 3000);
         };
         
-        const [request, response, promptAsync] = Google.useAuthRequest({
+        const [request, response, promptAsync] = GoogleImport.useAuthRequest({
             clientId: WEB_CLIENT_ID,
             scopes: ['profile', 'email'],
             redirectUri: AuthSession.makeRedirectUri({
@@ -61,9 +58,10 @@ export default function SignIn() {
                         email: user.email ?? "null",
                         uid: user.uid ?? "null",
                         displayName: user.displayName ?? "null", 
+                        photoURL: user.photoURL ?? "null"
                     };
                     await storeUserData(payload).then(() => {
-                        console.log("Thành công");
+                        console.warn("Đăng nhập thành công");
                     });
                     setUserData(payload);
                     setTimeout(() => {
@@ -95,16 +93,17 @@ export default function SignIn() {
                     setIsLoadingVisible(false);
                 });
         }
-        
 
-
-    
   return (
     <SafeAreaView style={styles.container}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+                
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{position:"absolute", top:10}}> 
+                        <Text style={[{fontFamily: 'genshin_font',color:"black",fontSize:18,padding:15}]}> ﹤Back</Text>
+                    </TouchableOpacity>
                         <View style={styles.content_container}>
                             <View style={{margin:20}}>
                                 <Text style={{fontSize:24,textAlign:'center',fontFamily:'genshin_font'}}>Sign In</Text>
@@ -135,6 +134,19 @@ export default function SignIn() {
                                     style={{marginTop:10, backgroundColor:"#4460f0"}}
                                     onPress={() => {signIn()}}>
                                     <Text style={{color:"white"}}>Sign In</Text>
+                                </Button>
+                                <Button
+                                    mode="contained-tonal"
+                                    style={{marginTop:10, backgroundColor:"white",marginVertical:10}}
+                                    onPress={() => {signIn()}}
+                                >
+                                    <View style={{flexDirection:"row",alignItems:"center"}}>
+                                        <Text style={{color:"black"}}>Sign In with </Text> 
+                                        <View style={{flexDirection:"row",alignItems:"center", justifyContent:"center"}}>
+                                            <Google.Brand size={16}/>
+                                            <Google.Color size={18}/>
+                                        </View>
+                                    </View>
                                 </Button>
                             </View>
                         </View>

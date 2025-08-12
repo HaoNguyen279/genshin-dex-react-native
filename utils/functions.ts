@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import characterData from "../assets/data/character.json"
 
 export function getRounded1Number(num : number) : number {
     if (isNaN(num)) {
@@ -31,9 +32,7 @@ export async function getUserData(key : string){
         if(key === 'displayName'){
             result = AsyncStorage.getItem('userData')
                 .then(userdata => {
-                    if(userdata){
-                        return JSON.parse(userdata).displayName;
-                    }
+                    if(userdata) return JSON.parse(userdata).displayName;
                     return 'null';
                 })
             return result;
@@ -41,9 +40,7 @@ export async function getUserData(key : string){
         else if(key === 'email'){
             result = AsyncStorage.getItem('userData')
                 .then(userdata => {
-                    if(userdata){
-                        return JSON.parse(userdata).email;
-                    }
+                    if(userdata) return JSON.parse(userdata).email;
                     return 'null';
                 })
             return result;
@@ -51,9 +48,17 @@ export async function getUserData(key : string){
         else if(key === 'uid'){
             result = AsyncStorage.getItem('userData')
                 .then(userdata => {
-                    if(userdata){
-                        return JSON.parse(userdata).uid;
-                    }
+                    if(userdata) return JSON.parse(userdata).uid;
+                    return 'null';
+                })
+            return result;
+        }
+        else if(key === 'photoURL'){
+            result = AsyncStorage.getItem('userData')
+                .then(userData =>{
+                    if(userData){
+                        return JSON.parse(userData).photoURL;
+                    } 
                     return 'null';
                 })
             return result;
@@ -64,6 +69,15 @@ export async function getUserData(key : string){
     return result;
 }
 
+export function getAvatarByCharacterName(charName : string){
+    const url = characterData.find(char => char.name === charName)?.url_icon || 'null';
+    if(url && url != 'null') {
+        console.log("chay" + url);
+        return url;
+    }
+    console.log("chay" + url);
+    return 'null';
+}
 export async function logout(){
     try {
         await AsyncStorage.removeItem('userData');

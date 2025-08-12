@@ -1,4 +1,4 @@
-import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View, TextInput } from "react-native";
+import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View, TextInput, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingModal from "../splashscreen/Loading";
 import { Button } from "react-native-paper";
@@ -16,19 +16,14 @@ const { width, height } = Dimensions.get("window");
 
 export default function SignIn() {
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
-    const [inputText, setInputText] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
-
-    const [loading, setLoading] = useState(false);
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
     const [secureText, setSecureText] = useState(true);
 
-    const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null" });
     
-    var timeout : any;
     const setErrorMessage = (message: string) => {
         setMessage(message + "5");
         for (let i = 5; i > 0; i--) {
@@ -49,15 +44,20 @@ export default function SignIn() {
         } as any),
     });
         const signUp = async () =>{
-            if (email === "" || password === ""){
-                setErrorMessage("Email and password cannot be empty!");
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !password || !emailRegex.test(email)) {
+                alert('Vui lòng nhập email và mật khẩu hợp lệ.');
+                return;
+            }
+            if (password.length < 6) {
+                alert('Mật khẩu phải có ít nhất 6 ký tự.');
                 return;
             }
             setIsLoadingVisible(true);
             createUserWithEmailAndPassword(auth, email, password)
                 .then((userCredential) =>{
                     updateProfile(userCredential.user, {
-                        displayName: name
+                        displayName: name,
                     })
                     alert("Đăng ký thành công!");
                     
@@ -82,13 +82,15 @@ export default function SignIn() {
                 });
         }
 
-    
     return (
         <SafeAreaView style={styles.container}>
             <LoadingModal visible={isLoadingVisible}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled" >
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={{position:"absolute", top:10}}> 
+                        <Text style={[{fontFamily: 'genshin_font',color:"black",fontSize:18,padding:15}]}> ﹤Back</Text>
+                    </TouchableOpacity>
                         <View style={styles.content_container}>
                             <View style={{margin:20}}>
                                 <Text style={{fontSize:24,textAlign:'center',fontFamily:'genshin_font'}}>Sign Up</Text>
