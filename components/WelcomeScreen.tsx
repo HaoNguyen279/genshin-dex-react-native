@@ -25,7 +25,7 @@ const WelcomeScreen = () => {
         <View style={styles.container}>
             <Text style={styles.welcomeText}>Welcome to</Text>
             <Image 
-                source={require("../assets/gi_dex_icon.png")}
+                source={require("../assets/gi_dex_icon.jpg")}
                 style={styles.image}
             />
             <Text style={styles.authorText}>by Hao Nguyen</Text>

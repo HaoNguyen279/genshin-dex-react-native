@@ -5,26 +5,32 @@
     "scheme": "anime_picture",
     "version": "1.0.1",
     "orientation": "default",
-    "icon": "./assets/gi_dex_icon.png",
+    "icon": "./assets/gi_dex_icon.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/gi_dex_icon.png",
+      "image": "./assets/gi_dex_icon.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
-            "infoPlist": {
+      "bundleIdentifier": "com.haonguyen279z.genshindex",
+      "infoPlist": {
         "UISupportedInterfaceOrientations": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight",
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationLandscapeLeft",
           "UIInterfaceOrientationLandscapeRight"
-        ]}
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/gi_dex_icon.png",
+        "foregroundImage": "./assets/gi_dex_icon.jpg",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -37,7 +43,8 @@
     "plugins": [
       "expo-font",
       "expo-video",
-      "expo-screen-orientation"
+      "expo-screen-orientation",
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {
@@ -46,10 +53,12 @@
     },
     "owner": "haonguyen279z",
     "jsEngine": "hermes",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "assetBundlePatterns": [
       "**/*"
     ]
-
   }
 }

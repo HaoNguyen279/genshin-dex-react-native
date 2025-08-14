@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import characterData from "../assets/data/character.json"
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export function getRounded1Number(num : number) : number {
     if (isNaN(num)) {
@@ -58,7 +59,7 @@ export async function getUserData(key : string){
                 .then(userData =>{
                     if(userData){
                         return JSON.parse(userData).photoURL;
-                    } 
+                    }
                     return 'null';
                 })
             return result;
@@ -66,6 +67,7 @@ export async function getUserData(key : string){
     } catch (error) {
        console.log("Caught error when trying to get user data:" + error); 
     }
+    console.warn("No user data found for key: " + key);
     return result;
 }
 
@@ -81,6 +83,7 @@ export function getAvatarByCharacterName(charName : string){
 export async function logout(){
     try {
         await AsyncStorage.removeItem('userData');
+        await GoogleSignin.signOut();
     } catch (error) {
         console.log("Caught error when trying to logout:" + error);
     }

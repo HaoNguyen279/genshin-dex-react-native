@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithCredential, GoogleAuthProvider , getAuth, reload, updateProfile } from "firebase/auth";
 
 import LoadingModal from "./splashscreen/Loading";
-
+import ChoosingAvatarModal from "./customcomponent/ChoosingAvatarModal";
 
 import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
 
@@ -32,7 +32,7 @@ export default function Profile(){
     const [isLoadingVisible, setIsLoadingVisible] = useState(false);
     const [isLoggedIn, setLoggedIn] = useState(false);
     const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null", photoURL: "null" });
-
+    const [isChangingAvatar, setIsChangingAvatar] = useState(false);
     const changeAvatar = useCallback(async (charName : string) =>{
         const auth = getAuth();
         const user = auth.currentUser;
@@ -41,7 +41,7 @@ export default function Profile(){
         // console.log(user?.displayName + "<user_display_name>" + user?.photoURL!);
         if(user){
             await updateProfile(auth.currentUser, {
-            photoURL : getAvatarByCharacterName(charName)
+                photoURL : getAvatarByCharacterName(charName)
             }).then(async() => {
                 setUserData(prev => {
                     const newData = {
@@ -58,8 +58,12 @@ export default function Profile(){
                         getUserData('photoURL')
                     ]);
                     console.log("Focused 123 36:" + userEmail, userDisplayName, userUid, userPhotoURL );
+            }).then(async() =>{
+                await storeUserData(userData);
             })
-            await storeUserData(userData);
+        }
+        else{
+            console.log("No user is currently logged in.");
         }
         
     }, []);
@@ -70,17 +74,19 @@ export default function Profile(){
                 async () =>{
                     try {
                         const loadUserData = async () =>{
+                            console.log("Loading user data...");
                             const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
                                 getUserData('displayName'),
                                 getUserData('email'),
                                 getUserData('uid'),
                                 getUserData('photoURL')
                             ]);
-                          
-                            // const userDisplayName = await getUserData('displayName');
-                            // const userEmail = await getUserData('email');
-                            // const userUid = await getUserData('uid');
-                            // const userPhotoURL = await getUserData('photoURL');
+                            console.log("Loaded user data:", {
+                                displayName: userDisplayName,
+                                email: userEmail,
+                                uid: userUid,
+                                photoURL: userPhotoURL
+                            });
                             const newData = {
                                 displayName : userDisplayName,
                                 email: userEmail,
@@ -110,10 +116,14 @@ export default function Profile(){
             return () => { mounted = false; };
         }, [])
     );
+    useEffect(() => {
+        console.log("isChangingAvatar state changed: ", isChangingAvatar);
+    }, [isChangingAvatar]);
 
     return(
         <SafeAreaView style={{flex:1, backgroundColor:"#e6e7e2"}}>
             <LoadingModal visible={isLoadingVisible}/>
+            <ChoosingAvatarModal isVisible={isChangingAvatar} onClose={() => setIsChangingAvatar(false)} />
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
@@ -175,9 +185,11 @@ export default function Profile(){
                         <View style={styles.setting_item}>
                             <Text style={styles.text_item}>Deo buiet nua</Text>
                         </View>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Deo buiet nua</Text>
-                        </View>
+                        <TouchableOpacity onPress={() => setIsChangingAvatar(true)}>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>Doi avt</Text>
+                            </View>
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={() => {
                             console.log(JSON.stringify(userData))
                         }}>
@@ -185,15 +197,12 @@ export default function Profile(){
                                 <Text style={styles.text_item}>Deo buiet nua</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => changeAvatar('Yae Miko').catch((error) => console.error(error))}>
+                        <TouchableOpacity onPress={() => changeAvatar('Skirk').catch((error) => console.error(error))}>
                             <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>test</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
-
-
-
                 </ScrollView>
             </TouchableWithoutFeedback>
             </KeyboardAvoidingView>

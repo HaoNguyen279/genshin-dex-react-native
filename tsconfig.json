@@ -4,7 +4,8 @@
     "jsx": "react-native", 
     "paths": {
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
-    }
+    },
+    "typeRoots": ["./src/@types", "./node_modules/@types"]
   },
   "extends": "expo/tsconfig.base",
 }

@@ -1,9 +1,9 @@
-import { View, FlatList, Image, StyleSheet, Text, ViewStyle, ImageBackground, Dimensions, ScrollView, SafeAreaView, Touchable, TouchableOpacity } from "react-native";
+import { View, FlatList, StyleSheet, Text, ViewStyle , Dimensions, ScrollView, SafeAreaView, Touchable, TouchableOpacity } from "react-native";
 import { RouteProp, useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { Shadow } from "react-native-shadow-2";
 import { Video, ResizeMode } from "expo-av";
 import { useEffect, useState } from "react";
-
+import { Image, ImageBackground } from "expo-image";
 import { DataTable } from "react-native-paper";
 import { scale } from "react-native-size-matters";
 
@@ -371,7 +371,8 @@ export function ImagesList(){
                                 <Image
                                     source={{uri:route.params?.url_image}}
                                     style={styles.image}
-                                    resizeMode="contain"
+                                    contentFit="contain"
+                                    priority={'high'}
                                 />
                             </View>
                         </Shadow>

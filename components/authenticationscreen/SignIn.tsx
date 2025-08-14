@@ -2,17 +2,17 @@ import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, Style
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingModal from "../splashscreen/Loading";
 import { Button } from "react-native-paper";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { scale, verticalScale } from "react-native-size-matters";
 import { auth } from "../../firebaseConfig"
 import * as GoogleImport from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { WEB_CLIENT_ID } from "@env";
+import { signInWithEmailAndPassword } from "firebase/auth";  
+import { IOS_CLIENT_ID, WEB_CLIENT_ID } from "@env";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { Google} from "@lobehub/icons-rn"
+import { Google } from "@lobehub/icons-rn"
 import {storeUserData} from "../../utils/functions"
-
+import { GoogleSigninButton, isSuccessResponse, isErrorWithCode, statusCodes, GoogleSignin} from "@react-native-google-signin/google-signin"
 const { width, height } = Dimensions.get("window");
 
 interface UserDataType {
@@ -28,7 +28,7 @@ export default function SignIn() {
         const [message, setMessage] = useState("");
         const [isLoadingVisible, setIsLoadingVisible] = useState(false);
         const [secureText, setSecureText] = useState(true);
-
+        const [isSubmitting, setIsSubmitting] = useState(false);
         const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" , photoURL: "null"});
 
         const setErrorMessage = (message: string) => {
@@ -38,13 +38,52 @@ export default function SignIn() {
             }, 3000);
         };
         
-        const [request, response, promptAsync] = GoogleImport.useAuthRequest({
-            clientId: WEB_CLIENT_ID,
-            scopes: ['profile', 'email'],
-            redirectUri: AuthSession.makeRedirectUri({
-                useProxy: true, 
-         } as any),
-        });
+
+
+
+        const handleGoogleSignIn = async () =>{
+            try {
+                setIsSubmitting(true);
+                await GoogleSignin.hasPlayServices();
+                const response = await GoogleSignin.signIn();
+                if(isSuccessResponse(response)){
+                    const { idToken, user } = response.data;
+                    const { name, email, photo } = user;
+                    const payload: UserDataType = {
+                        email: email ?? "null",
+                        uid: user.id ?? "null",
+                        displayName: name ?? "null",
+                        photoURL: photo ?? "null"
+                    };
+                    console.log("Google Sign In successful: ", payload);
+                    setUserData(payload);
+                    await storeUserData(payload);
+                    navigation.goBack();
+                }
+                else{
+                    console.warn("Google Sign In failed: ", response);
+                }
+            } catch (error) {
+                if(isErrorWithCode(error)){
+                    switch (error.code) {
+                        case statusCodes.SIGN_IN_CANCELLED:
+                            console.warn("User cancelled the sign-in flow");
+                            break;
+                        case statusCodes.IN_PROGRESS:
+                            console.warn("Sign-in is in progress");
+                            break;
+                        case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+                            console.warn("Google Play Services not available");
+                            break;
+                        default:
+                            console.warn("Google Sign In error: ", error);
+                    }
+                }
+                console.warn("Google Play Services not available", error);
+                setIsSubmitting(false);
+            }
+        };
+
         const signIn = async () =>{
             if (email === "" || password === ""){
                 setErrorMessage("Email and password cannot be empty!");
@@ -93,6 +132,14 @@ export default function SignIn() {
                     setIsLoadingVisible(false);
                 });
         }
+        useEffect(() => {
+            GoogleSignin.configure({
+                webClientId: WEB_CLIENT_ID,
+                iosClientId: IOS_CLIENT_ID,
+                offlineAccess: true,
+                profileImageSize: 150,  
+            });
+        }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,8 +159,7 @@ export default function SignIn() {
                                     value={email}
                                     onChangeText={text => setEmail(text)}
                                     style={styles.input}
-                                    placeholder="Email"/>   
-                                    
+                                    placeholder="Email"/>
                                 <Text style={styles.textLabel}>Enter your password</Text>
                                 <TextInput
                                     value={password}
@@ -138,7 +184,7 @@ export default function SignIn() {
                                 <Button
                                     mode="contained-tonal"
                                     style={{marginTop:10, backgroundColor:"white",marginVertical:10}}
-                                    onPress={() => {signIn()}}
+                                    onPress={() => {handleGoogleSignIn()}}
                                 >
                                     <View style={{flexDirection:"row",alignItems:"center"}}>
                                         <Text style={{color:"black"}}>Sign In with </Text> 
