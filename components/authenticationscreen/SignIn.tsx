@@ -11,7 +11,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { IOS_CLIENT_ID, WEB_CLIENT_ID } from "@env";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { Google } from "@lobehub/icons-rn"
-import {storeUserData} from "../../utils/functions"
+import {setSignInProvider, storeUserData} from "../../utils/functions"
 import { GoogleSigninButton, isSuccessResponse, isErrorWithCode, statusCodes, GoogleSignin} from "@react-native-google-signin/google-signin"
 const { width, height } = Dimensions.get("window");
 
@@ -31,6 +31,7 @@ export default function SignIn() {
         const [isSubmitting, setIsSubmitting] = useState(false);
         const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" , photoURL: "null"});
 
+
         const setErrorMessage = (message: string) => {
             setMessage(message);
             setTimeout(() =>{
@@ -38,9 +39,6 @@ export default function SignIn() {
             }, 3000);
         };
         
-
-
-
         const handleGoogleSignIn = async () =>{
             try {
                 setIsSubmitting(true);
@@ -55,9 +53,9 @@ export default function SignIn() {
                         displayName: name ?? "null",
                         photoURL: photo ?? "null"
                     };
-                    console.log("Google Sign In successful: ", payload);
                     setUserData(payload);
                     await storeUserData(payload);
+                    await setSignInProvider("google");
                     navigation.goBack();
                 }
                 else{
@@ -83,7 +81,6 @@ export default function SignIn() {
                 setIsSubmitting(false);
             }
         };
-
         const signIn = async () =>{
             if (email === "" || password === ""){
                 setErrorMessage("Email and password cannot be empty!");
@@ -103,6 +100,7 @@ export default function SignIn() {
                         console.warn("Đăng nhập thành công");
                     });
                     setUserData(payload);
+                    await setSignInProvider("email");
                     setTimeout(() => {
                         navigation.goBack();
                     }, 500);

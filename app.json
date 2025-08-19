@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/gi_dex_icon.jpg",
+      "image": "./assets/gi_dex_icon_without_bg.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

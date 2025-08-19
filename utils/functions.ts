@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import characterData from "../assets/data/character.json"
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { GoogleSignin, User } from "@react-native-google-signin/google-signin";
+import { reload } from "@firebase/auth";
 
 export function getRounded1Number(num : number) : number {
     if (isNaN(num)) {
@@ -21,9 +22,18 @@ export function getPercentage(num : number, substatText : string) : String {
 export async function storeUserData(value: any){
     try{
         await AsyncStorage.setItem('userData', JSON.stringify(value));
-        console.log("User data stored successfully:", await AsyncStorage.getItem('userData'));
+        console.warn("Hàm update chạy : ", await AsyncStorage.getItem('userData'));
     }catch(error){
         console.log("Caught error when trying to store user data:" + error);
+    }
+}
+export async function updateUserDataInAsyncStorage(user : User) {
+    try {
+        
+        await AsyncStorage.setItem('userData', JSON.stringify(user));
+        console.warn("Hàm update chạy : ", await AsyncStorage.getItem('userData'));
+    } catch (error) {
+        console.log("Caught error when trying to update user data:" + error);
     }
 }
 
@@ -94,6 +104,24 @@ export async function getIsLoggedIn() : Promise<boolean> {
     return uid !== 'null';
 }
 
+export async function setSignInProvider(provider: string) {
+    try {
+        await AsyncStorage.setItem('signInProvider', provider);
+    } catch (error) {
+        console.log("Caught error when trying to set sign-in provider:" + error);
+        return 'Null';
+    }
+}
+export async function getSignInProvider() {
+    try {
+        const provider = await AsyncStorage.getItem('signInProvider');
+        return provider !== null ? provider : 'Null';
+    } catch (error) {
+        console.log("Caught error when trying to get sign-in provider:" + error);
+        return 'Null';
+    }
+}
+
 export async function changeThemeColor(color : string){
     // Color hoặc black hoặc white
     try {
@@ -102,12 +130,41 @@ export async function changeThemeColor(color : string){
         console.log("Caught error when trying to change theme color:" + error);
     }
 }
-async function getThemeColor() {
+export async function getThemeColor() {
     try {
         const color = await AsyncStorage.getItem('themeColor');
         return color !== null ? color : 'white';
     } catch (error) {
         console.log("Caught error when trying to get theme color:" + error);
         return 'white';
+    }
+}
+
+export async function getResultLang() {
+    try {
+        const lang = await AsyncStorage.getItem('language');
+        if (lang === "Vietnamese") return 'vi';
+        return 'en';
+    } catch (error) {
+        console.log("Caught error when trying to get language:" + error);
+        return 'vi';
+    }
+}
+
+export async function setResultLangStorage(lang: string) {
+    try {
+        await AsyncStorage.setItem('language', lang);
+    } catch (error) {
+        console.log("Caught error when trying to set language:" + error);
+    }
+}
+
+export async function getCharacterNameByPhotoURL(photoURL: string) {
+    try {
+        const character = characterData.find(char => char.url_icon === photoURL);
+        return character ? character.name : 'Null';
+    } catch (error) {
+        console.log("Caught error when trying to get character name by photo URL:" + error);
+        return 'Null';
     }
 }

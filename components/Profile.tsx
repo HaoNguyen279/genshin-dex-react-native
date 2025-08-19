@@ -1,19 +1,15 @@
-import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationProp, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
 import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {  Button, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {getUserData,getIsLoggedIn,logout, getAvatarByCharacterName, storeUserData} from "../utils/functions"
+import {getUserData,getIsLoggedIn,logout, getAvatarByCharacterName, storeUserData, setResultLangStorage, getResultLang, getCharacterNameByPhotoURL, getSignInProvider} from "../utils/functions"
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithCredential, GoogleAuthProvider , getAuth, reload, updateProfile } from "firebase/auth";
-
 import LoadingModal from "./splashscreen/Loading";
 import ChoosingAvatarModal from "./customcomponent/ChoosingAvatarModal";
-
-import { GEMINI_API_KEY, WEB_CLIENT_ID } from "@env"; // Import WEB_CLIENT_ID from .env file
-
 
 
 const provider = new GoogleAuthProvider(); // Firebase Google Auth Provider
@@ -23,9 +19,16 @@ provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
 WebBrowser.maybeCompleteAuthSession();
 
 const {width, height} = Dimensions.get("window");
-//{email, uid, displayName, photoURL} : {email : string, uid : string, displayName : string, photoURL : string}
 
-
+const initData = async () =>{
+    await storeUserData({
+        email: "null",
+        uid: "null",
+        displayName: "null",
+        photoURL: "null"
+    });
+}
+// initData();
 export default function Profile(){
 
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
@@ -33,39 +36,61 @@ export default function Profile(){
     const [isLoggedIn, setLoggedIn] = useState(false);
     const [userData, setUserData] = useState({ email: "null", uid: "null", displayName: "null", photoURL: "null" });
     const [isChangingAvatar, setIsChangingAvatar] = useState(false);
+    const [resultLang, setResultLang] = useState<string | null>("Vietnamese");
+    const [avatarCharacter, setAvatarCharacter] = useState<string | null>("Furina");
+    const [provider, setProvider] = useState<string | null>("google");
+    const changeResultLanguage = useCallback(async () =>{
+        if(resultLang === 'Vietnamese'){
+            setResultLang('English');
+            await setResultLangStorage('English');
+        }else{
+            setResultLang('Vietnamese');
+            await setResultLangStorage('Vietnamese');
+        }
+    }, [resultLang]);
     const changeAvatar = useCallback(async (charName : string) =>{
+        console.warn("Changing avatar to: ", charName);
+        if(provider !== "email") {
+            console.warn("Character name is empty or null." + provider);
+            return;
+        }
         const auth = getAuth();
         const user = auth.currentUser;
         if(user) await reload(user);
         else console.log("No user is currently logged in.");
-        // console.log(user?.displayName + "<user_display_name>" + user?.photoURL!);
         if(user){
             await updateProfile(auth.currentUser, {
                 photoURL : getAvatarByCharacterName(charName)
-            }).then(async() => {
-                setUserData(prev => {
-                    const newData = {
-                        ...prev,
-                        photoURL: getAvatarByCharacterName(charName)
-                    };
-                    console.log("-------------> Updated thành công");
-                    return newData;
-                });
-                    const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
-                        getUserData('displayName'),
-                        getUserData('email'),
-                        getUserData('uid'),
-                        getUserData('photoURL')
+            });
+                    
+            
+            const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
+                        user.displayName || 'null',
+                        user.email || 'null',
+                        user.uid || 'null',
+                        await getCharacterNameByPhotoURL(charName)
                     ]);
-                    console.log("Focused 123 36:" + userEmail, userDisplayName, userUid, userPhotoURL );
-            }).then(async() =>{
-                await storeUserData(userData);
-            })
+                console.log("Avatar from Async Storage" + userEmail, userDisplayName, userUid, userPhotoURL );
+                setUserData(() => {
+                const newData = {
+                    email : userEmail,
+                    uid : userUid,
+                    displayName : userDisplayName,
+                    // loi od ay
+
+                    photoURL: userPhotoURL
+                };
+                return newData;
+            });
+            // loi o day
+            await storeUserData(userData);
+            console.warn("Updated user data: ", userData);
+                
+        
         }
         else{
             console.log("No user is currently logged in.");
         }
-        
     }, []);
     useFocusEffect(
         useCallback(()=>{
@@ -74,19 +99,13 @@ export default function Profile(){
                 async () =>{
                     try {
                         const loadUserData = async () =>{
-                            console.log("Loading user data...");
                             const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
                                 getUserData('displayName'),
                                 getUserData('email'),
                                 getUserData('uid'),
                                 getUserData('photoURL')
                             ]);
-                            console.log("Loaded user data:", {
-                                displayName: userDisplayName,
-                                email: userEmail,
-                                uid: userUid,
-                                photoURL: userPhotoURL
-                            });
+                            console.warn("Loaded user data ảnh nè --- :", userPhotoURL );
                             const newData = {
                                 displayName : userDisplayName,
                                 email: userEmail,
@@ -103,6 +122,9 @@ export default function Profile(){
                                 Image.prefetch(userData.photoURL).then(()=>{
                                     console.log("Image prefetch successful for " + userData.photoURL);
                                 })
+                                console.warn("Provider: " + provider);
+                                setProvider(await getSignInProvider());
+                                setAvatarCharacter(await getCharacterNameByPhotoURL(userData.photoURL));
                             }
                         }
                         loadUserData();  
@@ -119,11 +141,21 @@ export default function Profile(){
     useEffect(() => {
         console.log("isChangingAvatar state changed: ", isChangingAvatar);
     }, [isChangingAvatar]);
+    useEffect(() => {
+        const loadLang = async () =>{
+            const lang = await getResultLang();
+            if(lang !== 'vi') {
+                setResultLang('Vietnamese');
+                setResultLangStorage('Vietnamese');
+            }
+        }
+        loadLang();
+    }, []);
 
     return(
         <SafeAreaView style={{flex:1, backgroundColor:"#e6e7e2"}}>
             <LoadingModal visible={isLoadingVisible}/>
-            <ChoosingAvatarModal isVisible={isChangingAvatar} onClose={() => setIsChangingAvatar(false)} />
+            <ChoosingAvatarModal isVisible={isChangingAvatar} onClose={() => setIsChangingAvatar(false)} isLoggedIn={isLoggedIn}/>
             <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0} >
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
@@ -139,7 +171,6 @@ export default function Profile(){
                                 }
                                 contentFit="contain"
                                 priority={`high`}
-
                             />
                         </View>
                         <Text style={styles.username}>{userData.displayName === "null" ? "Guest" : userData.displayName}</Text>
@@ -176,18 +207,27 @@ export default function Profile(){
                     )}
                     <View style={{marginHorizontal:20,marginVertical:5}}><Text style={{color:"#5b5b5b",fontFamily:'genshin_font'}}>Settings</Text></View>
                     <View style={styles.setting_container}>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Theme</Text>
-                        </View>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Avatar</Text>
-                        </View>
-                        <View style={styles.setting_item}>
-                            <Text style={styles.text_item}>Deo buiet nua</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => setIsChangingAvatar(true)}>
+                        <TouchableOpacity >
                             <View style={styles.setting_item}>
-                                <Text style={styles.text_item}>Doi avt</Text>
+                                <Text style={styles.text_item}>Theme color:</Text>
+                                <Text style={[styles.text_item_right, {marginRight:20}]}>Light</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>Avatar character:</Text>
+                                <Text style={[styles.text_item_right, {marginRight:20}]}>{avatarCharacter}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={changeResultLanguage}>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>Voice language:</Text>
+                                <Text style={[styles.text_item_right, {marginRight:20}]}>{resultLang}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => changeAvatar(avatarCharacter === "Furina" ? "Skirk" : "Furina")}>
+                            <View style={styles.setting_item}>
+                                <Text style={styles.text_item}>Change avatar (not work with google sign in)</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => {
@@ -197,7 +237,7 @@ export default function Profile(){
                                 <Text style={styles.text_item}>Deo buiet nua</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => changeAvatar('Skirk').catch((error) => console.error(error))}>
+                        <TouchableOpacity onPress={() => changeAvatar('Yae Miko').catch((error) => console.error(error))}>
                             <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>test</Text>
                             </View>
@@ -263,12 +303,20 @@ const styles = StyleSheet.create({
         backgroundColor:"#f4f4f4",
         height:50,
         borderRadius:10,
-        justifyContent:"center",
+        justifyContent:"space-between",
         marginVertical:5,
+        display:"flex",
+        flexDirection:"row",
+        alignItems:"center",
     },
     text_item:{
         marginLeft:20,
         color:"#1a1a1a",
+        fontFamily:'genshin_font',
+    },
+    text_item_right:{
+        marginLeft:20,
+        color:"#919191ff",
         fontFamily:'genshin_font',
     }
 });

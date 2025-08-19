@@ -9,7 +9,7 @@ import { scale } from "react-native-size-matters";
 
 import { BASE_URL, H_API_KEY } from "@env";
 import {defaultCharacter, defaultVoiceover, defaultCharacterStats} from "../utils/constant";
-import {getRounded1Number,getPercentage} from "../utils/functions";
+import {getRounded1Number,getPercentage, getResultLang} from "../utils/functions";
 
 
 
@@ -302,15 +302,16 @@ export function ImagesList(){
     const [voice,setVoice] = useState<Voiceover>(defaultVoiceover);
     const [characterStats,setCharacterStats] = useState<CharacterStats>(defaultCharacterStats);
     const [loaded,setLoaded] = useState(false);
-
+    const [lang,setLang] = useState<string | undefined>("en");
     const navigation = useNavigation();
     const route : RouteProp<RootStackParamList, "Images"> = useRoute();
 
     useEffect(() => {
         const char_name : string = route.params?.name || "Lumine";
         const fetchData = async () => {
-            const requestURL1 = BASE_URL + "/api/char?name=" + encodeURIComponent(char_name);
-            const requestURL2 = BASE_URL + "/api/charInfo?name=" + encodeURIComponent(char_name);
+            const lang = await getResultLang();
+            const requestURL1 = BASE_URL + "/api/char?name=" + encodeURIComponent(char_name) + "&lang=" + lang;
+            const requestURL2 = BASE_URL + "/api/charInfo?name=" + encodeURIComponent(char_name) +"&lang=" + lang;
             const responese1 = await fetch( requestURL1 ,{
                 method: 'GET',
                 headers:{
@@ -332,6 +333,9 @@ export function ImagesList(){
             else{
                 const responseData = await responese1.json();
                 const responseInfo = await responese2.json();
+                console.log(responseData);
+                console.log(responseInfo);
+
                 setVoice(responseInfo.voice);
                 setCharacterStats({
                     baseStats: responseInfo.statsBase,
@@ -343,8 +347,12 @@ export function ImagesList(){
                 setLoaded(true);
             }
         }
-        if(!loaded) fetchData();
+        if(!loaded) {
+            fetchData();
+            const lang = getResultLang().then(lang => setLang(lang));
+        }
     }, [loaded]);
+
     return(
         <SafeAreaView style={{flex:1}}>
                 <Video
@@ -406,22 +414,22 @@ export function ImagesList(){
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Ngày sinh:</Text> {data.birthday || route.params?.birthday || "<No data>"}
+                                    <Text style={styles.title_text}>{lang === "en" ? "Birthday:" : "Ngày sinh:"}</Text> {data.birthday || route.params?.birthday || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Quốc gia:</Text> {data.region || route.params?.region || "<No data>"}
+                                    <Text style={styles.title_text}>{lang === "en" ? "Country:" : "Quốc gia:"}</Text> {data.region || route.params?.region || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Cung mệnh:</Text> {data.constellation || "<No data>"}
+                                    <Text style={styles.title_text}>{lang === "en" ? "Constellation:" : "Cung mệnh:"}</Text> {data.constellation || "<No data>"}
                                 </Text>
                             </View>
                             <View style={styles.info_row}>
                                 <Text style={styles.info_text_row}> 
-                                    <Text style={styles.title_text}>Phiên bản ra mắt:</Text> {characterStats.version || "<No data>"}
+                                    <Text style={styles.title_text}>{lang === "en" ? "Release Version:" : "Phiên bản ra mắt:"}</Text> {characterStats.version || "<No data>"}
                                 </Text>
                             </View>
                             <View style={{marginHorizontal: 20, marginTop: 15}}>

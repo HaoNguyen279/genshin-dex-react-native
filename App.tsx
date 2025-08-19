@@ -26,15 +26,6 @@ export default function App() {
             'genshin_font': require("./assets/fonts/genshin_font.ttf"),
   });
     const HomeStackScreen = ()=>{
-        // useLayoutEffect(() =>{
-        //     const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomePage';
-        //     if(routeName === 'Images'){
-        //         navigation.setOptions({tabBarStyle: {display: 'none'}});
-        //     }
-        //     else{
-        //         navigation.setOptions({tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'});
-        //     }
-        // }, [navigation,route]);
         return(
             <Stack.Navigator>
             <Stack.Screen
@@ -56,15 +47,6 @@ export default function App() {
     };
 
     const ProfileScreen = ({navigation, route} : {navigation: any, route: any}) => {
-        // useLayoutEffect(() =>{
-        //     const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomePage';
-        //     if(routeName === 'Images'){
-        //         navigation.setOptions({tabBarStyle: {display: 'none'}});
-        //     }
-        //     else{
-        //         navigation.setOptions({tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'});
-        //     }
-        // }, [navigation,route]);
       return (
         <Stack.Navigator>
           <Stack.Screen
