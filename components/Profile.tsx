@@ -4,17 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import { Dimensions, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import {  Button, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {getUserData,getIsLoggedIn,logout, getAvatarByCharacterName, storeUserData, setResultLangStorage, getResultLang, getCharacterNameByPhotoURL, getSignInProvider} from "../utils/functions"
+import {getUserData,getIsLoggedIn,logout, getAvatarByCharacterName, storeUserData, setResultLangStorage, getResultLang, getCharacterNameByPhotoURL} from "../utils/functions"
 import * as WebBrowser from 'expo-web-browser';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { signInWithCredential, GoogleAuthProvider , getAuth, reload, updateProfile } from "firebase/auth";
+import { signInWithCredential, GoogleAuthProvider , getAuth, reload, updateProfile, onAuthStateChanged } from "firebase/auth";
 import LoadingModal from "./splashscreen/Loading";
 import ChoosingAvatarModal from "./customcomponent/ChoosingAvatarModal";
 
 
-const provider = new GoogleAuthProvider(); // Firebase Google Auth Provider
+const providerImport = new GoogleAuthProvider(); // Firebase Google Auth Provider
  
-provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+providerImport.addScope('https://www.googleapis.com/auth/contacts.readonly');
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,6 +38,7 @@ export default function Profile(){
     const [resultLang, setResultLang] = useState<string | null>("Vietnamese");
     const [avatarCharacter, setAvatarCharacter] = useState<string | null>("Furina");
     const [provider, setProvider] = useState<string | null>("google");
+    const auth = getAuth();
     const changeResultLanguage = useCallback(async () =>{
         if(resultLang === 'Vietnamese'){
             setResultLang('English');
@@ -49,8 +49,10 @@ export default function Profile(){
         }
     }, [resultLang]);
     const changeAvatar = useCallback(async (charName : string) =>{
+
         console.warn("Changing avatar to: ", charName);
-        if(provider !== "email") {
+        if(provider !== "password") {
+            alert("Please sign in with email to change avatar." + provider);
             console.warn("Character name is empty or null." + provider);
             return;
         }
@@ -76,8 +78,6 @@ export default function Profile(){
                     email : userEmail,
                     uid : userUid,
                     displayName : userDisplayName,
-                    // loi od ay
-
                     photoURL: userPhotoURL
                 };
                 return newData;
@@ -85,25 +85,45 @@ export default function Profile(){
             // loi o day
             await storeUserData(userData);
             console.warn("Updated user data: ", userData);
-                
-        
         }
         else{
             console.log("No user is currently logged in.");
         }
     }, []);
+    useEffect( () =>{
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseuser) =>{
+        alert("onAuthStateChanged called");
+        const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
+            firebaseuser?.uid || 'null',
+            firebaseuser?.email || 'null',
+            firebaseuser?.displayName || 'null',
+            firebaseuser?.photoURL || 'null'
+        ]);
+            setUserData({
+                email: userEmail,
+                uid: userUid,
+                displayName: userDisplayName,
+                photoURL: userPhotoURL
+            });
+        });
+        return unsubscribe;
+    },[auth]);
     useFocusEffect(
         useCallback(()=>{
             let mounted = true;
             (
                 async () =>{
                     try {
+                        const user = auth.currentUser;
+                        if(user) await reload(user);             
+                        alert("Focus called");
+                        setProvider(user?.providerData[0].providerId || 'null');
                         const loadUserData = async () =>{
                             const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
-                                getUserData('displayName'),
-                                getUserData('email'),
-                                getUserData('uid'),
-                                getUserData('photoURL')
+                                user?.displayName || 'null',
+                                user?.email || 'null',
+                                user?.uid || 'null',
+                                user?.photoURL || 'null'
                             ]);
                             console.warn("Loaded user data ảnh nè --- :", userPhotoURL );
                             const newData = {
@@ -112,6 +132,7 @@ export default function Profile(){
                                 uid : userUid,
                                 photoURL: userPhotoURL
                             }
+                            console.warn("Loaded user data: ", JSON.stringify(newData));
                             setUserData( prev => {
                                 if(JSON.stringify(prev) === JSON.stringify(newData)){
                                     return prev;
@@ -120,10 +141,8 @@ export default function Profile(){
                             });
                             if(userData.photoURL){
                                 Image.prefetch(userData.photoURL).then(()=>{
-                                    console.log("Image prefetch successful for " + userData.photoURL);
+                                    console.log("Image prefetch suSccessful for " + userData.photoURL);
                                 })
-                                console.warn("Provider: " + provider);
-                                setProvider(await getSignInProvider());
                                 setAvatarCharacter(await getCharacterNameByPhotoURL(userData.photoURL));
                             }
                         }
@@ -139,7 +158,7 @@ export default function Profile(){
         }, [])
     );
     useEffect(() => {
-        console.log("isChangingAvatar state changed: ", isChangingAvatar);
+        
     }, [isChangingAvatar]);
     useEffect(() => {
         const loadLang = async () =>{
@@ -176,7 +195,6 @@ export default function Profile(){
                         <Text style={styles.username}>{userData.displayName === "null" ? "Guest" : userData.displayName}</Text>
                         <Text style={styles.email}> {userData.email === "null" ? "No email" : userData.email}</Text>
                     </View>
-
                     {!isLoggedIn ? (
                         <View style={{margin:10}}>  
                             <View style={{display:"flex", flexDirection:"row", justifyContent:"center", marginTop:10}}>
@@ -237,7 +255,10 @@ export default function Profile(){
                                 <Text style={styles.text_item}>Deo buiet nua</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => changeAvatar('Yae Miko').catch((error) => console.error(error))}>
+                        <TouchableOpacity onPress={() =>{
+                            console.log(JSON.stringify(userData) + 'Provider:' + provider);
+                            
+                        }}>
                             <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>test</Text>
                             </View>

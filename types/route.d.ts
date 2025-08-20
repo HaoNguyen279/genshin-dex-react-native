@@ -1,6 +1,7 @@
 
 
 type RootStackParamList = {
+    "MainScreen" : undefined,
     "Welcome" : undefined,
     "HomePage" : undefined,
     "Profile" : {
@@ -25,6 +26,7 @@ type RootStackParamList = {
         url_icon: string,
         gacha_card_url : string
     } | undefined,
+    "BirthdayListScreen" : undefined    
 }
 
 type FontOfElement = {

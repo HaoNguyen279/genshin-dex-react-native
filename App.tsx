@@ -13,6 +13,7 @@ import SignIn from './components/authenticationscreen/SignIn';
 import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
+import BirthdayList from './components/BirthdayList';
 
 
 
@@ -45,8 +46,28 @@ export default function App() {
             </Stack.Navigator>
         )
     };
+    const MainScreen = () =>{
+        return (
+            <Stack.Navigator>
+                <Stack.Screen
+                    name="Welcome"
+                    component={WelcomeScreen}
+                    options={{
+                        headerShown: false
+                    }}
+                />
+                <Stack.Screen
+                    name="BirthdayListScreen"
+                    component={BirthdayList}
+                    options={{
+                        headerShown: false
+                    }}
+                />
+            </Stack.Navigator>
+        )
+    }
 
-    const ProfileScreen = ({navigation, route} : {navigation: any, route: any}) => {
+    const ProfileScreen = () => {
       return (
         <Stack.Navigator>
           <Stack.Screen
@@ -89,9 +110,9 @@ export default function App() {
         <NavigationContainer>
             <Tab.Navigator
                 screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}
-            > 
+            >
             {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
-                <Tab.Screen name='Welcome' component={WelcomeScreen}
+                <Tab.Screen name='MainScreen' component={MainScreen}
                     options={{
                         headerShown:false, 
                         tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
@@ -130,13 +151,3 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-    home:{
-        display: "flex",
-        flex: 1,
-        justifyContent: "center",
-        alignItems:"center",
-        alignContent:"center"
-    },
-    
-});

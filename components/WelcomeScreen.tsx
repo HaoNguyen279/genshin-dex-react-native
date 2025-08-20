@@ -1,9 +1,9 @@
 import React,  {  useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { BASE_URL,H_API_KEY } from '@env';
+
 const WelcomeScreen = () => {
     const navigation : NavigationProp<RootStackParamList> = useNavigation();
     const [name,setName] = useState('');
@@ -34,6 +34,9 @@ const WelcomeScreen = () => {
             <View style={{alignItems:"center", position:"absolute", bottom:"5%"}}>
                 <Text style={{marginTop:200}}>To use app, please choose tab below</Text>
                 <Text>{name}</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('BirthdayListScreen')}>
+                    <Text style={{fontSize:30}}>Navigate test</Text>
+                </TouchableOpacity>
                 <Text style={{fontSize:30}}>↓↓↓</Text>
             </View>
         </View>

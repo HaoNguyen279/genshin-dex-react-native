@@ -22,7 +22,6 @@ export function getPercentage(num : number, substatText : string) : String {
 export async function storeUserData(value: any){
     try{
         await AsyncStorage.setItem('userData', JSON.stringify(value));
-        console.warn("Hàm update chạy : ", await AsyncStorage.getItem('userData'));
     }catch(error){
         console.log("Caught error when trying to store user data:" + error);
     }
@@ -94,6 +93,7 @@ export async function logout(){
     try {
         await AsyncStorage.removeItem('userData');
         await GoogleSignin.signOut();
+        await AsyncStorage.removeItem('signInProvider');
     } catch (error) {
         console.log("Caught error when trying to logout:" + error);
     }
@@ -104,23 +104,23 @@ export async function getIsLoggedIn() : Promise<boolean> {
     return uid !== 'null';
 }
 
-export async function setSignInProvider(provider: string) {
-    try {
-        await AsyncStorage.setItem('signInProvider', provider);
-    } catch (error) {
-        console.log("Caught error when trying to set sign-in provider:" + error);
-        return 'Null';
-    }
-}
-export async function getSignInProvider() {
-    try {
-        const provider = await AsyncStorage.getItem('signInProvider');
-        return provider !== null ? provider : 'Null';
-    } catch (error) {
-        console.log("Caught error when trying to get sign-in provider:" + error);
-        return 'Null';
-    }
-}
+// export async function setSignInProvider(provider: string) {
+//     try {
+//         await AsyncStorage.setItem('signInProvider', provider);
+//     } catch (error) {
+//         console.log("Caught error when trying to set sign-in provider:" + error);
+//         return 'Null';
+//     }
+// }
+// export async function getSignInProvider() {
+//     try {
+//         const provider = await AsyncStorage.getItem('signInProvider');
+//         return provider !== null ? provider : 'Null';
+//     } catch (error) {
+//         console.log("Caught error when trying to get sign-in provider:" + error);
+//         return 'Null';
+//     }
+// }
 
 export async function changeThemeColor(color : string){
     // Color hoặc black hoặc white

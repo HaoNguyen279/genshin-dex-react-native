@@ -5,13 +5,11 @@ import { Button } from "react-native-paper";
 import { useEffect, useState } from "react";
 import { scale, verticalScale } from "react-native-size-matters";
 import { auth } from "../../firebaseConfig"
-import * as GoogleImport from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
 import { signInWithEmailAndPassword } from "firebase/auth";  
 import { IOS_CLIENT_ID, WEB_CLIENT_ID } from "@env";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { Google } from "@lobehub/icons-rn"
-import {setSignInProvider, storeUserData} from "../../utils/functions"
+import { storeUserData} from "../../utils/functions"
 import { GoogleSigninButton, isSuccessResponse, isErrorWithCode, statusCodes, GoogleSignin} from "@react-native-google-signin/google-signin"
 const { width, height } = Dimensions.get("window");
 
@@ -55,7 +53,9 @@ export default function SignIn() {
                     };
                     setUserData(payload);
                     await storeUserData(payload);
-                    await setSignInProvider("google");
+                    // await setSignInProvider("google");
+                    // const probe = await getSignInProvider?.(); // nếu export sẵn trong utils
+                    // console.warn("Provider stored =", probe);
                     navigation.goBack();
                 }
                 else{
@@ -100,7 +100,9 @@ export default function SignIn() {
                         console.warn("Đăng nhập thành công");
                     });
                     setUserData(payload);
-                    await setSignInProvider("email");
+                    // await setSignInProvider("email");
+                    // const probe = await getSignInProvider?.(); // nếu export sẵn trong utils
+                    // console.warn("Provider stored =", probe);
                     setTimeout(() => {
                         navigation.goBack();
                     }, 500);

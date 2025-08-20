@@ -797,7 +797,7 @@ export function WishSimulator(){
                     {/* Button bar 1 */}
                     <View style={[styles.button_bar,{marginTop:scale(5)}]}>
                         <View  style={styles.button_group_2}>
-                            <TouchableOpacity style={styles.button_} onPress={()=>{navigation.navigate("Welcome")}}>
+                            <TouchableOpacity style={styles.button_} onPress={()=>{navigation.navigate("MainScreen")}}>
                                 <ImageBackground
                                     source={button_bg}
                                     contentFit="cover"
