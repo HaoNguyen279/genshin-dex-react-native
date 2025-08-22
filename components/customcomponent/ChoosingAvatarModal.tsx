@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View ,Modal, Text, Dimensions, TouchableOpacity} 
 import data from "../../assets/data/character.json"
 import { Image } from "expo-image";
 import { Button } from "react-native-paper";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const url_img_array = data.map(item => ({name: item.name, url_image: item.url_icon}));
 const { width, height } = Dimensions.get("window");

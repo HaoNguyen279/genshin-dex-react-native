@@ -12,7 +12,7 @@ type RootStackParamList = {
     "SignIn" : undefined,
     "SignUp" : undefined,
     "Images" :  
-     {  
+     {
         id: number,
         name: string,
         element: string,

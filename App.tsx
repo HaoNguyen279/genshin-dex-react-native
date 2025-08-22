@@ -14,7 +14,7 @@ import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import BirthdayList from './components/BirthdayList';
-
+import Test from './components/games/Test';
 
 
 export default function App() {
@@ -141,10 +141,14 @@ export default function App() {
                             headerShown:false,
                             title:"Profile",
                             tabBarStyle: hide ? {display: 'none'} :{height:70,paddingTop:10, animation: 'shift'},
-                            tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>}
-                        }
-                    }}
-            />
+                            tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>} }}}/>
+                <Tab.Screen name='BirthdayList' component={Test}
+                    options={{
+                        freezeOnBlur: true,
+                        headerShown:false,
+                        title:"Birthday List",
+                        // tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/birthday_list.png")}/>}
+                    }}/>
             </Tab.Navigator>
         </NavigationContainer>
     </SafeAreaProvider>

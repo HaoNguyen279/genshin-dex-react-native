@@ -1,0 +1,50 @@
+[
+  {
+    "question": "What is the capital of France?",
+    "answer": ["Paris", "London", "Berlin", "Madrid"],
+    "correct": 0,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Paris_as_seen_from_the_Tour_Saint-Jacques_2011_1.jpg"
+  },
+  {
+    "question": "Which planet is known as the Red Planet?",
+    "answer": ["Earth", "Venus", "Mars", "Jupiter"],
+    "correct": 2,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg"
+  },
+  {
+    "question": "Which animal is the largest mammal on Earth?",
+    "answer": ["Elephant", "Blue Whale", "Giraffe", "Shark"],
+    "correct": 1,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Anim1754_-_Flickr_-_NOAA_Photo_Library.jpg"
+  },
+  {
+    "question": "In which continent is the Sahara Desert located?",
+    "answer": ["Asia", "Africa", "Australia", "South America"],
+    "correct": 1,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Sahara_satellite_hires.jpg"
+  },
+  {
+    "question": "Which fruit is known for keeping the doctor away if eaten daily?",
+    "answer": ["Banana", "Apple", "Orange", "Grapes"],
+    "correct": 1,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/1/15/Red_Apple.jpg"
+  },
+  {
+    "question": "What is the tallest mountain in the world?",
+    "answer": ["K2", "Mount Kilimanjaro", "Mount Everest", "Denali"],
+    "correct": 2,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/1/12/Mount_Everest_as_seen_from_Drukair2_PLW_edit.jpg"
+  },
+  {
+    "question": "Which ocean is the largest?",
+    "answer": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
+    "correct": 2,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Pacific_Ocean_-_en.png"
+  },
+  {
+    "question": "What is the national sport of Japan?",
+    "answer": ["Karate", "Baseball", "Sumo Wrestling", "Judo"],
+    "correct": 2,
+    "url_image": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Sumo_Bout_2006_May.jpg"
+  }
+]
