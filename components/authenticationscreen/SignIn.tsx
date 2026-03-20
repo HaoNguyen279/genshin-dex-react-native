@@ -11,6 +11,7 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { Google } from "@lobehub/icons-rn"
 import { storeUserData} from "../../utils/functions"
 import { GoogleSigninButton, isSuccessResponse, isErrorWithCode, statusCodes, GoogleSignin} from "@react-native-google-signin/google-signin"
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get("window");
 
 interface UserDataType {
@@ -18,6 +19,7 @@ interface UserDataType {
     uid: string | null;
     displayName: string | null;
     photoURL: string | null;
+    token : string 
 }
 export default function SignIn() {
         const navigation : NavigationProp<RootStackParamList> = useNavigation();
@@ -27,7 +29,7 @@ export default function SignIn() {
         const [isLoadingVisible, setIsLoadingVisible] = useState(false);
         const [secureText, setSecureText] = useState(true);
         const [isSubmitting, setIsSubmitting] = useState(false);
-        const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" , photoURL: "null"});
+        const [userData, setUserData] = useState<UserDataType>({ email: "null", uid: "null", displayName: "null" , photoURL: "null", token : "null"});
 
 
         const setErrorMessage = (message: string) => {
@@ -37,6 +39,13 @@ export default function SignIn() {
             }, 3000);
         };
         
+        // const saveUserData = async (userData) : => {
+        //     try{
+        //         await AsyncStorage.setItem("userToken", userData.token)
+        //     }catch{
+        //         console.log("Error found!")
+        //     }
+        // }
         const handleGoogleSignIn = async () =>{
             try {
                 setIsSubmitting(true);
@@ -49,7 +58,8 @@ export default function SignIn() {
                         email: email ?? "null",
                         uid: user.id ?? "null",
                         displayName: name ?? "null",
-                        photoURL: photo ?? "null"
+                        photoURL: photo ?? "null",
+                        token : idToken ?? "null"
                     };
                     setUserData(payload);
                     await storeUserData(payload);
@@ -81,7 +91,8 @@ export default function SignIn() {
                 setIsSubmitting(false);
             }
         };
-        const signIn = async () =>{
+
+        const signIn = async () => {
             if (email === "" || password === ""){
                 setErrorMessage("Email and password cannot be empty!");
                 return;
@@ -94,7 +105,8 @@ export default function SignIn() {
                         email: user.email ?? "null",
                         uid: user.uid ?? "null",
                         displayName: user.displayName ?? "null", 
-                        photoURL: user.photoURL ?? "null"
+                        photoURL: user.photoURL ?? "null",
+                        token : await user.getIdToken() ?? "null"
                     };
                     await storeUserData(payload).then(() => {
                         console.warn("Đăng nhập thành công");

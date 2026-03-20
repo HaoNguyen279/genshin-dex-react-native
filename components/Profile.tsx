@@ -52,7 +52,7 @@ export default function Profile(){
 
         console.warn("Changing avatar to: ", charName);
         if(provider !== "password") {
-            alert("Please sign in with email to change avatar." + provider);
+            // alert("Please sign in with email to change avatar." + provider);
             console.warn("Character name is empty or null." + provider);
             return;
         }
@@ -92,7 +92,7 @@ export default function Profile(){
     }, []);
     useEffect( () =>{
         const unsubscribe = onAuthStateChanged(auth, async (firebaseuser) =>{
-        alert("onAuthStateChanged called");
+        // alert("onAuthStateChanged called");
         const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
             firebaseuser?.uid || 'null',
             firebaseuser?.email || 'null',
@@ -116,7 +116,7 @@ export default function Profile(){
                     try {
                         const user = auth.currentUser;
                         if(user) await reload(user);             
-                        alert("Focus called");
+                        // alert("Focus called");
                         setProvider(user?.providerData[0].providerId || 'null');
                         const loadUserData = async () =>{
                             const [userDisplayName, userEmail, userUid, userPhotoURL] = await Promise.all([
@@ -257,7 +257,6 @@ export default function Profile(){
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() =>{
                             console.log(JSON.stringify(userData) + 'Provider:' + provider);
-                            
                         }}>
                             <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>test</Text>

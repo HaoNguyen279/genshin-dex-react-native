@@ -14,7 +14,7 @@ import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import BirthdayList from './components/BirthdayList';
-import Test from './components/games/Test';
+import Quiz from './components/games/Quiz';
 
 
 export default function App() {
@@ -53,14 +53,15 @@ export default function App() {
                     name="Welcome"
                     component={WelcomeScreen}
                     options={{
-                        headerShown: false
+                        headerShown: false,
                     }}
                 />
                 <Stack.Screen
                     name="BirthdayListScreen"
                     component={BirthdayList}
                     options={{
-                        headerShown: false
+                        headerShown: false,
+                        animation: 'slide_from_right'
                     }}
                 />
             </Stack.Navigator>
@@ -109,13 +110,10 @@ export default function App() {
     <SafeAreaProvider>
         <NavigationContainer>
             <Tab.Navigator
+            initialRouteName='MainScreen'
                 screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}
             >
             {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
-                <Tab.Screen name='MainScreen' component={MainScreen}
-                    options={{
-                        headerShown:false, 
-                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
                 <Tab.Screen name='HomePage' component={HomeStackScreen}
                     options={({route}) =>{
                         const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomePage';
@@ -130,9 +128,21 @@ export default function App() {
                 <Tab.Screen name='Wish' component={WishSimulator}
                     options={{
                         headerShown:false,
+                        
                         title:"Wish Simulator",
                         tabBarStyle: {display: isLandscape ? 'none' : 'flex'},
                         tabBarIcon: () =>{ return <Image style={{width:25, height:25}} source={require("./assets/wish_animation/intertwined_fate.webp")}/>}}}/>
+                <Tab.Screen name='MainScreen' component={MainScreen}
+                    options={{
+                        popToTopOnBlur:true,
+                        headerShown:false, 
+                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
+                <Tab.Screen name='Quiz' component={Quiz}
+                    options={{
+                        freezeOnBlur: true,
+                        headerShown:false,
+                        title:"Quiz",
+                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/quiz_icon.png")}/>}}}/>
                 <Tab.Screen name='ProfileScreen' component={ProfileScreen}
                     options={({route})=>{
                         const routeName = getFocusedRouteNameFromRoute(route) ?? 'Profile';
@@ -142,13 +152,7 @@ export default function App() {
                             title:"Profile",
                             tabBarStyle: hide ? {display: 'none'} :{height:70,paddingTop:10, animation: 'shift'},
                             tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/profile.png")}/>} }}}/>
-                <Tab.Screen name='BirthdayList' component={Test}
-                    options={{
-                        freezeOnBlur: true,
-                        headerShown:false,
-                        title:"Birthday List",
-                        // tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/birthday_list.png")}/>}
-                    }}/>
+
             </Tab.Navigator>
         </NavigationContainer>
     </SafeAreaProvider>

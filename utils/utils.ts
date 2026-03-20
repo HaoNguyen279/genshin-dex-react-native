@@ -24,7 +24,6 @@ export function compareTwoDay(dateStr1: string, dateStr2: string) {
     if (date1Parts.month !== date2Parts.month) {
         return date1Parts.month - date2Parts.month;
     }
-    
     return date1Parts.day - date2Parts.day;
 }
 interface BirthdayProps {
@@ -44,11 +43,11 @@ export function getBirthDayListSortedByDay(arrays: CharacterJSON[]) {
         return compareTwoDay(char1.birthday, char2.birthday);
     });
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    var groupedArray : {month : string , data : BirthdayProps[]}[] = []
+    var groupedArray : {month : string , data : BirthdayProps[]}[] = [];
 
     months.forEach(month => {
         const monthArray = sortedArray.filter(item => item.birthday.includes(month));
         groupedArray.push({month, data: monthArray})
     });
-    return groupedArray;
+    return {groupedArray, mappedArray };
 }

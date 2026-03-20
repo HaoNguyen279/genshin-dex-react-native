@@ -28,7 +28,6 @@ export async function storeUserData(value: any){
 }
 export async function updateUserDataInAsyncStorage(user : User) {
     try {
-        
         await AsyncStorage.setItem('userData', JSON.stringify(user));
         console.warn("Hàm update chạy : ", await AsyncStorage.getItem('userData'));
     } catch (error) {
@@ -121,6 +120,10 @@ export async function getIsLoggedIn() : Promise<boolean> {
 //         return 'Null';
 //     }
 // }
+
+export async function bucu(){
+
+}
 
 export async function changeThemeColor(color : string){
     // Color hoặc black hoặc white
