@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Genshin Dex",
-    "slug": "anime_picture",
-    "scheme": "anime_picture",
+    "slug": "genshin-dex",
+    "scheme": "genshin-dex",
     "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/gi_dex_icon.jpg",
@@ -46,11 +46,6 @@
       "expo-screen-orientation",
       "@react-native-google-signin/google-signin"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "c5cdf951-bfb2-4956-a946-002327c421d6"
-      }
-    },
     "owner": "haonguyen279z",
     "jsEngine": "hermes",
     "platforms": [
@@ -59,6 +54,11 @@
     ],
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "37df6184-b0ae-4ce6-8e66-9482be696239"
+      }
+    }
   }
 }

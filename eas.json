@@ -11,13 +11,16 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator": true
+        "buildConfiguration": "Debug"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "buildConfiguration": "Debug"
       },
       "env": {
         "NODE_ENV": "production",

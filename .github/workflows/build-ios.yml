@@ -1,0 +1,104 @@
+```yaml
+name: Build iOS Unsigned IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS Unsigned IPA
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate iOS native project
+        run: pnpm expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Find Xcode workspace
+        id: workspace
+        working-directory: ios
+        shell: bash
+        run: |
+          WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" -print -quit)
+
+          if [ -z "$WORKSPACE" ]; then
+            echo "No .xcworkspace found"
+            exit 1
+          fi
+
+          WORKSPACE_NAME=$(basename "$WORKSPACE")
+
+          echo "workspace=$WORKSPACE_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build unsigned iOS app
+        working-directory: ios
+        shell: bash
+        run: |
+          WORKSPACE="${{ steps.workspace.outputs.workspace }}"
+          SCHEME="${WORKSPACE%.xcworkspace}"
+
+          echo "Workspace: $WORKSPACE"
+          echo "Scheme: $SCHEME"
+
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package unsigned IPA
+        working-directory: ios
+        shell: bash
+        run: |
+          APP_PATH=$(find build/Build/Products/Debug-iphoneos \
+            -maxdepth 1 \
+            -name "*.app" \
+            -print -quit)
+
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found"
+            exit 1
+          fi
+
+          echo "Found app: $APP_PATH"
+
+          rm -rf Payload
+          mkdir -p Payload
+
+          cp -R "$APP_PATH" Payload/
+
+          zip -r App-Unsigned.ipa Payload
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: ios/App-Unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
+```
