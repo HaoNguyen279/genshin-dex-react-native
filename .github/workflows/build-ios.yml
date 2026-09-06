@@ -1,4 +1,3 @@
-```yaml
 name: Build iOS Unsigned IPA
 
 on:
@@ -101,4 +100,4 @@ jobs:
           path: ios/App-Unsigned.ipa
           if-no-files-found: error
           retention-days: 7
-```
+
