@@ -9,31 +9,44 @@ jobs:
     runs-on: macos-15
 
     steps:
+      # 1. Checkout source code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 11.20.0
           run_install: false
 
+      # 3. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
+      # 4. Verify environment
+      - name: Check Node and pnpm versions
+        run: |
+          node --version
+          pnpm --version
+
+      # 5. Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 6. Generate iOS native project
       - name: Generate iOS native project
         run: pnpm expo prebuild --platform ios --clean
 
+      # 7. Install CocoaPods dependencies
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install
 
+      # 8. Find Xcode workspace
       - name: Find Xcode workspace
         id: workspace
         working-directory: ios
@@ -42,14 +55,26 @@ jobs:
           WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" -print -quit)
 
           if [ -z "$WORKSPACE" ]; then
-            echo "No .xcworkspace found"
+            echo "❌ No .xcworkspace found"
             exit 1
           fi
 
           WORKSPACE_NAME=$(basename "$WORKSPACE")
 
+          echo "Found workspace: $WORKSPACE_NAME"
           echo "workspace=$WORKSPACE_NAME" >> "$GITHUB_OUTPUT"
 
+      # 9. Show available Xcode schemes
+      - name: List Xcode schemes
+        working-directory: ios
+        run: |
+          WORKSPACE="${{ steps.workspace.outputs.workspace }}"
+
+          xcodebuild \
+            -list \
+            -workspace "$WORKSPACE"
+
+      # 10. Build unsigned iOS app
       - name: Build unsigned iOS app
         working-directory: ios
         shell: bash
@@ -70,6 +95,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
+      # 11. Package .app into unsigned .ipa
       - name: Package unsigned IPA
         working-directory: ios
         shell: bash
@@ -80,11 +106,12 @@ jobs:
             -print -quit)
 
           if [ -z "$APP_PATH" ]; then
-            echo "No .app found"
+            echo "❌ No .app found"
             exit 1
           fi
 
-          echo "Found app: $APP_PATH"
+          echo "Found app:"
+          echo "$APP_PATH"
 
           rm -rf Payload
           mkdir -p Payload
@@ -93,6 +120,10 @@ jobs:
 
           zip -r App-Unsigned.ipa Payload
 
+          echo "✅ Unsigned IPA created:"
+          ls -lh App-Unsigned.ipa
+
+      # 12. Upload IPA as GitHub Actions artifact
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
@@ -100,4 +131,3 @@ jobs:
           path: ios/App-Unsigned.ipa
           if-no-files-found: error
           retention-days: 7
-
