@@ -40,13 +40,22 @@ jobs:
       # 6. Generate iOS native project
       - name: Generate iOS native project
         run: pnpm expo prebuild --platform ios --clean
+        env:
+          EXPO_USE_PNPM: "1"
 
-      # 7. Install CocoaPods dependencies
+      # 7. Setup Ruby for CocoaPods
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      # 8. Install CocoaPods dependencies
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install
 
-      # 8. Find Xcode workspace
+      # 9. Find Xcode workspace
       - name: Find Xcode workspace
         id: workspace
         working-directory: ios
