@@ -42,6 +42,23 @@ jobs:
         run: pnpm expo prebuild --platform ios --clean
 
       # 7. Install CocoaPods dependencies
+      - name: Enable modular headers for CocoaPods
+        working-directory: ios
+        shell: bash
+        run: |
+          if ! grep -q "^use_modular_headers!$" Podfile; then
+            awk '
+              /prepare_react_native_project!/ {
+                print
+                print ""
+                print "use_modular_headers!"
+                next
+              }
+              { print }
+            ' Podfile > Podfile.tmp
+            mv Podfile.tmp Podfile
+          fi
+
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install
