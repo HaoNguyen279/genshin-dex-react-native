@@ -45,8 +45,7 @@
       "expo-video",
       "expo-screen-orientation",
       "@react-native-google-signin/google-signin",
-      "@react-native-firebase/app",
-      "@react-native-firebase/auth",
+      "./plugins/withFirebaseSwiftAppDelegate",
       [
         "expo-build-properties",
         {
