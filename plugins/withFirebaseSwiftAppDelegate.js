@@ -1,6 +1,22 @@
-const { withDangerousMod, WarningAggregator } = require('@expo/config-plugins');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
+
+let configPlugins;
+try {
+  configPlugins = require('@expo/config-plugins');
+} catch (_) {
+  try {
+    const expoPath = require.resolve('expo/package.json', { paths: [__dirname, process.cwd()] });
+    const configPluginsPath = require.resolve('@expo/config-plugins', {
+      paths: [path.dirname(expoPath)]
+    });
+    configPlugins = require(configPluginsPath);
+  } catch (e) {
+    throw new Error('Could not resolve @expo/config-plugins: ' + e.message);
+  }
+}
+
+const { withDangerousMod, WarningAggregator, IOSConfig } = configPlugins;
 
 /**
  * Custom Expo config plugin to add Firebase initialization to Swift AppDelegate.
@@ -11,66 +27,48 @@ const withFirebaseSwiftAppDelegate = (config) => {
   return withDangerousMod(config, [
     'ios',
     async (config) => {
-      const projectRoot = config.modRequest.projectRoot;
-      const iosDir = path.join(projectRoot, 'ios');
-
-      // Find AppDelegate.swift
-      let appDelegatePath = null;
-      const projectName = config.modRequest.projectName;
-      const candidate = path.join(iosDir, projectName, 'AppDelegate.swift');
-      if (fs.existsSync(candidate)) {
-        appDelegatePath = candidate;
-      } else {
-        // Fallback: search for AppDelegate.swift recursively (max 2 levels)
-        const entries = fs.readdirSync(iosDir);
-        for (const entry of entries) {
-          const dir = path.join(iosDir, entry);
-          if (fs.statSync(dir).isDirectory()) {
-            const swiftFile = path.join(dir, 'AppDelegate.swift');
-            if (fs.existsSync(swiftFile)) {
-              appDelegatePath = swiftFile;
-              break;
-            }
-          }
-        }
-      }
-
-      if (!appDelegatePath) {
+      let fileInfo;
+      try {
+        fileInfo = IOSConfig.Paths.getAppDelegate(config.modRequest.projectRoot);
+      } catch (e) {
         WarningAggregator.addWarningIOS(
           'with-firebase-swift',
-          'AppDelegate.swift not found. Skipping Firebase initialization injection.'
+          'Could not locate AppDelegate: ' + e.message
         );
+        return config;
+      }
+
+      const { path: appDelegatePath, language } = fileInfo;
+      if (language !== 'swift') {
         return config;
       }
 
       let contents = fs.readFileSync(appDelegatePath, 'utf8');
 
-      // Skip if already injected
-      if (contents.includes('FirebaseApp.configure()') || contents.includes('FirebaseCore')) {
+      if (contents.includes('FirebaseApp.configure()') && contents.includes('import FirebaseCore')) {
         return config;
       }
 
-      // Add FirebaseCore import after last import line
       if (!contents.includes('import FirebaseCore')) {
         contents = contents.replace(
-          /(import\s+\w+[^\n]*\n)(?!import)/,
-          (match) => match + 'import FirebaseCore\n'
+          /(import\s+[^\n]+\n)(?!import)/,
+          '$1import FirebaseCore\n'
         );
       }
 
-      // Inject FirebaseApp.configure() at the start of didFinishLaunchingWithOptions
-      // Pattern matches the Swift function signature
-      const swiftDidFinishPattern = /(func application\s*\(_\s*application\s*:\s*UIApplication\s*,\s*didFinishLaunchingWithOptions[^{]*\{)/;
-      if (swiftDidFinishPattern.test(contents)) {
-        contents = contents.replace(
-          swiftDidFinishPattern,
-          '$1\n    FirebaseApp.configure()'
-        );
-      } else {
-        WarningAggregator.addWarningIOS(
-          'with-firebase-swift',
-          'Could not find didFinishLaunchingWithOptions in AppDelegate.swift. Firebase may not initialize correctly.'
-        );
+      if (!contents.includes('FirebaseApp.configure()')) {
+        const swiftDidFinishPattern = /(func application\s*\([\s\S]*?didFinishLaunchingWithOptions[\s\S]*?\{)/;
+        if (swiftDidFinishPattern.test(contents)) {
+          contents = contents.replace(
+            swiftDidFinishPattern,
+            '$1\n    FirebaseApp.configure()'
+          );
+        } else {
+          WarningAggregator.addWarningIOS(
+            'with-firebase-swift',
+            'Could not find didFinishLaunchingWithOptions in AppDelegate.swift. Firebase may not initialize correctly.'
+          );
+        }
       }
 
       fs.writeFileSync(appDelegatePath, contents, 'utf8');
@@ -80,3 +78,4 @@ const withFirebaseSwiftAppDelegate = (config) => {
 };
 
 module.exports = withFirebaseSwiftAppDelegate;
+
