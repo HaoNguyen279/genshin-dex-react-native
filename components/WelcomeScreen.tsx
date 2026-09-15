@@ -28,16 +28,12 @@ const WelcomeScreen = () => {
                 source={require("../assets/gi_dex_icon.jpg")}
                 style={styles.image}
             />
-            <Text style={styles.authorText}>by Hao Nguyen</Text>
+            {/* <Text style={styles.authorText}>by Hao Nguyen</Text> */}
             <Text style={styles.techText}>using React Native - Expo</Text>
             <Image source={require("../assets/png/furina_sticker.webp")} style={{width:100,height:100,marginTop:20}}/>
             <View style={{alignItems:"center", position:"absolute", bottom:"5%"}}>
-                <Text style={{marginTop:200}}>To use app, please choose tab below</Text>
+                {/* <Text style={{marginTop:200}}>To use app, please choose tab below</Text> */}
                 <Text>{name}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('BirthdayListScreen')}>
-                    <Text style={{fontSize:30}}>Navigate test</Text>
-                </TouchableOpacity>
-                <Text style={{fontSize:30}}>↓↓↓</Text>
             </View>
         </View>
     );

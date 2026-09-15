@@ -310,7 +310,7 @@ export function ImagesList(){
         const char_name : string = route.params?.name || "Lumine";
         const fetchData = async () => {
             const lang = await getResultLang();
-            const requestURL1 = BASE_URL + "/api/char?name=" + encodeURIComponent(char_name) + "&lang=" + lang;
+            const requestURL1 = BASE_URL + "/characters?query=" + encodeURIComponent(char_name) + "&lang=" + lang;
             const requestURL2 = BASE_URL + "/api/charInfo?name=" + encodeURIComponent(char_name) +"&lang=" + lang;
             const responese1 = await fetch( requestURL1 ,{
                 method: 'GET',

@@ -137,12 +137,12 @@ export default function App() {
                         popToTopOnBlur:true,
                         headerShown:false, 
                         tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/wish.webp")} />}}}/>
-                <Tab.Screen name='Quiz' component={Quiz}
+                {/* <Tab.Screen name='Quiz' component={Quiz}
                     options={{
                         freezeOnBlur: true,
                         headerShown:false,
                         title:"Quiz",
-                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/quiz_icon.png")}/>}}}/>
+                        tabBarIcon: () =>{ return <Image style={{width:30, height:30}} source={require("./assets/png/quiz_icon.png")}/>}}}/> */}
                 <Tab.Screen name='ProfileScreen' component={ProfileScreen}
                     options={({route})=>{
                         const routeName = getFocusedRouteNameFromRoute(route) ?? 'Profile';

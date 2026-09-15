@@ -243,24 +243,24 @@ export default function Profile(){
                                 <Text style={[styles.text_item_right, {marginRight:20}]}>{resultLang}</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => changeAvatar(avatarCharacter === "Furina" ? "Skirk" : "Furina")}>
+                        {/* <TouchableOpacity onPress={() => changeAvatar(avatarCharacter === "Furina" ? "Skirk" : "Furina")}>
                             <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>Change avatar (not work with google sign in)</Text>
                             </View>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                         <TouchableOpacity onPress={() => {
                             console.log(JSON.stringify(userData))
                         }}>
-                            <View style={styles.setting_item}>
+                            {/* <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>Deo buiet nua</Text>
-                            </View>
+                            </View> */}
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() =>{
                             console.log(JSON.stringify(userData) + 'Provider:' + provider);
                         }}>
-                            <View style={styles.setting_item}>
+                            {/* <View style={styles.setting_item}>
                                 <Text style={styles.text_item}>test</Text>
-                            </View>
+                            </View> */}
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

@@ -1,162 +1,691 @@
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
-import { View, FlatList, StyleSheet, Text, TouchableOpacity, TextInput, Pressable, Dimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {Image} from "expo-image";
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  Pressable,
+  Dimensions,
+  Modal,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
-import data from '../assets/data/character.json';
-import { scale, verticalScale } from "react-native-size-matters";
+import data from "../assets/data/character.json";
+import { scale } from "react-native-size-matters";
 
-const preload_icon_list = data.map( item => item.url_icon);
+// ─── Layout constants ────────────────────────────────────────────────
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const HORIZONTAL_PADDING = 12;
+const CARD_GAP = 16;
+const NUM_COLUMNS = 4;
+const CARD_WIDTH =
+  (SCREEN_WIDTH - HORIZONTAL_PADDING * 2 - CARD_GAP * (NUM_COLUMNS - 1)) /
+  NUM_COLUMNS;
+const CARD_IMAGE_HEIGHT = CARD_WIDTH * 1.15;
 
-type RenderListProps = {
-    navigation : NavigationProp<RootStackParamList>;
-    // data_render : NonNullable<RootStackParamList["Images"]>    
-    search_text : string
-}
-const RenderList : React.FC<RenderListProps> = ({navigation,search_text})=>{
-    return(
-        <View style={styles.list}>
-            <FlatList 
-                data={data.filter(item => item.name.toLowerCase().includes(search_text.toLowerCase()))}   
-                numColumns={3}
-                renderItem={({item}) =>{
-                    return(
-                        <TouchableOpacity onPress={() => navigation.navigate("Images", item)}>
-                                <View style={[getBackgroundFrame(item.rarity).background,styles.box]}>
-                                    <Image
-                                        source={{uri:item.url_icon}}
-                                        style={styles.icon}
-                                        priority={"high"}
-                                    />
-                                    <Text style={[styles.text]}>{item.name}</Text>
-                                </View>
-                        </TouchableOpacity>
-                    )
-                }}
-                ListEmptyComponent={() =>(
-                    <View style={{alignItems:"center", marginTop:90,display:"flex",justifyContent:"center",marginHorizontal:50}}>
-                        <Text style={{fontFamily:"genshin_font", color: "white",textAlign:"center"}}>The world is wide, try to search something else!</Text>
-                        <Image source={require("../assets/png/qiqi_sticker.webp")} style={{width:100, height:100}}/>
-                    </View>
-                )}
-                keyExtractor={ (item) => item.id.toString()}
+const preload_icon_list = data.map((item) => item.url_icon);
+
+// ─── Element data ────────────────────────────────────────────────────
+const ELEMENT_ICONS: Record<string, any> = {
+  Pyro: require("../assets/element_icons/Element_Pyro.webp"),
+  Hydro: require("../assets/element_icons/Element_Hydro.webp"),
+  Electro: require("../assets/element_icons/Element_Electro.webp"),
+  Cryo: require("../assets/element_icons/Element_Cryo.webp"),
+  Dendro: require("../assets/element_icons/Element_Dendro.webp"),
+  Anemo: require("../assets/element_icons/Element_Anemo.webp"),
+  Geo: require("../assets/element_icons/Element_Geo.webp"),
+};
+
+const ELEMENTS = ["Pyro", "Hydro", "Electro", "Cryo", "Dendro", "Anemo", "Geo"];
+
+const ELEMENT_COLORS: Record<string, string> = {
+  Pyro: "#EF7938",
+  Hydro: "#4CC2F1",
+  Electro: "#B07BD8",
+  Cryo: "#9FD6E3",
+  Dendro: "#A0C939",
+  Anemo: "#74C2A8",
+  Geo: "#F5B723",
+};
+
+// ─── Weapon data ─────────────────────────────────────────────────────
+const WEAPONS = ["Sword", "Bow", "Claymore", "Polearm", "Catalyst"];
+
+const WEAPON_LABELS: Record<string, string> = {
+  Sword: "⚔️  Sword",
+  Bow: "🏹  Bow",
+  Claymore: "🗡️  Claymore",
+  Polearm: "🔱  Polearm",
+  Catalyst: "📖  Catalyst",
+};
+
+// ─── Rarity gradients ────────────────────────────────────────────────
+const RARITY_GRADIENTS: Record<number, [string, string, string]> = {
+  5: ["#A0712E", "#C5994A", "#DDB862"],
+  4: ["#565080", "#74669D", "#8E7CB8"],
+};
+
+// ─── Main component ─────────────────────────────────────────────────
+export function Home() {
+  const navigation: NavigationProp<RootStackParamList> = useNavigation();
+  const insets = useSafeAreaInsets();
+  const searchInputRef = useRef<TextInput>(null);
+
+  const [searchText, setSearchText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [onPress5Star, setOnPress5Star] = useState(false);
+  const [onPress4Star, setOnPress4Star] = useState(false);
+
+  // Dropdown filter state (UI only — no filtering logic applied)
+  const [showElementModal, setShowElementModal] = useState(false);
+  const [showWeaponModal, setShowWeaponModal] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [selectedWeapon, setSelectedWeapon] = useState<string | null>(null);
+
+  useEffect(() => {
+    const preload_url = async () => {
+      await Promise.all(
+        preload_icon_list.map((url_icon) => Image.prefetch(url_icon))
+      ).catch((err) => console.warn("Failed to preload url icon: " + err));
+      setLoading(false);
+    };
+    preload_url();
+  });
+
+  const handleOnPress4Star = () => {
+    setOnPress4Star(!onPress4Star);
+    setOnPress5Star(false);
+  };
+  const handleOnPress5Star = () => {
+    setOnPress5Star(!onPress5Star);
+    setOnPress4Star(false);
+  };
+
+  if (loading) return <CustomSplashScreen />;
+
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // ─── Render a single character card ──────────────────────────────
+  const renderCard = ({ item }: { item: (typeof data)[0] }) => {
+    const gradientColors = RARITY_GRADIENTS[item.rarity] ?? RARITY_GRADIENTS[4];
+    return (
+      <Pressable
+        onPress={() => navigation.navigate("Images", item)}
+        style={styles.cardContainer}
+      >
+        <LinearGradient
+          colors={gradientColors}
+          style={styles.cardGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+        >
+          {/* Element badge */}
+          {ELEMENT_ICONS[item.element] && (
+            <View
+              style={[
+                styles.elementBadge,
+                { backgroundColor: (ELEMENT_COLORS[item.element] ?? "#555") + "40" },
+              ]}
             >
-            </FlatList>
+              <Image
+                source={ELEMENT_ICONS[item.element]}
+                style={styles.elementIcon}
+              />
+            </View> // lala
+          )}
+
+          {/* Character icon */}
+          <Image
+            source={{ uri: item.url_icon }}
+            style={styles.cardCharIcon}
+            priority="high"
+          />
+                <View style={styles.cardNameStrip}>
+                  <Text style={styles.cardName} numberOfLines={1} adjustsFontSizeToFit>
+                    {item.name}
+                  </Text>
+                </View>
+        </LinearGradient>
+
+      </Pressable>
+    );
+  };
+
+  // ─── Main render ───────────────────────────────────────────────── main
+  return (
+    <SafeAreaView style={[styles.safeArea]}>  
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+        <Text style={styles.headerText}>Character Archive</Text>
+        {/* ── Search Bar ──────────────────────────────────────────── */}
+        <View style={styles.searchWrapper}>
+          <View style={styles.searchBar}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Search characters..."
+              placeholderTextColor="#8B8DA3"
+              onChangeText={setSearchText}
+              returnKeyType="search"
+              selectionColor="#D4A650"
+            />
+            <Pressable
+              onPress={() =>{
+                searchInputRef.current?.blur();
+                searchInputRef.current?.clear();
+               setSearchText("")
+            }}>
+              <Image
+                source={require("../assets/png/search_icon.png")}
+                style={styles.searchIcon}
+                tintColor="#8B8DA3"
+              />
+            </Pressable>
+          </View>
         </View>
-    )
-}
 
-const getBackgroundFrame = (rarity :number) =>{
-    return StyleSheet.create({
-        background:{
-            backgroundColor: rarity === 5 ? 'rgb(184, 133, 81)' : 'rgb(116, 98, 153)',
-        }
-    })
-}
+        {/* ── Filter Row ──────────────────────────────────────────── */}
+        <ScrollView
+          style={{paddingVertical: 4,marginBottom: 4}}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {/* 4-Star toggle */}
+          <Pressable
+            onPress={handleOnPress4Star}
+            style={[styles.filterChip, onPress4Star && styles.filterChipActive4]}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                onPress4Star && styles.filterChipTextActive,
+              ]}
+            >
+              ★ 4
+            </Text>
+          </Pressable>
 
-export function Home(){
-    const navigation : NavigationProp<RootStackParamList> = useNavigation();
-    const [searchText,setSearchText]  = useState("");
-    const [loading,setLoading] = useState(true);
-    const searchInputRef = useRef<TextInput>(null);
-    const clearSearchText = () =>{
-        if(searchInputRef != null)
-            searchInputRef.current?.clear();
-    }
+          {/* 5-Star toggle */}
+          <Pressable
+            onPress={handleOnPress5Star}
+            style={[styles.filterChip, onPress5Star && styles.filterChipActive5]}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                onPress5Star && styles.filterChipTextActive,
+              ]}
+            >
+              ★ 5
+            </Text>
+          </Pressable>
 
-    useEffect(() =>{
-        const preload_url = async () =>{
-            await Promise.all(preload_icon_list.map( url_icon => Image.prefetch(url_icon)))
-            // .then(() => console.log("Successfully preloaded url icon!"))
-            .catch(err => console.warn("Failed to preload url icon :" + err))
-            setLoading(false);
-        }
-        preload_url();
-    })
-    if(loading ) return <CustomSplashScreen/>
+          {/* Element dropdown trigger */}
+          <Pressable
+            onPress={() => setShowElementModal(true)}
+            style={[
+              styles.filterChip,
+              selectedElement != null && {
+                borderColor: ELEMENT_COLORS[selectedElement],
+                backgroundColor: (ELEMENT_COLORS[selectedElement] ?? "#555") + "20",
+              },
+            ]}
+          >
+            {selectedElement != null && ELEMENT_ICONS[selectedElement] && (
+              <Image
+                source={ELEMENT_ICONS[selectedElement]}
+                style={styles.filterChipIcon}
+              />
+            )}
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedElement != null && styles.filterChipTextActive,
+              ]}
+            >
+              {selectedElement ?? "Element"} ▾
+            </Text>
+          </Pressable>
 
-    return(
-        <SafeAreaView style={{backgroundColor:"#2a2a2a", flex:1}}>
-            <View style={styles.search_bar}>
-                <TextInput
-                    ref={searchInputRef}
-                    style= {styles.search_input}
-                    placeholder='Search'
-                    multiline={true}
-                    onChangeText={setSearchText}
-                    keyboardType='default'
-                /> 
-                <Pressable
-                    style={({pressed}) =>([styles.x_button, {backgroundColor : pressed ? "#e3e3e3" : "transparent"}])}
-                    onPress={()=> { setSearchText("");  clearSearchText(); }}>
-                    <Image
-                        style={{width:30,height:30,margin:"auto"}}
-                        source={require("../assets/png/search_icon.png")}
-                        contentFit="contain"/>
-                </Pressable>
+          {/* Weapon dropdown trigger */}
+          <Pressable
+            onPress={() => setShowWeaponModal(true)}
+            style={[
+              styles.filterChip,
+              selectedWeapon != null && {
+                borderColor: "#D4A650",
+                backgroundColor: "rgba(212,166,80,0.15)",
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedWeapon != null && styles.filterChipTextActive,
+              ]}
+            >
+              {selectedWeapon != null
+                ? `${WEAPON_LABELS[selectedWeapon]}`
+                : "⚔ Weapon"}{" "}
+              ▾
+            </Text>
+          </Pressable>
+        </ScrollView>
+        {/* ── Character Grid ──────────────────────────────────────── */}
+        <FlatList
+          data={filteredData}
+          renderItem={renderCard}
+          numColumns={NUM_COLUMNS}
+          columnWrapperStyle={styles.gridRow}
+          contentContainerStyle={styles.gridContent}
+          keyExtractor={(item) => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Image
+                source={require("../assets/png/qiqi_sticker.webp")}
+                style={styles.emptyImage}
+              />
+              <Text style={styles.emptyText}>
+                The world is wide, try to search something else!
+              </Text>
             </View>
-            <RenderList
-                navigation={navigation}
-                search_text={searchText}>
-            </RenderList>
-        </SafeAreaView>
-    )
+          )}
+        />
+
+        {/* ── Element Modal ───────────────────────────────────────── */}
+        <Modal
+          visible={showElementModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowElementModal(false)}
+        >
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowElementModal(false)}
+          >
+            <Pressable style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>Select Element</Text>
+              <View style={styles.modalDivider} />
+
+              {ELEMENTS.map((el) => {
+                const isActive = selectedElement === el;
+                return (
+                  <Pressable
+                    key={el}
+                    style={[
+                      styles.modalOption,
+                      isActive && {
+                        backgroundColor: (ELEMENT_COLORS[el] ?? "#555") + "25",
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedElement(isActive ? null : el);
+                      setShowElementModal(false);
+                    }}
+                  >
+                    <Image
+                      source={ELEMENT_ICONS[el]}
+                      style={styles.modalElIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        isActive && { color: ELEMENT_COLORS[el] },
+                      ]}
+                    >
+                      {el}
+                    </Text>
+                    {isActive && (
+                      <Text
+                        style={[styles.modalCheck, { color: ELEMENT_COLORS[el] }]}
+                      >
+                        ✓
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+
+              {selectedElement != null && (
+                <>
+                  <View style={styles.modalDivider} />
+                  <Pressable
+                    style={styles.modalClearBtn}
+                    onPress={() => {
+                      setSelectedElement(null);
+                      setShowElementModal(false);
+                    }}
+                  >
+                    <Text style={styles.modalClearText}>Clear Filter</Text>
+                  </Pressable>
+                </>
+              )}
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* ── Weapon Modal ────────────────────────────────────────── */}
+        <Modal
+          visible={showWeaponModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowWeaponModal(false)}
+        >
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowWeaponModal(false)}
+          >
+            <Pressable style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>Select Weapon</Text>
+              <View style={styles.modalDivider} />
+
+              {WEAPONS.map((wp) => {
+                const isActive = selectedWeapon === wp;
+                return (
+                  <Pressable
+                    key={wp}
+                    style={[
+                      styles.modalOption,
+                      isActive && {
+                        backgroundColor: "rgba(212,166,80,0.18)",
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedWeapon(isActive ? null : wp);
+                      setShowWeaponModal(false);
+                    }}
+                  >
+                    <Text style={styles.modalWpEmoji}>
+                      {WEAPON_LABELS[wp]?.split("  ")[0]}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        isActive && { color: "#D4A650" },
+                      ]}
+                    >
+                      {wp}
+                    </Text>
+                    {isActive && (
+                      <Text style={[styles.modalCheck, { color: "#D4A650" }]}>
+                        ✓
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+
+              {selectedWeapon != null && (
+                <>
+                  <View style={styles.modalDivider} />
+                  <Pressable
+                    style={styles.modalClearBtn}
+                    onPress={() => {
+                      setSelectedWeapon(null);
+                      setShowWeaponModal(false);
+                    }}
+                  >
+                    <Text style={styles.modalClearText}>Clear Filter</Text>
+                  </Pressable>
+                </>
+              )}
+            </Pressable>
+          </Pressable>
+        </Modal>
+      </View>
+    </SafeAreaView>
+  );
 }
-const {width: wid, height: hei} = Dimensions.get("window");
+
+// ─── Styles ──────────────────────────────────────────────────────────
+const BG_PRIMARY = "#1E1E2E";
+const BG_SURFACE = "#2A2C3E";
+const BORDER_COLOR = "#3A3C50";
+
 const styles = StyleSheet.create({
-    list :{
-        display: "flex",
-        flex: 1,
-        paddingTop: 30,
-        alignItems:"center",
-    },
-    icon:{
-        width:wid/8*2,
-        height:hei/8,
-    },
-    box:{
-        width:wid/8*2,
-        height:hei/7,
-        display:"flex",
-        alignItems:"center",
-        marginBottom:20,
-        marginHorizontal:10,
-        borderRadius: 10,
-    } ,
-     search_bar:{
-        display:"flex",
-        flexDirection:"row",
-        justifyContent:"center",
-        alignItems:"center",
-        margin:"auto",
-        marginTop:10
-    },
-    search_input:{
-        backgroundColor:"rgba(202, 207, 217, 1)",
-        width: scale(wid*0.7),
-        borderWidth: 2,
-        borderRadius: 10,
-        height: verticalScale(32),
-        borderColor: "#dcdcdcff",
-        lineHeight:30
-    },
-    text:{
-        backgroundColor:"rgba(40, 50, 70, 1)",
-        fontFamily: "genshin_font",
-        fontSize:scale(10),
-        width:wid/8*2,
-        textAlign:"center",
-        color:"#dcdcdc",
-        borderBottomLeftRadius:10,
-        borderBottomRightRadius:10,
-        borderTopWidth:0,
-    },
-    x_button:{
-        width:40,
-        height:40,
-        marginLeft:10,
-        borderRadius:20
-    }
+  headerText: {
+    fontFamily: "genshin_font",
+    fontSize: scale(18),
+    color: "#E8E8F0",
+    textAlign: "left",
+    marginVertical: 10,
+    marginHorizontal: HORIZONTAL_PADDING,
+  },
+  // Layout
+  safeArea: {
+    flex: 1,
+    backgroundColor: BG_PRIMARY,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: BG_PRIMARY,
+  },
+
+  // ── Search ──────────────────────────────────────────────────────
+  searchWrapper: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: BG_SURFACE,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 46,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+  },
+  searchIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: "genshin_font",
+    fontSize: scale(13),
+    color: "#E8E8F0",
+    padding: 0,
+  },
+
+  // ── Filters ─────────────────────────────────────────────────────
+  filterRow: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    gap: 8,
+    alignItems: "center",
+    // backgroundColor: "red",
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    height: 60,
+    paddingBottom: 8,
+
+
+  },
+  filterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: BG_SURFACE,
+    borderWidth: 1.5,
+    borderColor: BORDER_COLOR,
+    gap: 6,
+  },
+  filterChipActive4: {
+    backgroundColor: "rgba(142,124,184,0.25)",
+    borderColor: "#8E7CB8",
+  },
+  filterChipActive5: {
+    backgroundColor: "rgba(212,166,80,0.25)",
+    borderColor: "#D4A650",
+  },
+  filterChipText: {
+    fontFamily: "genshin_font",
+    fontSize: scale(11),
+    color: "#B0B0C4",
+  },
+  filterChipTextActive: {
+    color: "#FFFFFF",
+  },
+  filterChipIcon: {
+    width: 18,
+    height: 18,
+  },
+
+  // ── Grid ────────────────────────────────────────────────────────
+  gridContent: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 8,
+  },
+  gridRow: {
+    gap: CARD_GAP,
+    marginBottom: CARD_GAP,
+  },
+
+  // ── Card ────────────────────────────────────────────────────────
+  cardContainer: {
+    width: CARD_WIDTH,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: BG_SURFACE,
+  },
+  cardGradient: {
+    width: "100%",
+    height: CARD_IMAGE_HEIGHT,
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  elementBadge: {
+    position: "absolute",
+    top: 5,
+    left: 5,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  elementIcon: {
+    width: 18,
+    height: 18,
+  },
+  cardCharIcon: {
+    width: CARD_WIDTH * 0.88,
+    height: CARD_IMAGE_HEIGHT * 0.88,
+  },
+  cardNameStrip: {
+    // paddingVertical: 7,
+    // paddingHorizontal: 4,
+    // alignItems: "center",
+    width: "100%",
+    backgroundColor: "#eee4da",
+  },
+  cardName: {
+    fontFamily: "genshin_font",
+    fontSize: scale(10),
+    color: "#393f49",
+    textAlign: "center",
+  },
+
+  // ── Empty state ─────────────────────────────────────────────────
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 80,
+    marginHorizontal: 40,
+  },
+  emptyImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
+  },
+  emptyText: {
+    fontFamily: "genshin_font",
+    color: "#8B8DA3",
+    textAlign: "center",
+    fontSize: scale(14),
+    lineHeight: 24,
+  },
+
+  // ── Modal (shared) ──────────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalSheet: {
+    backgroundColor: "#252738",
+    borderRadius: 18,
+    width: SCREEN_WIDTH * 0.72,
+    paddingVertical: 20,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    elevation: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+  },
+  modalTitle: {
+    fontFamily: "genshin_font",
+    fontSize: scale(16),
+    color: "#E8E8F0",
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: BORDER_COLOR,
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  modalElIcon: {
+    width: 30,
+    height: 30,
+  },
+  modalWpEmoji: {
+    fontSize: 22,
+    width: 30,
+    textAlign: "center",
+  },
+  modalOptionText: {
+    fontFamily: "genshin_font",
+    fontSize: scale(14),
+    color: "#C8C8D8",
+    flex: 1,
+  },
+  modalCheck: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  modalClearBtn: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  modalClearText: {
+    fontFamily: "genshin_font",
+    fontSize: scale(13),
+    color: "#EF7938",
+  },
 });

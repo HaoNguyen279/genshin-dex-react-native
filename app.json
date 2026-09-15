@@ -44,16 +44,7 @@
       "expo-font",
       "expo-video",
       "expo-screen-orientation",
-      "@react-native-google-signin/google-signin",
-      "./plugins/withFirebaseSwiftAppDelegate",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static"
-          }
-        }
-      ]
+      "@react-native-google-signin/google-signin"
     ],
     "owner": "haonguyen279z",
     "jsEngine": "hermes",
