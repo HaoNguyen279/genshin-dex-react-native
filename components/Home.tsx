@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -88,6 +89,7 @@ export function Home() {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedWeapon, setSelectedWeapon] = useState<string | null>(null);
 
+  const [filteredData, setFilteredData] = useState(data);
   useEffect(() => {
     const preload_url = async () => {
       await Promise.all(
@@ -97,7 +99,25 @@ export function Home() {
     };
     preload_url();
   });
-
+  useEffect(() => {
+    let filtered = data;
+    setTimeout(() => {
+      if (onPress4Star) {
+        filtered = filtered.filter((item) => item.rarity === 4);
+      }if (onPress5Star) {
+        filtered = filtered.filter((item) => item.rarity === 5);
+      }if(selectedElement){
+        filtered = filtered.filter((item) => item.element === selectedElement);
+      }if(selectedWeapon){
+        filtered = filtered.filter((item) => item.weapon === selectedWeapon);
+      }
+      filtered = filtered.filter((item) =>
+        item.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }, 200);
+  }, [searchText, onPress4Star, onPress5Star, selectedElement, selectedWeapon]);
+  
   const handleOnPress4Star = () => {
     setOnPress4Star(!onPress4Star);
     setOnPress5Star(false);
@@ -109,15 +129,14 @@ export function Home() {
 
   if (loading) return <CustomSplashScreen />;
 
-  const filteredData = data.filter((item) =>
-    item.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+
 
   // ─── Render a single character card ──────────────────────────────
-  const renderCard = ({ item }: { item: (typeof data)[0] }) => {
+  const renderCard = ({ item, index }: { item: (typeof data)[0], index: number }) => {
     const gradientColors = RARITY_GRADIENTS[item.rarity] ?? RARITY_GRADIENTS[4];
     return (
-      <Pressable
+      <Animated.View entering={FadeIn.duration(600).delay(index * 50)}>
+        <Pressable
         onPress={() => navigation.navigate("Images", item)}
         style={styles.cardContainer}
       >
@@ -154,8 +173,8 @@ export function Home() {
                   </Text>
                 </View>
         </LinearGradient>
-
       </Pressable>
+      </Animated.View>
     );
   };
 
@@ -193,7 +212,7 @@ export function Home() {
 
         {/* ── Filter Row ──────────────────────────────────────────── */}
         <ScrollView
-          style={{paddingVertical: 4,marginBottom: 4}}
+          style={{paddingVertical: 4,marginBottom: 4, flexGrow: 0}}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterRow}
@@ -302,6 +321,7 @@ export function Home() {
         />
 
         {/* ── Element Modal ───────────────────────────────────────── */}
+        
         <Modal
           visible={showElementModal}
           transparent
@@ -312,6 +332,7 @@ export function Home() {
             style={styles.modalOverlay}
             onPress={() => setShowElementModal(false)}
           >
+            <Animated.View entering={ZoomIn.duration(200).springify()}>
             <Pressable style={styles.modalSheet}>
               <Text style={styles.modalTitle}>Select Element</Text>
               <View style={styles.modalDivider} />
@@ -370,20 +391,23 @@ export function Home() {
                 </>
               )}
             </Pressable>
+            </Animated.View>
           </Pressable>
         </Modal>
-
+      
         {/* ── Weapon Modal ────────────────────────────────────────── */}
+      
         <Modal
-          visible={showWeaponModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowWeaponModal(false)}
-        >
+            visible={showWeaponModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowWeaponModal(false)}
+          >
           <Pressable
             style={styles.modalOverlay}
             onPress={() => setShowWeaponModal(false)}
           >
+            <Animated.View entering={ZoomIn.duration(200).springify()}>
             <Pressable style={styles.modalSheet}>
               <Text style={styles.modalTitle}>Select Weapon</Text>
               <View style={styles.modalDivider} />
@@ -439,6 +463,7 @@ export function Home() {
                 </>
               )}
             </Pressable>
+            </Animated.View>
           </Pressable>
         </Modal>
       </View>
@@ -504,13 +529,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: HORIZONTAL_PADDING,
     gap: 8,
     alignItems: "center",
-    // backgroundColor: "red",
     flexDirection: "row",
-    alignSelf: "flex-start",
     height: 60,
     paddingBottom: 8,
-
-
+    flexGrow: 0,
   },
   filterChip: {
     flexDirection: "row",
@@ -548,6 +570,7 @@ const styles = StyleSheet.create({
   gridContent: {
     paddingHorizontal: HORIZONTAL_PADDING,
     paddingTop: 8,
+    justifyContent: "flex-start",
   },
   gridRow: {
     gap: CARD_GAP,

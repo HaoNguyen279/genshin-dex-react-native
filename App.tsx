@@ -113,7 +113,7 @@ export default function App() {
             initialRouteName='MainScreen'
                 screenOptions={{tabBarStyle:{height:70,paddingTop:10} , animation: 'shift'}}
             >
-            {/* Animtion cho tab bar, shift chuyển tiếp, fade thì là fade ừ fade ấy =) */}
+            {/* Animtion cho tab bar, shift chuyển tiếp, fade ) */}
                 <Tab.Screen name='HomePage' component={HomeStackScreen}
                     options={({route}) =>{
                         const routeName = getFocusedRouteNameFromRoute(route) ?? 'HomePage';

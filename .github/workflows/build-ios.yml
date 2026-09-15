@@ -71,8 +71,8 @@ jobs:
         shell: bash
         run: |
           if [ ! -f Gemfile ]; then
-            echo "⚠️ Gemfile not found. Creating default Gemfile with cocoapods ~> 1.16..."
-            printf 'source "https://rubygems.org"\n\ngem "cocoapods", "~> 1.16"\n' > Gemfile
+            echo "⚠️ Gemfile not found. Creating default Gemfile with cocoapods ~> 1.16 and json < 3.0..."
+            printf 'source "https://rubygems.org"\n\ngem "cocoapods", "~> 1.16"\ngem "json", "< 3.0"\n' > Gemfile
           fi
           bundle install
 
