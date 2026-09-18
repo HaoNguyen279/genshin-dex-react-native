@@ -10,15 +10,35 @@ import {
   Dimensions,
   Modal,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import Svg, {
+  Circle,
+  RadialGradient,
+  Defs,
+  Stop,
+  Rect,
+} from "react-native-svg";
 
 import CustomSplashScreen from "./splashscreen/CustomSplashScreen";
 import data from "../assets/data/character.json";
 import { scale } from "react-native-size-matters";
+
+import {
+  COLORS,
+  SvgSparkle,
+  SvgStar,
+  SvgSwords,
+  SvgSearch,
+  SvgMic,
+  SvgTune,
+  SvgPerson,
+  SvgClose,
+} from "./ui/svg-icon";
 
 // ─── Layout constants ────────────────────────────────────────────────
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -180,124 +200,179 @@ export function Home() {
 
   // ─── Main render ───────────────────────────────────────────────── main
   return (
-    <SafeAreaView style={[styles.safeArea]}>  
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.surface} />
+
       <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-        <Text style={styles.headerText}>Character Archive</Text>
-        {/* ── Search Bar ──────────────────────────────────────────── */}
-        <View style={styles.searchWrapper}>
-          <View style={styles.searchBar}>
+        <View style={styles.topHeader}>
+          
+          <View style={styles.topHeaderLeft}>
+            <SvgSparkle size={20} color={COLORS.primary} />
+            <View style={styles.headerTitleCol}>
+              <Text style={styles.headerMainTitle}>Character Archive</Text>
+              <Text style={styles.headerSubTitle}>NHÂN VẬT</Text>
+            </View>
+          </View>
+
+          <View style={styles.topHeaderRight}>
+            <View style={styles.countBadge}>
+              <SvgPerson size={13} color={COLORS.primary} />
+              <Text style={styles.countText}>{filteredData.length}</Text>
+            </View>
+          </View>
+
+        </View>
+
+        {/* ── Controls Deck (Search & Filters) ─────────────── */}
+        <View style={styles.headerDeck}>
+          {/* Search Input Container */}
+          <View style={styles.searchContainer}>
+            <SvgSearch size={18} color={COLORS.primary} />
             <TextInput
               ref={searchInputRef}
               style={styles.searchInput}
-              placeholder="Search characters..."
-              placeholderTextColor="#8B8DA3"
+              placeholder="Tìm kiếm nhân vật..."
+              placeholderTextColor={COLORS.outline}
+              value={searchText}
               onChangeText={setSearchText}
               returnKeyType="search"
-              selectionColor="#D4A650"
+              selectionColor={COLORS.primary}
             />
-            <Pressable
-              onPress={() =>{
-                searchInputRef.current?.blur();
-                searchInputRef.current?.clear();
-               setSearchText("")
-            }}>
-              <Image
-                source={require("../assets/png/search_icon.png")}
-                style={styles.searchIcon}
-                tintColor="#8B8DA3"
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* ── Filter Row ──────────────────────────────────────────── */}
-        <ScrollView
-          style={{paddingVertical: 4,marginBottom: 4, flexGrow: 0}}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {/* 4-Star toggle */}
-          <Pressable
-            onPress={handleOnPress4Star}
-            style={[styles.filterChip, onPress4Star && styles.filterChipActive4]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                onPress4Star && styles.filterChipTextActive,
-              ]}
-            >
-              ★ 4
-            </Text>
-          </Pressable>
-
-          {/* 5-Star toggle */}
-          <Pressable
-            onPress={handleOnPress5Star}
-            style={[styles.filterChip, onPress5Star && styles.filterChipActive5]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                onPress5Star && styles.filterChipTextActive,
-              ]}
-            >
-              ★ 5
-            </Text>
-          </Pressable>
-
-          {/* Element dropdown trigger */}
-          <Pressable
-            onPress={() => setShowElementModal(true)}
-            style={[
-              styles.filterChip,
-              selectedElement != null && {
-                borderColor: ELEMENT_COLORS[selectedElement],
-                backgroundColor: (ELEMENT_COLORS[selectedElement] ?? "#555") + "20",
-              },
-            ]}
-          >
-            {selectedElement != null && ELEMENT_ICONS[selectedElement] && (
-              <Image
-                source={ELEMENT_ICONS[selectedElement]}
-                style={styles.filterChipIcon}
-              />
+            {searchText.length > 0 ? (
+              <Pressable
+                onPress={() => {
+                  searchInputRef.current?.blur();
+                  searchInputRef.current?.clear();
+                  setSearchText("");
+                }}
+                hitSlop={10}
+                style={styles.searchActionBtn}
+              >
+                <SvgClose size={16} color={COLORS.onSurfaceVariant} />
+              </Pressable>
+            ) : (
+              <Pressable hitSlop={10} style={styles.searchActionBtn}>
+                <SvgMic size={18} color={COLORS.onSurfaceVariant} />
+              </Pressable>
             )}
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedElement != null && styles.filterChipTextActive,
-              ]}
-            >
-              {selectedElement ?? "Element"} ▾
-            </Text>
-          </Pressable>
+          </View>
 
-          {/* Weapon dropdown trigger */}
-          <Pressable
-            onPress={() => setShowWeaponModal(true)}
-            style={[
-              styles.filterChip,
-              selectedWeapon != null && {
-                borderColor: "#D4A650",
-                backgroundColor: "rgba(212,166,80,0.15)",
-              },
-            ]}
+          {/* Filter Row (Horizontal ScrollView) */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
           >
-            <Text
+            {/* 5-Star toggle */}
+            <Pressable
+              onPress={handleOnPress5Star}
               style={[
-                styles.filterChipText,
-                selectedWeapon != null && styles.filterChipTextActive,
+                styles.rarityPill,
+                {
+                  backgroundColor: onPress5Star
+                    ? `${COLORS.primary}33`
+                    : `${COLORS.primary}15`,
+                  borderColor: onPress5Star ? COLORS.primary : "transparent",
+                },
               ]}
             >
-              {selectedWeapon != null
-                ? `${WEAPON_LABELS[selectedWeapon]}`
-                : "⚔ Weapon"}{" "}
-              ▾
-            </Text>
-          </Pressable>
-        </ScrollView>
+              <SvgStar size={12} color={COLORS.primary} filled />
+              <Text style={[styles.rarityText, { color: COLORS.primary }]}>
+                5 SAO
+              </Text>
+            </Pressable>
+
+            {/* 4-Star toggle */}
+            <Pressable
+              onPress={handleOnPress4Star}
+              style={[
+                styles.rarityPill,
+                {
+                  backgroundColor: onPress4Star
+                    ? `${COLORS.secondary}33`
+                    : `${COLORS.secondary}15`,
+                  borderColor: onPress4Star ? COLORS.secondary : "transparent",
+                },
+              ]}
+            >
+              <SvgStar size={12} color={COLORS.secondary} filled />
+              <Text style={[styles.rarityText, { color: COLORS.secondary }]}>
+                4 SAO
+              </Text>
+            </Pressable>
+
+            {/* Element dropdown trigger */}
+            <Pressable
+              onPress={() => setShowElementModal(true)}
+              style={[
+                styles.filterChip,
+                selectedElement != null
+                  ? {
+                      borderColor: ELEMENT_COLORS[selectedElement] ?? COLORS.primary,
+                      backgroundColor:
+                        (ELEMENT_COLORS[selectedElement] ?? COLORS.primary) + "25",
+                    }
+                  : styles.filterChipInactive,
+              ]}
+            >
+              {selectedElement != null && ELEMENT_ICONS[selectedElement] ? (
+                <Image
+                  source={ELEMENT_ICONS[selectedElement]}
+                  style={styles.filterChipIcon}
+                />
+              ) : (
+                <SvgSparkle size={13} color={COLORS.onSurfaceVariant} />
+              )}
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedElement != null
+                    ? {
+                        color: ELEMENT_COLORS[selectedElement] ?? COLORS.primary,
+                        fontWeight: "bold",
+                      }
+                    : styles.filterChipTextInactive,
+                ]}
+              >
+                {selectedElement ?? "Element"} ▾
+              </Text>
+            </Pressable>
+
+            {/* Weapon dropdown trigger */}
+            <Pressable
+              onPress={() => setShowWeaponModal(true)}
+              style={[
+                styles.filterChip,
+                selectedWeapon != null
+                  ? {
+                      borderColor: COLORS.primary,
+                      backgroundColor: "rgba(255, 213, 141, 0.25)",
+                    }
+                  : styles.filterChipInactive,
+              ]}
+            >
+              <SvgSwords
+                size={13}
+                color={
+                  selectedWeapon != null ? COLORS.primary : COLORS.onSurfaceVariant
+                }
+              />
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedWeapon != null
+                    ? { color: COLORS.primary, fontWeight: "bold" }
+                    : styles.filterChipTextInactive,
+                ]}
+              >
+                {selectedWeapon != null
+                  ? `${WEAPON_LABELS[selectedWeapon]}`
+                  : "Weapon"}{" "}
+                ▾
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </View>
         {/* ── Character Grid ──────────────────────────────────────── */}
         <FlatList
           data={filteredData}
@@ -472,98 +547,164 @@ export function Home() {
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────
-const BG_PRIMARY = "#1E1E2E";
-const BG_SURFACE = "#2A2C3E";
-const BORDER_COLOR = "#3A3C50";
+const BG_PRIMARY = "#0e1323";
+const BG_SURFACE = "#1a1f2f";
+const BORDER_COLOR = "rgba(255, 255, 255, 0.08)";
 
 const styles = StyleSheet.create({
-  headerText: {
-    fontFamily: "genshin_font",
-    fontSize: scale(18),
-    color: "#E8E8F0",
-    textAlign: "left",
-    marginVertical: 10,
-    marginHorizontal: HORIZONTAL_PADDING,
-  },
   // Layout
   safeArea: {
     flex: 1,
-    backgroundColor: BG_PRIMARY,
+    backgroundColor: COLORS.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: BG_PRIMARY,
+    backgroundColor: "transparent",
   },
 
-  // ── Search ──────────────────────────────────────────────────────
-  searchWrapper: {
+  // ── Header ──────────────────────────────────────────────────────────
+  topHeader: {
+    height: 56,
     paddingHorizontal: HORIZONTAL_PADDING,
-    paddingTop: 10,
-    paddingBottom: 4,
-  },
-  searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: BG_SURFACE,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 46,
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    justifyContent: "space-between",
+    backgroundColor: "rgba(14, 19, 35, 0.92)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 213, 141, 0.12)",
+    zIndex: 10,
   },
-  searchIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 10,
+  topHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerTitleCol: {
+    flexDirection: "column",
+  },
+  headerMainTitle: {
+    fontFamily: "genshin_font",
+    fontSize: scale(16),
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
+  headerSubTitle: {
+    fontFamily: "montserrat-semi-bold",
+    fontSize: scale(9),
+    color: COLORS.onSurfaceVariant,
+    letterSpacing: 1.5,
+  },
+  topHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  countBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: COLORS.surfaceHigh,
+  },
+  countText: {
+    fontFamily: "montserrat-semi-bold",
+    fontSize: scale(11),
+    color: COLORS.primary,
+    fontWeight: "bold",
+  },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarPill: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 2,
+  },
+
+  // ── Controls Deck ───────────────────────────────────────────────────
+  headerDeck: {
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingTop: 12,
+    paddingBottom: 6,
+    gap: 10,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surfaceLow,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   searchInput: {
     flex: 1,
-    fontFamily: "genshin_font",
-    fontSize: scale(13),
-    color: "#E8E8F0",
+    fontFamily: "montserrat",
+    fontSize: scale(12),
+    color: COLORS.onSurface,
+    marginLeft: 8,
     padding: 0,
   },
+  searchActionBtn: {
+    padding: 4,
+  },
 
-  // ── Filters ─────────────────────────────────────────────────────
+  // Filters
   filterRow: {
-    paddingHorizontal: HORIZONTAL_PADDING,
     gap: 8,
     alignItems: "center",
     flexDirection: "row",
-    height: 60,
-    paddingBottom: 8,
-    flexGrow: 0,
+    paddingVertical: 2,
+  },
+  rarityPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  rarityText: {
+    fontFamily: "montserrat-semi-bold",
+    fontSize: scale(10),
+    fontWeight: "bold",
+    letterSpacing: 0.8,
   },
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: BG_SURFACE,
-    borderWidth: 1.5,
-    borderColor: BORDER_COLOR,
     gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
   },
-  filterChipActive4: {
-    backgroundColor: "rgba(142,124,184,0.25)",
-    borderColor: "#8E7CB8",
-  },
-  filterChipActive5: {
-    backgroundColor: "rgba(212,166,80,0.25)",
-    borderColor: "#D4A650",
+  filterChipInactive: {
+    backgroundColor: COLORS.surfaceContainer,
+    borderColor: "rgba(255, 255, 255, 0.06)",
   },
   filterChipText: {
-    fontFamily: "genshin_font",
+    fontFamily: "montserrat-semi-bold",
     fontSize: scale(11),
-    color: "#B0B0C4",
+    letterSpacing: 0.5,
   },
-  filterChipTextActive: {
-    color: "#FFFFFF",
+  filterChipTextInactive: {
+    color: COLORS.onSurfaceVariant,
   },
   filterChipIcon: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
   },
 
   // ── Grid ────────────────────────────────────────────────────────
@@ -646,17 +787,17 @@ const styles = StyleSheet.create({
   // ── Modal (shared) ──────────────────────────────────────────────
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalSheet: {
-    backgroundColor: "#252738",
+    backgroundColor: "#161b2b",
     borderRadius: 18,
-    width: SCREEN_WIDTH * 0.72,
+    width: SCREEN_WIDTH * 0.76,
     paddingVertical: 20,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: "rgba(255, 213, 141, 0.2)",
     elevation: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
@@ -666,13 +807,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: "genshin_font",
     fontSize: scale(16),
-    color: "#E8E8F0",
+    color: COLORS.primary,
     textAlign: "center",
     marginBottom: 6,
   },
   modalDivider: {
     height: 1,
-    backgroundColor: BORDER_COLOR,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     marginHorizontal: 16,
     marginVertical: 8,
   },
@@ -695,7 +836,7 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontFamily: "genshin_font",
     fontSize: scale(14),
-    color: "#C8C8D8",
+    color: COLORS.onSurfaceVariant,
     flex: 1,
   },
   modalCheck: {
@@ -709,6 +850,6 @@ const styles = StyleSheet.create({
   modalClearText: {
     fontFamily: "genshin_font",
     fontSize: scale(13),
-    color: "#EF7938",
+    color: COLORS.error,
   },
 });

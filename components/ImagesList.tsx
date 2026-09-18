@@ -7,11 +7,10 @@ import { Image, ImageBackground } from "expo-image";
 import { DataTable } from "react-native-paper";
 import { scale } from "react-native-size-matters";
 
-import { BASE_URL, H_API_KEY } from "@env";
+import { BASE_URL, H_API_KEY, PAIMON_CDN } from "@env";
 import {defaultCharacter, defaultVoiceover, defaultCharacterStats} from "../utils/constant";
 import {getRounded1Number,getPercentage, getResultLang} from "../utils/functions";
-
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const RenderTable : React.FC<{stats: CharacterStats}> = ({stats}) =>{
@@ -303,15 +302,26 @@ export function ImagesList(){
     const [characterStats,setCharacterStats] = useState<CharacterStats>(defaultCharacterStats);
     const [loaded,setLoaded] = useState(false);
     const [lang,setLang] = useState<string | undefined>("en");
+    const [characterName,setCharacterName] = useState<string | undefined>(undefined);
     const navigation = useNavigation();
     const route : RouteProp<RootStackParamList, "Images"> = useRoute();
-
+    const insets = useSafeAreaInsets();
     useEffect(() => {
         const char_name : string = route.params?.name || "Lumine";
+        setCharacterName(char_name);
         const fetchData = async () => {
             const lang = await getResultLang();
             const requestURL1 = BASE_URL + "/characters?query=" + encodeURIComponent(char_name) + "&lang=" + lang;
             const requestURL2 = BASE_URL + "/api/charInfo?name=" + encodeURIComponent(char_name) +"&lang=" + lang;
+            
+            await Image.prefetch(
+                `${PAIMON_CDN}/images/skills/${char_name}/talent_1.png`
+            );
+            await Image.prefetch(
+                `${PAIMON_CDN}/images/skills/${char_name}/talent_2.png`
+            );
+
+
             const responese1 = await fetch( requestURL1 ,{
                 method: 'GET',
                 headers:{
@@ -326,8 +336,12 @@ export function ImagesList(){
                     'x-api-key' : H_API_KEY
                 }
             });
-            if(!responese1.ok || !responese2.ok){
-                console.warn("Error response");
+            if(!responese1.ok){
+                console.warn("Error 1 response");
+                return;
+            }
+            if(!responese2.ok){
+                console.warn("Error 2 response");
                 return;
             }
             else{
@@ -354,7 +368,7 @@ export function ImagesList(){
     }, [loaded]);
 
     return(
-        <SafeAreaView style={{flex:1}}>
+        <View style={[styles.rootContainer, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
                 <Video
                     source={getBackground(route.params?.element)}
                     isLooping
@@ -362,11 +376,11 @@ export function ImagesList(){
                     resizeMode={ResizeMode.COVER}
                     style={styles.backgroundVideo}
                 />
-                <ScrollView style={{flex:1,paddingTop:scale(20),paddingBottom:scale(50)}}>
-                <View>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={{position:'absolute',zIndex:1}}> 
-                        <Text style={[{fontFamily: 'genshin_font',color:"white",fontSize:18,padding:15}]}> ﹤Back</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{position:'absolute',zIndex:1, top: insets.top , left: 5, backgroundColor: 'rgba(0, 0, 0, 0.5)', borderRadius: 10}}> 
+                        <Text style={[{fontFamily: 'genshin_font',color:"white",fontSize:14,padding:15}]}>﹤Back</Text>
                     </TouchableOpacity>
+                <ScrollView style={{flex:1,paddingTop:scale(20),paddingBottom:scale(50)}}>
+
                     <View style={{display:"flex", alignItems:"center", marginTop:60}}>
                         <Shadow
                             distance={10}
@@ -384,6 +398,13 @@ export function ImagesList(){
                                 />
                             </View>
                         </Shadow>
+                        <View style={{flexDirection:"row", flexWrap:"wrap", padding:10 }}>
+                            <Image source={{uri: PAIMON_CDN + '/images/skills/' + characterName + "/talent_1.png"}} style={{width: 100, height: 100}}/>
+                            <Image source={{uri: PAIMON_CDN + '/images/skills/' + characterName + "/talent_2.png"}} style={{width: 100, height: 100}}/>
+                            <Image source={{uri: PAIMON_CDN + '/images/skills/' + characterName + "/talent_3.png"}} style={{width: 100, height: 100}}/>
+                            <Image source={{uri: PAIMON_CDN + '/images/skills/' + characterName + "/talent_4.png"}} style={{width: 100, height: 100}}/>
+                            <Image source={{uri: PAIMON_CDN + '/images/skills/' + characterName + "/talent_5.png"}} style={{width: 100, height: 100}}/>
+                        </View>
                     </View>
 
                         <View >
@@ -457,7 +478,7 @@ export function ImagesList(){
                             </View>
                             )}
                         </View>
-                </View>
+       
                 <RenderTable
                     stats={characterStats || {
                         baseStats: { hp: 0, attack: 0, defense: 0, specialized: 0, level: 0, ascension: 0 },
@@ -471,11 +492,14 @@ export function ImagesList(){
                     element={route.params?.element}
                 />
             </ScrollView>
-        </SafeAreaView>
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
+    rootContainer: {
+        flex: 1, 
+    },
     image:{
         width:270,
         height:472,

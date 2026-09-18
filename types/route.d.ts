@@ -4,6 +4,7 @@ type RootStackParamList = {
     "MainScreen" : undefined,
     "Welcome" : undefined,
     "HomePage" : undefined,
+    "Weapons" : undefined,
     "Profile" : {
         email: string | null,   
         uid: string | null,

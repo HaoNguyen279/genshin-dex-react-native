@@ -14,7 +14,7 @@ import SignUp from './components/authenticationscreen/SignUp';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import BirthdayList from './components/BirthdayList';
-import Quiz from './components/games/Quiz';
+import Weapons from './components/Weapons';
 
 
 export default function App() {
@@ -125,6 +125,25 @@ export default function App() {
                             tabBarIcon : () =>{ return <Image style={{width:30,height:30}} source={require("./assets/png/character_archive.png")}/>}
                         }
                        }}/>
+                <Tab.Screen name='Weapons' component={Weapons}
+                    options={{
+                        headerShown: false,
+                        title: "Weapons",
+                        tabBarStyle: { height: 70, paddingTop: 10 },
+                        tabBarIcon: ({ focused }) => {
+                            return (
+                                <Image
+                                    style={{
+                                        width: 28,
+                                        height: 28,
+                                        tintColor: focused ? "#ffd58d" : "#8B8DA3",
+                                    }}
+                                    source={require("./assets/wish_animation/weapon_indicator.png")}
+                                />
+                            );
+                        }
+                    }}
+                />
                 <Tab.Screen name='Wish' component={WishSimulator}
                     options={{
                         headerShown:false,
