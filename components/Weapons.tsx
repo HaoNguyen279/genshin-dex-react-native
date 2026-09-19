@@ -28,27 +28,111 @@ import {
   SvgHeart,
   SvgUpgrade,
   SvgCompare,
-  SvgTune,
-  SvgPerson,
 } from "./ui/svg-icon";
+import WEAPONS_RAW from "../assets/data/weapons.json";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const HORIZONTAL_MARGIN = 16;
-
-
-
-// ─── Element Icons Map ────────────────────────────────────────────────
-const ELEMENT_ICONS: Record<string, any> = {
-  Pyro: require("../assets/element_icons/Element_Pyro.webp"),
-  Hydro: require("../assets/element_icons/Element_Hydro.webp"),
-  Electro: require("../assets/element_icons/Element_Electro.webp"),
-  Cryo: require("../assets/element_icons/Element_Cryo.webp"),
-  Dendro: require("../assets/element_icons/Element_Dendro.webp"),
-  Anemo: require("../assets/element_icons/Element_Anemo.webp"),
-  Geo: require("../assets/element_icons/Element_Geo.webp"),
+// ─── ATK Scaling Lv90 – Lookup Table ─────────────────────────────────
+// Formula: Math.round(baseAtkValue × multiplier + ascension)
+// Key = Math.round(baseAtkValue) = Lv1 base ATK displayed in-game.
+// ascension = flat bonus added after full ascension (Phase 6).
+const SCALING_90: Record<number, Record<number, { multiplier: number; ascension: number }>> = {
+  5: {
+    // Ascension Phase 6 bonus: 186.7
+    44: { multiplier: 8.010,  ascension: 186.7 },
+    46: { multiplier: 9.173,  ascension: 186.7 },
+    48: { multiplier: 10.258, ascension: 186.7 },
+    49: { multiplier: 11.272, ascension: 186.7 },
+  },
+  4: {
+    // Ascension Phase 6 bonus: 155.6
+    41: { multiplier: 7.275,  ascension: 155.6 },
+    42: { multiplier: 8.349,  ascension: 155.6 },
+    44: { multiplier: 9.356,  ascension: 155.6 },
+    45: { multiplier: 10.305, ascension: 155.6 },
+  },
+  3: {
+    // Ascension Phase 6 bonus: 116.7
+    38: { multiplier: 6.320,  ascension: 116.7 },
+    39: { multiplier: 7.346,  ascension: 116.7 },
+    40: { multiplier: 8.314,  ascension: 116.7 },
+  },
 };
 
-// ─── Vector SVG Icons ─────────────────────────────────────────────────
+// Fallback linear multipliers for rarities/tiers not in the table
+const FALLBACK_MULT: Record<number, number> = { 5: 7.0, 4: 8.2, 3: 9.6, 2: 10.4, 1: 11.2 };
+function calcAtk(baseAtkValue: number, rarity: number, level: 1 | 90): number {
+  if (level === 1) return Math.round(baseAtkValue);
+  const roundedBase = Math.round(baseAtkValue);
+  const tierConfig = SCALING_90[rarity]?.[roundedBase];
+  if (tierConfig) {
+    return Math.round(baseAtkValue * tierConfig.multiplier + tierConfig.ascension);
+  }
+  // Fallback for rarities/tiers not yet mapped
+  return Math.round(baseAtkValue * (FALLBACK_MULT[rarity] ?? 8.0));
+}
+
+// ─── Rarity accent gradients ──────────────────────────────────────────
+function getRarityGradient(rarity: number): [string, string] {
+  if (rarity === 5) return ["#b07d16", "#ffd58d"];
+  if (rarity === 4) return ["#7b5cb5", "#c9aaff"];
+  return ["#4a7a6d", "#90cfc0"];
+}
+function getRarityGlowColor(rarity: number): string {
+  if (rarity === 5) return "rgba(176,125,22,0.25)";
+  if (rarity === 4) return "rgba(123,92,181,0.25)";
+  return "rgba(74,122,109,0.20)";
+}
+
+// ─── Display-ready weapon type ────────────────────────────────────────
+interface WeaponDisplay {
+  id: number;
+  name: string;
+  description: string;
+  weaponText: string;
+  rarity: number;
+  baseAtkValue: number;
+  mainStatText: string;
+  baseStatText: string;
+  effectName: string;
+  r1: { description: string; values: string[] };
+  r2: { description: string; values: string[] };
+  r3: { description: string; values: string[] };
+  r4: { description: string; values: string[] };
+  r5: { description: string; values: string[] };
+  story: string;
+  imageUrl: string;
+  version: string;
+  accentGradient: [string, string];
+  glowColor: string;
+}
+
+type RefKey = "r1" | "r2" | "r3" | "r4" | "r5";
+const REF_KEYS: RefKey[] = ["r1", "r2", "r3", "r4", "r5"];
+const REF_LABELS = ["R1", "R2", "R3", "R4", "R5"];
+
+const INITIAL_WEAPONS: WeaponDisplay[] = (WEAPONS_RAW as any[]).map((w) => ({
+  id: w.id,
+  name: w.name ?? "",
+  description: w.description ?? "",
+  weaponText: w.weaponText ?? "",
+  rarity: w.rarity ?? 3,
+  baseAtkValue: w.baseAtkValue ?? 0,
+  mainStatText: w.mainStatText ?? "",
+  baseStatText: w.baseStatText ?? "",
+  effectName: w.effectName ?? "",
+  r1: w.r1 ?? { description: "", values: [] },
+  r2: w.r2 ?? { description: "", values: [] },
+  r3: w.r3 ?? { description: "", values: [] },
+  r4: w.r4 ?? { description: "", values: [] },
+  r5: w.r5 ?? { description: "", values: [] },
+  story: w.story ?? "",
+  imageUrl: w.images?.mihoyo_awakenIcon ?? w.images?.mihoyo_icon ?? "",
+  version: w.version ?? "",
+  accentGradient: getRarityGradient(w.rarity ?? 3),
+  glowColor: getRarityGlowColor(w.rarity ?? 3),
+}));
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const HORIZONTAL_MARGIN = 16;
 
 
 
@@ -69,86 +153,23 @@ const ARCHETYPES: ArchetypeOption[] = [
   { key: "Bow", label: "Cung" },
 ];
 
-// ─── Weapon Interface & Mock Data ─────────────────────────────────────
-export interface WeaponItem {
-  id: number;
-  name: string;
-  englishName: string;
-  archetypeText: string;
-  weaponType: WeaponType;
-  rarity: 3 | 4 | 5;
-  defaultRefinement: "R1" | "R2" | "R3" | "R4" | "R5";
-  accentGradient: [string, string, string];
-  glowColor: string;
-  imageUrl: string;
-  statsByLevel: {
-    1: { atk: number; subValue: string };
-    70: { atk: number; subValue: string };
-    90: { atk: number; subValue: string };
-  };
-  atkTag?: string;
-  subType: string;
-  passiveName: string;
-  passiveRefinements: Record<string, string>;
-  compatibleCharacters: Array<{ name: string; element: string }>;
-  lore: string;
-}
 
-const INITIAL_WEAPONS: WeaponItem[] = [
-  {
-    id: 0,
-    name: "N/a",
-    englishName: "N/a",
-    archetypeText: "N/a",
-    weaponType: "All",
-    rarity: 5,
-    defaultRefinement: "R1",
-    accentGradient: ["N/a", "N/a", "N/a"],
-    glowColor: "N/a",
-    imageUrl: "N/a",
-
-    statsByLevel: {
-      1: { atk: 0, subValue: "N/a" },
-      70: { atk: 0, subValue: "N/a" },
-      90: { atk: 0, subValue: "N/a" },
-    },
-
-    atkTag: "N/a",
-    subType: "N/a",
-    passiveName: "N/a",
-
-    passiveRefinements: {
-      R1: "N/a",
-      R2: "N/a",
-      R3: "N/a",
-      R4: "N/a",
-      R5: "N/a",
-    },
-
-    compatibleCharacters: [
-      { name: "N/a", element: "N/a" },
-    ],
-
-    lore: "N/a",
-  },
-];
 
 // ─── Main Weapons Component ───────────────────────────────────────────
 export default function Weapons() {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList>(null);
 
-  // States
   const [searchText, setSearchText] = useState("");
   const [selectedArchetype, setSelectedArchetype] = useState<WeaponType>("All");
   const [selectedRarity, setSelectedRarity] = useState<number | null>(null);
-  const [previewLevel, setPreviewLevel] = useState<1 | 70 | 90>(90);
+  const [previewLevel, setPreviewLevel] = useState<1 | 90>(90);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
-  const [favorites, setFavorites] = useState<Record<number, boolean>>({ 11509: true, 13501: true });
+  const [favorites, setFavorites] = useState<Record<number, boolean>>({});
 
   // Modal State
-  const [activeWeaponDetail, setActiveWeaponDetail] = useState<WeaponItem | null>(null);
-  const [modalRefinement, setModalRefinement] = useState<string>("R1");
+  const [activeWeaponDetail, setActiveWeaponDetail] = useState<WeaponDisplay | null>(null);
+  const [modalRefinement, setModalRefinement] = useState<RefKey>("r1");
 
   // Toggle favorite
   const toggleFavorite = (id: number) => {
@@ -156,35 +177,33 @@ export default function Weapons() {
   };
 
   // Open detail modal
-  const openDetail = (weapon: WeaponItem) => {
+  const openDetail = (weapon: WeaponDisplay) => {
     setActiveWeaponDetail(weapon);
-    setModalRefinement(weapon.defaultRefinement);
+    setModalRefinement("r1");
   };
 
   // Filter & Sort Logic
   const filteredWeapons = useMemo(() => {
     return INITIAL_WEAPONS.filter((item) => {
-      // Search
+      // Search by name, effectName, or r1 description
+      const lc = searchText.toLowerCase().trim();
       const matchSearch =
-        !searchText.trim() ||
-        item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.englishName.toLowerCase().includes(searchText.toLowerCase()) ||
-        item.passiveName.toLowerCase().includes(searchText.toLowerCase()) ||
-        Object.values(item.passiveRefinements).some((desc) =>
-          desc.toLowerCase().includes(searchText.toLowerCase())
-        );
+        !lc ||
+        item.name.toLowerCase().includes(lc) ||
+        item.effectName.toLowerCase().includes(lc) ||
+        item.r1.description.toLowerCase().includes(lc);
 
       // Archetype
       const matchArchetype =
-        selectedArchetype === "All" || item.weaponType === selectedArchetype;
+        selectedArchetype === "All" || item.weaponText === selectedArchetype;
 
       // Rarity
       const matchRarity = selectedRarity === null || item.rarity === selectedRarity;
 
       return matchSearch && matchArchetype && matchRarity;
     }).sort((a, b) => {
-      const atkA = a.statsByLevel[previewLevel].atk;
-      const atkB = b.statsByLevel[previewLevel].atk;
+      const atkA = calcAtk(a.baseAtkValue, a.rarity, previewLevel);
+      const atkB = calcAtk(b.baseAtkValue, b.rarity, previewLevel);
       return sortOrder === "desc" ? atkB - atkA : atkA - atkB;
     });
   }, [searchText, selectedArchetype, selectedRarity, previewLevel, sortOrder]);
@@ -304,7 +323,7 @@ export default function Weapons() {
             return (
               <Pressable
                 key={lvl}
-                onPress={() => setPreviewLevel(lvl as 1 | 70 | 90)}
+                onPress={() => setPreviewLevel(lvl as 1 | 90)}
                 style={[styles.lvlBtn, isActive && styles.lvlBtnActive]}
               >
                 <Text style={[styles.lvlBtnText, isActive && styles.lvlBtnTextActive]}>
@@ -319,9 +338,9 @@ export default function Weapons() {
   );
 
   // Render a Single Weapon Card
-  const renderWeaponCard = ({ item }: { item: WeaponItem }) => {
+  const renderWeaponCard = ({ item }: { item: WeaponDisplay }) => {
     const isFav = favorites[item.id] || false;
-    const currentStats = item.statsByLevel[previewLevel];
+    const currentAtk = calcAtk(item.baseAtkValue, item.rarity, previewLevel);
     const isFiveStar = item.rarity === 5;
     const isFourStar = item.rarity === 4;
     const rarityColor = isFiveStar ? COLORS.primary : isFourStar ? COLORS.secondary : COLORS.tertiary;
@@ -361,15 +380,17 @@ export default function Weapons() {
               {item.name}
             </Text>
             <Text style={styles.weaponSubtitle} numberOfLines={1}>
-              {item.archetypeText}
+              {item.weaponText}
             </Text>
           </View>
 
-          {/* Refinement & Favorite Action */}
+          {/* Version Badge & Favorite Action */}
           <View style={styles.cardActions}>
-            <View style={styles.refinementBadge}>
-              <Text style={styles.refinementText}>{item.defaultRefinement}</Text>
-            </View>
+            {item.version ? (
+              <View style={styles.refinementBadge}>
+                <Text style={styles.refinementText}>v{item.version}</Text>
+              </View>
+            ) : null}
             <Pressable
               onPress={() => toggleFavorite(item.id)}
               style={styles.favBtn}
@@ -394,81 +415,66 @@ export default function Weapons() {
           <View style={styles.statsColumn}>
             <View style={styles.levelTag}>
               <Text style={styles.levelTagText}>
-                Lv. {previewLevel}/90 {previewLevel === 90 ? "(Đột Phá 6)" : previewLevel === 70 ? "(Đột Phá 4)" : "(Cơ Bản)"}
+                Lv. {previewLevel}/90 {previewLevel === 90 ? "(Max)" : "(Cơ Bản)"}
               </Text>
             </View>
 
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>TẤN CÔNG CƠ BẢN</Text>
               <View style={styles.statValueRow}>
-                <Text style={styles.statNumberLarge}>{currentStats.atk}</Text>
-                {item.atkTag && <Text style={styles.statBonusTag}>{item.atkTag}</Text>}
+                <Text style={styles.statNumberLarge}>{currentAtk}</Text>
               </View>
             </View>
 
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>THUỘC TÍNH PHỤ</Text>
-              <View style={styles.statValueRow}>
-                <Text
-                  style={[
-                    styles.statNumberSub,
-                    { color: isFiveStar ? COLORS.secondary : COLORS.tertiary },
-                  ]}
-                >
-                  {currentStats.subValue}
-                </Text>
-                <Text style={styles.statSubName}>{item.subType}</Text>
+            {item.mainStatText ? (
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>THUỘC TÍNH PHỤ</Text>
+                <View style={styles.statValueRow}>
+                  <Text
+                    style={[
+                      styles.statNumberSub,
+                      { color: isFiveStar ? COLORS.secondary : COLORS.tertiary },
+                    ]}
+                  >
+                    {item.baseStatText}
+                  </Text>
+                  <Text style={styles.statSubName}>{item.mainStatText}</Text>
+                </View>
               </View>
-            </View>
+            ) : null}
           </View>
 
-          {/* Realistic Artwork Representation */}
+          {/* Weapon Artwork */}
           <View style={styles.artworkContainer}>
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.weaponImage}
-              contentFit="contain"
-              transition={300}
-            />
+            {item.imageUrl ? (
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.weaponImage}
+                contentFit="contain"
+                transition={300}
+              />
+            ) : null}
           </View>
         </View>
 
         {/* Passive Skill Container */}
-        <View style={styles.passiveContainer}>
-          <View style={styles.passiveHeader}>
-            <View style={styles.passiveTitleRow}>
-              <SvgSparkle size={15} color={rarityColor} />
-              <Text style={[styles.passiveTitle, { color: rarityColor }]}>
-                Nội Tại: {item.passiveName}
-              </Text>
+        {item.effectName ? (
+          <View style={styles.passiveContainer}>
+            <View style={styles.passiveHeader}>
+              <View style={styles.passiveTitleRow}>
+                <SvgSparkle size={15} color={rarityColor} />
+                <Text style={[styles.passiveTitle, { color: rarityColor }]}>
+                  Nội Tại: {item.effectName}
+                </Text>
+              </View>
+              <Text style={styles.passiveTier}>Tầng Tinh Luyện 1</Text>
             </View>
-            <Text style={styles.passiveTier}>
-              Tầng Tinh Luyện {item.defaultRefinement.replace("R", "")}
+
+            <Text style={styles.passiveDescription} numberOfLines={4}>
+              {item.r1.description || item.description}
             </Text>
           </View>
-
-          <Text style={styles.passiveDescription}>
-            {item.passiveRefinements[item.defaultRefinement]}
-          </Text>
-
-          {/* Compatible Characters Chips */}
-          <View style={styles.affinityBlock}>
-            <Text style={styles.affinityLabel}>NHÂN VẬT TƯƠNG THÍCH HÀNG ĐẦU</Text>
-            <View style={styles.affinityChipsRow}>
-              {item.compatibleCharacters.map((char) => (
-                <View key={char.name} style={styles.affinityChip}>
-                  {ELEMENT_ICONS[char.element] && (
-                    <Image
-                      source={ELEMENT_ICONS[char.element]}
-                      style={styles.affinityElementIcon}
-                    />
-                  )}
-                  <Text style={styles.affinityCharName}>{char.name}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
+        ) : null}
 
         {/* Action Buttons Row */}
         <View style={styles.cardFooterActions}>
@@ -567,94 +573,117 @@ export default function Weapons() {
             style={StyleSheet.absoluteFill}
             onPress={() => setActiveWeaponDetail(null)}
           />
-          {activeWeaponDetail && (
-            <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
-              {/* Modal Drag Handle */}
-              <View style={styles.modalHandle} />
+          {activeWeaponDetail && (() => {
+            const w = activeWeaponDetail;
+            const isFiveStar = w.rarity === 5;
+            const isFourStar = w.rarity === 4;
+            const rarityColor = isFiveStar ? COLORS.primary : isFourStar ? COLORS.secondary : COLORS.tertiary;
+            const currentAtk = calcAtk(w.baseAtkValue, w.rarity, previewLevel);
+            return (
+              <View style={[styles.modalSheet, { paddingBottom: insets.bottom + 16 }]}>
+                {/* Modal Drag Handle */}
+                <View style={styles.modalHandle} />
 
-              <View style={styles.modalHeaderRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalWeaponName}>
-                    {activeWeaponDetail.name}
-                  </Text>
-                  <Text style={styles.modalWeaponEn}>
-                    {activeWeaponDetail.englishName} • {activeWeaponDetail.rarity} SAO
-                  </Text>
+                <View style={styles.modalHeaderRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalWeaponName}>
+                      {w.name}
+                    </Text>
+                    <Text style={styles.modalWeaponEn}>
+                      {w.weaponText} • {w.rarity} SAO{w.version ? ` • v${w.version}` : ""}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={styles.modalCloseBtn}
+                    onPress={() => setActiveWeaponDetail(null)}
+                    hitSlop={10}
+                  >
+                    <SvgClose size={20} color={COLORS.onSurfaceVariant} />
+                  </Pressable>
                 </View>
-                <Pressable
-                  style={styles.modalCloseBtn}
-                  onPress={() => setActiveWeaponDetail(null)}
-                  hitSlop={10}
-                >
-                  <SvgClose size={20} color={COLORS.onSurfaceVariant} />
-                </Pressable>
+
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 480 }}>
+                  {/* Visual Image & Stats in Modal */}
+                  <View style={styles.modalShowcase}>
+                    {w.imageUrl ? (
+                      <Image
+                        source={{ uri: w.imageUrl }}
+                        style={styles.modalImage}
+                        contentFit="contain"
+                      />
+                    ) : null}
+                    <View style={styles.modalStatsRight}>
+                      <Text style={styles.modalStatLabel}>TẤN CÔNG CƠ BẢN (Lv.{previewLevel})</Text>
+                      <Text style={styles.modalStatNumber}>{currentAtk}</Text>
+
+                      {w.mainStatText ? (
+                        <>
+                          <Text style={[styles.modalStatLabel, { marginTop: 8 }]}>THUỘC TÍNH PHỤ</Text>
+                          <Text style={styles.modalStatSubNumber}>{w.baseStatText}</Text>
+                          <Text style={styles.modalStatSubTitle}>{w.mainStatText}</Text>
+                        </>
+                      ) : null}
+
+                      <Text style={[styles.modalStatLabel, { marginTop: 8 }]}>LOẠI VŨ KHÍ</Text>
+                      <Text style={[styles.modalStatSubTitle, { color: rarityColor }]}>{w.weaponText}</Text>
+                    </View>
+                  </View>
+
+                  {/* Description */}
+                  {w.description ? (
+                    <View style={styles.modalSection}>
+                      <Text style={styles.modalSectionTitle}>MÔ TẢ</Text>
+                      <Text style={styles.modalPassiveDesc}>{w.description}</Text>
+                    </View>
+                  ) : null}
+
+                  {/* Refinement Stepper (R1 - R5) */}
+                  {w.effectName ? (
+                    <View style={styles.modalSection}>
+                      <Text style={styles.modalSectionTitle}>NỘI TẠI: {w.effectName}</Text>
+                      <View style={styles.modalRefineRow}>
+                        {REF_KEYS.map((rk, idx) => {
+                          const isActive = modalRefinement === rk;
+                          const hasData = !!w[rk]?.description;
+                          if (!hasData) return null;
+                          return (
+                            <Pressable
+                              key={rk}
+                              onPress={() => setModalRefinement(rk)}
+                              style={[
+                                styles.modalRefineChip,
+                                isActive && styles.modalRefineChipActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.modalRefineText,
+                                  isActive && styles.modalRefineTextActive,
+                                ]}
+                              >
+                                {REF_LABELS[idx]}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                      <Text style={styles.modalPassiveDesc}>
+                        {w[modalRefinement]?.description || w.r1.description}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  {/* Lore Section */}
+                  {w.story ? (
+                    <View style={styles.modalSection}>
+                      <Text style={styles.modalSectionTitle}>CÂU CHUYỆN VŨ KHÍ</Text>
+                      <Text style={styles.modalLoreText} numberOfLines={20}>{w.story}</Text>
+                    </View>
+                  ) : null}
+                </ScrollView>
               </View>
-
-              <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }}>
-                {/* Visual Image & Stats in Modal */}
-                <View style={styles.modalShowcase}>
-                  <Image
-                    source={{ uri: activeWeaponDetail.imageUrl }}
-                    style={styles.modalImage}
-                    contentFit="contain"
-                  />
-                  <View style={styles.modalStatsRight}>
-                    <Text style={styles.modalStatLabel}>TẤN CÔNG CƠ BẢN (Lv.{previewLevel})</Text>
-                    <Text style={styles.modalStatNumber}>
-                      {activeWeaponDetail.statsByLevel[previewLevel].atk}
-                    </Text>
-
-                    <Text style={[styles.modalStatLabel, { marginTop: 8 }]}>THUỘC TÍNH PHỤ</Text>
-                    <Text style={styles.modalStatSubNumber}>
-                      {activeWeaponDetail.statsByLevel[previewLevel].subValue}
-                    </Text>
-                    <Text style={styles.modalStatSubTitle}>
-                      {activeWeaponDetail.subType}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Refinement Stepper (R1 - R5) */}
-                <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>CẤP ĐỘ TINH LUYỆN</Text>
-                  <View style={styles.modalRefineRow}>
-                    {(["R1", "R2", "R3", "R4", "R5"] as const).map((r) => {
-                      const isActive = modalRefinement === r;
-                      return (
-                        <Pressable
-                          key={r}
-                          onPress={() => setModalRefinement(r)}
-                          style={[
-                            styles.modalRefineChip,
-                            isActive && styles.modalRefineChipActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.modalRefineText,
-                              isActive && styles.modalRefineTextActive,
-                            ]}
-                          >
-                            {r}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                  <Text style={styles.modalPassiveDesc}>
-                    {activeWeaponDetail.passiveRefinements[modalRefinement] ||
-                      activeWeaponDetail.passiveRefinements.R1}
-                  </Text>
-                </View>
-
-                {/* Lore Section */}
-                <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>CÂU CHUYỆN VŨ KHÍ</Text>
-                  <Text style={styles.modalLoreText}>{activeWeaponDetail.lore}</Text>
-                </View>
-              </ScrollView>
-            </View>
-          )}
+            );
+          })()}
         </View>
       </Modal>
     </SafeAreaView>
