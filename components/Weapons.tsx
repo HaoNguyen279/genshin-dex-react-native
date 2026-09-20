@@ -91,6 +91,7 @@ interface WeaponDisplay {
   weaponText: string;
   rarity: number;
   baseAtkValue: number;
+  mainStatType: string;
   mainStatText: string;
   baseStatText: string;
   effectName: string;
@@ -110,6 +111,39 @@ type RefKey = "r1" | "r2" | "r3" | "r4" | "r5";
 const REF_KEYS: RefKey[] = ["r1", "r2", "r3", "r4", "r5"];
 const REF_LABELS = ["R1", "R2", "R3", "R4", "R5"];
 
+// ─── Sub-stat Scaling Lv90 ────────────────────────────────────────────
+// Flat stat: only Elemental Mastery (FIGHT_PROP_ELEMENT_MASTERY)
+//   EM_Lv90 = round(baseEM_Lv1 × 4.594)
+// Percentage stats (CRIT Rate/DMG, ATK%, HP%, DEF%, ER%, Phys%…):
+//   Stat_Lv90 = round_1_decimal(baseStatValue_Lv1 × 4.594) %
+const FLAT_STAT_TYPES = new Set(["FIGHT_PROP_ELEMENT_MASTERY"]);
+
+function calcSubStat(
+  baseStatText: string,
+  mainStatType: string,
+  level: 1 | 90
+): string {
+  if (!baseStatText || !mainStatType) return baseStatText;
+  if (level === 1) return baseStatText;
+
+  const isFlat = FLAT_STAT_TYPES.has(mainStatType);
+  const isPercent = baseStatText.endsWith("%");
+  const rawNum = parseFloat(baseStatText.replace("%", "").trim());
+  if (isNaN(rawNum)) return baseStatText;
+
+  if (isFlat) {
+    // Flat (EM): round to integer
+    return `${Math.round(rawNum * 4.594)}`;
+  } else if (isPercent) {
+    // Percentage: round to 1 decimal place
+    const result = Math.round(rawNum * 4.594 * 10) / 10;
+    return `${result}%`;
+  }
+
+  // Unknown type – return as-is
+  return baseStatText;
+}
+
 const INITIAL_WEAPONS: WeaponDisplay[] = (WEAPONS_RAW as any[]).map((w) => ({
   id: w.id,
   name: w.name ?? "",
@@ -117,6 +151,7 @@ const INITIAL_WEAPONS: WeaponDisplay[] = (WEAPONS_RAW as any[]).map((w) => ({
   weaponText: w.weaponText ?? "",
   rarity: w.rarity ?? 3,
   baseAtkValue: w.baseAtkValue ?? 0,
+  mainStatType: w.mainStatType ?? "",
   mainStatText: w.mainStatText ?? "",
   baseStatText: w.baseStatText ?? "",
   effectName: w.effectName ?? "",
@@ -133,6 +168,7 @@ const INITIAL_WEAPONS: WeaponDisplay[] = (WEAPONS_RAW as any[]).map((w) => ({
 }));
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HORIZONTAL_MARGIN = 16;
+
 
 
 
@@ -436,7 +472,7 @@ export default function Weapons() {
                       { color: isFiveStar ? COLORS.secondary : COLORS.tertiary },
                     ]}
                   >
-                    {item.baseStatText}
+                    {calcSubStat(item.baseStatText, item.mainStatType, previewLevel)}
                   </Text>
                   <Text style={styles.statSubName}>{item.mainStatText}</Text>
                 </View>
@@ -619,7 +655,9 @@ export default function Weapons() {
                       {w.mainStatText ? (
                         <>
                           <Text style={[styles.modalStatLabel, { marginTop: 8 }]}>THUỘC TÍNH PHỤ</Text>
-                          <Text style={styles.modalStatSubNumber}>{w.baseStatText}</Text>
+                          <Text style={styles.modalStatSubNumber}>
+                            {calcSubStat(w.baseStatText, w.mainStatType, previewLevel)}
+                          </Text>
                           <Text style={styles.modalStatSubTitle}>{w.mainStatText}</Text>
                         </>
                       ) : null}
