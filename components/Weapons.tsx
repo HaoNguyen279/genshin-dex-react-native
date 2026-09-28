@@ -257,7 +257,7 @@ export default function Weapons() {
         <SvgSearch size={18} color={COLORS.primary} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Tìm kiếm tên vũ khí, hiệu ứng nội tại..."
+          placeholder="Search weapons..."
           placeholderTextColor={COLORS.outline}
           value={searchText}
           onChangeText={setSearchText}
@@ -440,12 +440,12 @@ export default function Weapons() {
         {/* Showcase Banner Area */}
         <View style={styles.showcaseBanner}>
           {/* Ambient Rarity Glow */}
-          <View
+          {/* <View
             style={[
               styles.ambientGlow,
               { backgroundColor: item.glowColor },
             ]}
-          />
+          /> */}
 
           {/* Stats Overview on Left */}
           <View style={styles.statsColumn}>
@@ -503,7 +503,6 @@ export default function Weapons() {
                   Nội Tại: {item.effectName}
                 </Text>
               </View>
-              <Text style={styles.passiveTier}>Tầng Tinh Luyện 1</Text>
             </View>
 
             <Text style={styles.passiveDescription} numberOfLines={4}>

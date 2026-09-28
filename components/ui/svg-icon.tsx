@@ -108,3 +108,11 @@ export const SvgSort = ({ size = 14, color = COLORS.onSurfaceVariant }: { size?:
     <Path d="M7 15l5 5 5-5M7 9l5-5 5 5" />
   </Svg>
 );
+
+export const SvgGlobe = ({ size = 16, color = COLORS.primary }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Circle cx="12" cy="12" r="10" />
+    <Path d="M2 12h20" />
+    <Path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </Svg>
+);

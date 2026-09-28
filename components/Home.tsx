@@ -12,7 +12,16 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  Easing,
+  runOnJS,
+} from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,6 +42,7 @@ import {
   SvgSparkle,
   SvgStar,
   SvgSwords,
+  SvgGlobe,
   SvgSearch,
   SvgMic,
   SvgTune,
@@ -41,7 +51,7 @@ import {
 } from "./ui/svg-icon";
 
 // ─── Layout constants ────────────────────────────────────────────────
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const HORIZONTAL_PADDING = 12;
 const CARD_GAP = 16;
 const NUM_COLUMNS = 4;
@@ -86,11 +96,170 @@ const WEAPON_LABELS: Record<string, string> = {
   Catalyst: "📖  Catalyst",
 };
 
+// ─── Region data ─────────────────────────────────────────────────────
+const REGION_ORDER = [
+  "Mondstadt",
+  "Liyue",
+  "Inazuma",
+  "Sumeru",
+  "Fontaine",
+  "Natlan",
+  "Snezhnaya",
+  "Nod-Krai",
+  "N/A",
+];
+
+const ALL_REGIONS = Array.from(
+  new Set(data.map((item) => item.region))
+).filter(Boolean);
+
+const REGIONS = [
+  ...REGION_ORDER.filter((r) => ALL_REGIONS.includes(r)),
+  ...ALL_REGIONS.filter((r) => !REGION_ORDER.includes(r)),
+];
+
+const REGION_LABELS: Record<string, string> = {
+  Mondstadt: "🏰  Mondstadt",
+  Liyue: "🏮  Liyue",
+  Inazuma: "⚡  Inazuma",
+  Sumeru: "🌿  Sumeru",
+  Fontaine: "⛲  Fontaine",
+  Natlan: "🔥  Natlan",
+  Snezhnaya: "❄️  Snezhnaya",
+  "Nod-Krai": "⚙️  Nod-Krai",
+  "N/A": "🌐  N/A",
+};
+
 // ─── Rarity gradients ────────────────────────────────────────────────
 const RARITY_GRADIENTS: Record<number, [string, string, string]> = {
   5: ["#A0712E", "#C5994A", "#DDB862"],
   4: ["#565080", "#74669D", "#8E7CB8"],
 };
+
+// ─── iOS-style Animated Modal ───────────────────────────────────────
+interface FilterModalProps {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  showClear?: boolean;
+  onClear?: () => void;
+  children: React.ReactNode;
+}
+
+function FilterModal({
+  visible,
+  onClose,
+  title,
+  showClear,
+  onClear,
+  children,
+}: FilterModalProps) {
+  const [isRendered, setIsRendered] = useState(visible);
+  const isVisibleRef = useRef(visible);
+  isVisibleRef.current = visible;
+
+  const scale = useSharedValue(0.88);
+  const opacity = useSharedValue(0);
+  const backdropOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      setIsRendered(true);
+      scale.value = 0.88;
+      opacity.value = 0;
+      backdropOpacity.value = 0;
+
+      // iOS Alert presentation spring:
+      // Rapid scale from 0.88 to 1.0 with subtle settling overshoot
+      scale.value = withSpring(1, {
+        damping: 24,
+        stiffness: 300,
+        mass: 0.8,
+      });
+      opacity.value = withTiming(1, {
+        duration: 180,
+        easing: Easing.out(Easing.quad),
+      });
+      backdropOpacity.value = withTiming(1, {
+        duration: 220,
+        easing: Easing.out(Easing.quad),
+      });
+    } else if (isRendered) {
+      // iOS Alert dismissal:
+      // Snappy retreat (1.0 -> 0.92) with rapid fade
+      scale.value = withTiming(0.92, {
+        duration: 160,
+        easing: Easing.in(Easing.quad),
+      });
+      opacity.value = withTiming(0, {
+        duration: 140,
+        easing: Easing.in(Easing.quad),
+      });
+      backdropOpacity.value = withTiming(
+        0,
+        {
+          duration: 160,
+          easing: Easing.in(Easing.quad),
+        },
+        (finished) => {
+          if (finished && !isVisibleRef.current) {
+            runOnJS(setIsRendered)(false);
+          }
+        }
+      );
+    }
+  }, [visible]);
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  if (!isRendered) return null;
+
+  return (
+    <Modal
+      visible={isRendered}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.modalOverlay}>
+        <Animated.View
+          style={[StyleSheet.absoluteFill, styles.modalBackdrop, backdropStyle]}
+        >
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        </Animated.View>
+
+        <Animated.View style={sheetStyle}>
+          <Pressable
+            style={styles.modalSheet}
+            onPress={(e) => e.stopPropagation?.()}
+          >
+            <Text style={styles.modalTitle}>{title}</Text>
+            <View style={styles.modalDivider} />
+
+            {children}
+
+            {showClear && onClear && (
+              <>
+                <View style={styles.modalDivider} />
+                <Pressable style={styles.modalClearBtn} onPress={onClear}>
+                  <Text style={styles.modalClearText}>Clear Filter</Text>
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
 
 // ─── Main component ─────────────────────────────────────────────────
 export function Home() {
@@ -103,11 +272,13 @@ export function Home() {
   const [onPress5Star, setOnPress5Star] = useState(false);
   const [onPress4Star, setOnPress4Star] = useState(false);
 
-  // Dropdown filter state (UI only — no filtering logic applied)
+  // Dropdown filter state
   const [showElementModal, setShowElementModal] = useState(false);
   const [showWeaponModal, setShowWeaponModal] = useState(false);
+  const [showRegionModal, setShowRegionModal] = useState(false);
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [selectedWeapon, setSelectedWeapon] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   const [filteredData, setFilteredData] = useState(data);
   useEffect(() => {
@@ -121,22 +292,37 @@ export function Home() {
   });
   useEffect(() => {
     let filtered = data;
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (onPress4Star) {
         filtered = filtered.filter((item) => item.rarity === 4);
-      }if (onPress5Star) {
+      }
+      if (onPress5Star) {
         filtered = filtered.filter((item) => item.rarity === 5);
-      }if(selectedElement){
+      }
+      if (selectedElement) {
         filtered = filtered.filter((item) => item.element === selectedElement);
-      }if(selectedWeapon){
+      }
+      if (selectedWeapon) {
         filtered = filtered.filter((item) => item.weapon === selectedWeapon);
+      }
+      if (selectedRegion) {
+        filtered = filtered.filter((item) => item.region === selectedRegion);
       }
       filtered = filtered.filter((item) =>
         item.name.toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredData(filtered);
     }, 200);
-  }, [searchText, onPress4Star, onPress5Star, selectedElement, selectedWeapon]);
+
+    return () => clearTimeout(timer);
+  }, [
+    searchText,
+    onPress4Star,
+    onPress5Star,
+    selectedElement,
+    selectedWeapon,
+    selectedRegion,
+  ]);
   
   const handleOnPress4Star = () => {
     setOnPress4Star(!onPress4Star);
@@ -371,6 +557,40 @@ export function Home() {
                 ▾
               </Text>
             </Pressable>
+
+            {/* Region dropdown trigger */}
+            <Pressable
+              onPress={() => setShowRegionModal(true)}
+              style={[
+                styles.filterChip,
+                selectedRegion != null
+                  ? {
+                      borderColor: COLORS.primary,
+                      backgroundColor: "rgba(255, 213, 141, 0.25)",
+                    }
+                  : styles.filterChipInactive,
+              ]}
+            >
+              <SvgGlobe
+                size={13}
+                color={
+                  selectedRegion != null ? COLORS.primary : COLORS.onSurfaceVariant
+                }
+              />
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedRegion != null
+                    ? { color: COLORS.primary, fontWeight: "bold" }
+                    : styles.filterChipTextInactive,
+                ]}
+              >
+                {selectedRegion != null
+                  ? `${REGION_LABELS[selectedRegion] ?? selectedRegion}`
+                  : "Region"}{" "}
+                ▾
+              </Text>
+            </Pressable>
           </ScrollView>
         </View>
         {/* ── Character Grid ──────────────────────────────────────── */}
@@ -396,151 +616,157 @@ export function Home() {
         />
 
         {/* ── Element Modal ───────────────────────────────────────── */}
-        
-        <Modal
+        <FilterModal
           visible={showElementModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowElementModal(false)}
+          onClose={() => setShowElementModal(false)}
+          title="Select Element"
+          showClear={selectedElement != null}
+          onClear={() => {
+            setSelectedElement(null);
+            setShowElementModal(false);
+          }}
         >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setShowElementModal(false)}
-          >
-            <Animated.View entering={ZoomIn.duration(200).springify()}>
-            <Pressable style={styles.modalSheet}>
-              <Text style={styles.modalTitle}>Select Element</Text>
-              <View style={styles.modalDivider} />
-
-              {ELEMENTS.map((el) => {
-                const isActive = selectedElement === el;
-                return (
-                  <Pressable
-                    key={el}
-                    style={[
-                      styles.modalOption,
-                      isActive && {
-                        backgroundColor: (ELEMENT_COLORS[el] ?? "#555") + "25",
-                      },
-                    ]}
-                    onPress={() => {
-                      setSelectedElement(isActive ? null : el);
-                      setShowElementModal(false);
-                    }}
+          {ELEMENTS.map((el) => {
+            const isActive = selectedElement === el;
+            return (
+              <Pressable
+                key={el}
+                style={[
+                  styles.modalOption,
+                  isActive && {
+                    backgroundColor: (ELEMENT_COLORS[el] ?? "#555") + "25",
+                  },
+                ]}
+                onPress={() => {
+                  setSelectedElement(isActive ? null : el);
+                  setShowElementModal(false);
+                }}
+              >
+                <Image
+                  source={ELEMENT_ICONS[el]}
+                  style={styles.modalElIcon}
+                />
+                <Text
+                  style={[
+                    styles.modalOptionText,
+                    isActive && { color: ELEMENT_COLORS[el] },
+                  ]}
+                >
+                  {el}
+                </Text>
+                {isActive && (
+                  <Text
+                    style={[styles.modalCheck, { color: ELEMENT_COLORS[el] }]}
                   >
-                    <Image
-                      source={ELEMENT_ICONS[el]}
-                      style={styles.modalElIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.modalOptionText,
-                        isActive && { color: ELEMENT_COLORS[el] },
-                      ]}
-                    >
-                      {el}
-                    </Text>
-                    {isActive && (
-                      <Text
-                        style={[styles.modalCheck, { color: ELEMENT_COLORS[el] }]}
-                      >
-                        ✓
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              })}
+                    ✓
+                  </Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </FilterModal>
 
-              {selectedElement != null && (
-                <>
-                  <View style={styles.modalDivider} />
-                  <Pressable
-                    style={styles.modalClearBtn}
-                    onPress={() => {
-                      setSelectedElement(null);
-                      setShowElementModal(false);
-                    }}
-                  >
-                    <Text style={styles.modalClearText}>Clear Filter</Text>
-                  </Pressable>
-                </>
-              )}
-            </Pressable>
-            </Animated.View>
-          </Pressable>
-        </Modal>
-      
         {/* ── Weapon Modal ────────────────────────────────────────── */}
-      
-        <Modal
-            visible={showWeaponModal}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setShowWeaponModal(false)}
-          >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setShowWeaponModal(false)}
-          >
-            <Animated.View entering={ZoomIn.duration(200).springify()}>
-            <Pressable style={styles.modalSheet}>
-              <Text style={styles.modalTitle}>Select Weapon</Text>
-              <View style={styles.modalDivider} />
+        <FilterModal
+          visible={showWeaponModal}
+          onClose={() => setShowWeaponModal(false)}
+          title="Select Weapon"
+          showClear={selectedWeapon != null}
+          onClear={() => {
+            setSelectedWeapon(null);
+            setShowWeaponModal(false);
+          }}
+        >
+          {WEAPONS.map((wp) => {
+            const isActive = selectedWeapon === wp;
+            return (
+              <Pressable
+                key={wp}
+                style={[
+                  styles.modalOption,
+                  isActive && {
+                    backgroundColor: "rgba(212,166,80,0.18)",
+                  },
+                ]}
+                onPress={() => {
+                  setSelectedWeapon(isActive ? null : wp);
+                  setShowWeaponModal(false);
+                }}
+              >
+                <Text style={styles.modalWpEmoji}>
+                  {WEAPON_LABELS[wp]?.split("  ")[0]}
+                </Text>
+                <Text
+                  style={[
+                    styles.modalOptionText,
+                    isActive && { color: "#D4A650" },
+                  ]}
+                >
+                  {wp}
+                </Text>
+                {isActive && (
+                  <Text style={[styles.modalCheck, { color: "#D4A650" }]}>
+                    ✓
+                  </Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </FilterModal>
 
-              {WEAPONS.map((wp) => {
-                const isActive = selectedWeapon === wp;
-                return (
-                  <Pressable
-                    key={wp}
+        {/* ── Region Modal ─────────────────────────────────────────── */}
+        <FilterModal
+          visible={showRegionModal}
+          onClose={() => setShowRegionModal(false)}
+          title="Select Region"
+          showClear={selectedRegion != null}
+          onClear={() => {
+            setSelectedRegion(null);
+            setShowRegionModal(false);
+          }}
+        >
+          <ScrollView
+            style={{ maxHeight: SCREEN_HEIGHT * 0.55 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {REGIONS.map((reg) => {
+              const isActive = selectedRegion === reg;
+              const label = REGION_LABELS[reg] ?? `📍  ${reg}`;
+              const [emoji, ...nameParts] = label.split("  ");
+              const name = nameParts.join("  ") || reg;
+              return (
+                <Pressable
+                  key={reg}
+                  style={[
+                    styles.modalOption,
+                    isActive && {
+                      backgroundColor: "rgba(212,166,80,0.18)",
+                    },
+                  ]}
+                  onPress={() => {
+                    setSelectedRegion(isActive ? null : reg);
+                    setShowRegionModal(false);
+                  }}
+                >
+                  <Text style={styles.modalWpEmoji}>{emoji}</Text>
+                  <Text
                     style={[
-                      styles.modalOption,
-                      isActive && {
-                        backgroundColor: "rgba(212,166,80,0.18)",
-                      },
+                      styles.modalOptionText,
+                      isActive && { color: "#D4A650" },
                     ]}
-                    onPress={() => {
-                      setSelectedWeapon(isActive ? null : wp);
-                      setShowWeaponModal(false);
-                    }}
                   >
-                    <Text style={styles.modalWpEmoji}>
-                      {WEAPON_LABELS[wp]?.split("  ")[0]}
+                    {name}
+                  </Text>
+                  {isActive && (
+                    <Text style={[styles.modalCheck, { color: "#D4A650" }]}>
+                      ✓
                     </Text>
-                    <Text
-                      style={[
-                        styles.modalOptionText,
-                        isActive && { color: "#D4A650" },
-                      ]}
-                    >
-                      {wp}
-                    </Text>
-                    {isActive && (
-                      <Text style={[styles.modalCheck, { color: "#D4A650" }]}>
-                        ✓
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-
-              {selectedWeapon != null && (
-                <>
-                  <View style={styles.modalDivider} />
-                  <Pressable
-                    style={styles.modalClearBtn}
-                    onPress={() => {
-                      setSelectedWeapon(null);
-                      setShowWeaponModal(false);
-                    }}
-                  >
-                    <Text style={styles.modalClearText}>Clear Filter</Text>
-                  </Pressable>
-                </>
-              )}
-            </Pressable>
-            </Animated.View>
-          </Pressable>
-        </Modal>
+                  )}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </FilterModal>
       </View>
     </SafeAreaView>
   );
@@ -787,9 +1013,12 @@ const styles = StyleSheet.create({
   // ── Modal (shared) ──────────────────────────────────────────────
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
+  },
+  modalBackdrop: {
+    backgroundColor: "rgba(0, 0, 0, 0.72)",
   },
   modalSheet: {
     backgroundColor: "#161b2b",
